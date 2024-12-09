@@ -36,3 +36,5 @@ Follow these steps to challenge user NeurIPS2024 using the sample team:
    ![A screenshot showing the "Find a user" interface with "NeurIPS2024" entered in the search box and the challenge options displayed](figs/challenge2.png)
 
 Good luck with your Pokémon battle!
+
+We will be doing a full code release at a later date post NeurIPS.
