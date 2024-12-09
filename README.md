@@ -38,3 +38,15 @@ Follow these steps to challenge user NeurIPS2024 using the sample team:
 Good luck with your Pokémon battle!
 
 We will be doing a full code release at a later date post NeurIPS.
+
+If you found this project interesting or helpful, please cite as:
+```
+@inproceedings{
+karten2024pokechamp,
+title={PokeChamp: an Expert-level Minimax Language Agent for Competitive Pokemon},
+author={Seth Karten and Andy Luu Nguyen and Chi Jin},
+booktitle={Language Gamification - NeurIPS 2024 Workshop},
+year={2024},
+url={https://openreview.net/forum?id=jWodMf0OvO}
+}
+```
