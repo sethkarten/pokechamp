@@ -1,0 +1,64 @@
+
+
+Iron Treads @ Booster Energy  
+Ability: Quark Drive  
+Tera Type: Ghost  
+EVs: 252 SpA / 4 SpD / 252 Spe  
+Timid Nature  
+- Earth Power  
+- Steel Beam  
+- Rapid Spin  
+- Stealth Rock  
+
+Skeledirge (M) @ Heavy-Duty Boots  
+Ability: Unaware  
+Tera Type: Fairy  
+EVs: 248 HP / 16 Def / 244 SpD  
+Bold Nature  
+IVs: 0 Atk  
+- Torch Song  
+- Alluring Voice  
+- Will-O-Wisp  
+- Slack Off  
+
+Ogerpon-Wellspring (F) @ Wellspring Mask  
+Ability: Water Absorb  
+Tera Type: Water  
+EVs: 252 Atk / 4 SpD / 252 Spe  
+Jolly Nature  
+- Ivy Cudgel  
+- Power Whip  
+- U-turn  
+- Encore  
+
+Enamorus @ Focus Sash  
+Ability: Cute Charm  
+Tera Type: Ground  
+EVs: 4 Def / 252 SpA / 252 Spe  
+Modest Nature  
+IVs: 0 Atk  
+- Moonblast  
+- Earth Power  
+- Calm Mind  
+- Taunt  
+
+Zamazenta @ Leftovers  
+Ability: Dauntless Shield  
+Tera Type: Steel  
+EVs: 88 HP / 252 Def / 168 Spe  
+Jolly Nature  
+- Body Press  
+- Crunch  
+- Iron Defense  
+- Roar  
+
+Roaring Moon @ Booster Energy  
+Ability: Protosynthesis  
+Tera Type: Flying  
+EVs: 252 Atk / 4 Def / 252 Spe  
+Jolly Nature  
+- Knock Off  
+- Acrobatics  
+- Earthquake  
+- Dragon Dance  
+

@@ -1,0 +1,68 @@
+Iron Moth @ Booster Energy  
+Ability: Quark Drive  
+Shiny: Yes  
+Tera Type: Ghost  
+EVs: 124 Def / 132 SpA / 252 Spe  
+Timid Nature  
+IVs: 0 Atk  
+- Fiery Dance  
+- Psychic  
+- Sludge Wave  
+- Substitute  
+
+Kingambit (M) @ Lum Berry  
+Ability: Supreme Overlord  
+Shiny: Yes  
+Tera Type: Dark  
+EVs: 252 Atk / 4 Def / 252 Spe  
+Jolly Nature  
+- Swords Dance  
+- Kowtow Cleave  
+- Sucker Punch  
+- Iron Head  
+
+Iron Valiant @ Booster Energy  
+Ability: Quark Drive  
+Shiny: Yes  
+Tera Type: Ghost  
+EVs: 252 SpA / 4 SpD / 252 Spe  
+Timid Nature  
+IVs: 0 Atk  
+- Substitute  
+- Calm Mind  
+- Shadow Ball  
+- Moonblast  
+
+Rillaboom (M) @ Choice Band  
+Ability: Grassy Surge  
+Shiny: Yes  
+Tera Type: Grass  
+EVs: 252 Atk / 4 Def / 252 Spe  
+Adamant Nature  
+- Wood Hammer  
+- Grassy Glide  
+- U-turn  
+- Knock Off  
+
+Ogerpon-Cornerstone (F) @ Cornerstone Mask  
+Ability: Sturdy  
+Hidden Power: Poison  
+Tera Type: Rock  
+EVs: 252 Atk / 4 SpD / 252 Spe  
+Jolly Nature  
+- Spikes  
+- Ivy Cudgel  
+- Power Whip  
+- Taunt  
+
+Raging Bolt @ Booster Energy  
+Ability: Protosynthesis  
+Tera Type: Water  
+EVs: 252 SpA / 4 SpD / 252 Spe  
+Modest Nature  
+IVs: 20 Atk  
+- Thunderclap  
+- Tera Blast  
+- Dragon Pulse  
+- Calm Mind  
+

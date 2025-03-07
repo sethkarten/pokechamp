@@ -1,0 +1,65 @@
+
+
+Dragapult @ Choice Band  
+Ability: Clear Body  
+Shiny: Yes  
+Tera Type: Ghost  
+EVs: 252 Atk / 4 SpD / 252 Spe  
+Jolly Nature  
+- Dragon Darts  
+- U-turn  
+- Quick Attack  
+- Tera Blast  
+
+Primarina @ Heavy-Duty Boots  
+Ability: Torrent  
+Tera Type: Fairy  
+EVs: 248 HP / 80 SpA / 180 Spe  
+Modest Nature  
+IVs: 0 Atk  
+- Calm Mind  
+- Surf  
+- Moonblast  
+- Psychic Noise  
+
+Iron Crown @ Assault Vest  
+Ability: Quark Drive  
+Tera Type: Fighting  
+EVs: 252 SpA / 4 SpD / 252 Spe  
+Timid Nature  
+IVs: 20 Atk  
+- Future Sight  
+- Tachyon Cutter  
+- Volt Switch  
+- Focus Blast  
+
+Samurott-Hisui @ Heavy-Duty Boots  
+Ability: Sharpness  
+Tera Type: Fire  
+EVs: 252 Atk / 4 SpD / 252 Spe  
+Jolly Nature  
+- Ceaseless Edge  
+- Razor Shell  
+- Knock Off  
+- Encore  
+
+Kingambit @ Leftovers  
+Ability: Supreme Overlord  
+Tera Type: Ghost  
+EVs: 208 HP / 252 Atk / 48 Spe  
+Adamant Nature  
+- Swords Dance  
+- Kowtow Cleave  
+- Sucker Punch  
+- Iron Head  
+
+Landorus-Therian (M) @ Rocky Helmet  
+Ability: Intimidate  
+Tera Type: Water  
+EVs: 252 HP / 252 Def / 4 Spe  
+Bold Nature  
+- Stealth Rock  
+- Earth Power  
+- U-turn  
+- Grass Knot  
+

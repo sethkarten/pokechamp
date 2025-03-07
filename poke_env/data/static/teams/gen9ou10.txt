@@ -1,0 +1,63 @@
+
+
+Ting-Lu @ Leftovers  
+Ability: Vessel of Ruin  
+Tera Type: Water  
+EVs: 252 HP / 24 Def / 228 SpD / 4 Spe  
+Impish Nature  
+- Stealth Rock  
+- Earthquake  
+- Ruination  
+- Whirlwind  
+
+Dragapult @ Heavy-Duty Boots  
+Ability: Infiltrator  
+Tera Type: Dragon  
+EVs: 4 Def / 252 SpA / 252 Spe  
+Timid Nature  
+- Draco Meteor  
+- Hex  
+- Will-O-Wisp  
+- U-turn  
+
+Slowking-Galar @ Heavy-Duty Boots  
+Ability: Regenerator  
+Tera Type: Water  
+EVs: 252 HP / 4 Def / 252 SpD  
+Sassy Nature  
+IVs: 0 Atk  
+- Future Sight  
+- Sludge Bomb  
+- Flamethrower  
+- Chilly Reception  
+
+Kingambit @ Leftovers  
+Ability: Supreme Overlord  
+Tera Type: Dark  
+EVs: 232 HP / 252 Atk / 24 Spe  
+Adamant Nature  
+- Sucker Punch  
+- Swords Dance  
+- Iron Head  
+- Kowtow Cleave  
+
+Gliscor @ Toxic Orb  
+Ability: Poison Heal  
+Tera Type: Fairy  
+EVs: 244 HP / 244 SpD / 20 Spe  
+Jolly Nature  
+- Swords Dance  
+- Earthquake  
+- Knock Off  
+- Protect  
+
+Zamazenta @ Heavy-Duty Boots  
+Ability: Dauntless Shield  
+Tera Type: Fire  
+EVs: 80 HP / 252 Atk / 176 Spe  
+Jolly Nature  
+- Close Combat  
+- Stone Edge  
+- Crunch  
+- Roar  
+

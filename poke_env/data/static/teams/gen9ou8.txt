@@ -1,0 +1,63 @@
+
+
+Skarmory @ Rocky Helmet  
+Ability: Sturdy  
+Tera Type: Dragon  
+EVs: 248 HP / 252 Def / 8 Spe  
+Impish Nature  
+- Whirlwind  
+- Brave Bird  
+- Stealth Rock  
+- Roost  
+
+Ting-Lu @ Heavy-Duty Boots  
+Ability: Vessel of Ruin  
+Tera Type: Ghost  
+EVs: 252 HP / 252 SpD / 4 Spe  
+Careful Nature  
+- Ruination  
+- Earthquake  
+- Whirlwind  
+- Spikes  
+
+Zamazenta @ Heavy-Duty Boots  
+Ability: Dauntless Shield  
+Tera Type: Fire  
+EVs: 252 Atk / 4 SpD / 252 Spe  
+Adamant Nature  
+- Close Combat  
+- Crunch  
+- Heavy Slam  
+- Stone Edge  
+
+Weavile @ Heavy-Duty Boots  
+Ability: Pickpocket  
+Tera Type: Ice  
+EVs: 252 Atk / 4 SpD / 252 Spe  
+Jolly Nature  
+- Triple Axel  
+- Ice Shard  
+- Knock Off  
+- Low Kick  
+
+Kyurem @ Heavy-Duty Boots  
+Ability: Pressure  
+Tera Type: Fairy  
+EVs: 4 Def / 252 SpA / 252 Spe  
+Timid Nature  
+- Scale Shot  
+- Ice Beam  
+- Freeze-Dry  
+- Earth Power  
+
+Slowking-Galar @ Heavy-Duty Boots  
+Ability: Regenerator  
+Tera Type: Water  
+EVs: 252 HP / 4 Def / 252 SpD  
+Sassy Nature  
+IVs: 0 Atk / 0 Spe  
+- Future Sight  
+- Sludge Bomb  
+- Chilly Reception  
+- Toxic  
+

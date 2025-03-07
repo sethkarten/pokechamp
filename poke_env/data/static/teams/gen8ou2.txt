@@ -1,0 +1,54 @@
+Regieleki @ Heavy-Duty Boots  
+Ability: Transistor  
+EVs: 252 SpA / 4 SpD / 252 Spe  
+Timid Nature  
+- Volt Switch  
+- Rapid Spin  
+- Ancient Power  
+- Thunderbolt  
+
+Mew @ Heavy-Duty Boots  
+Ability: Synchronize  
+EVs: 248 HP / 124 SpD / 136 Spe  
+Jolly Nature  
+- Spikes  
+- Knock Off  
+- Taunt  
+- Roost  
+
+Blissey (F) @ Rocky Helmet  
+Ability: Natural Cure  
+EVs: 252 HP / 252 Def / 4 SpD  
+Bold Nature  
+IVs: 0 Atk  
+- Seismic Toss  
+- Soft-Boiled  
+- Toxic  
+- Aromatherapy  
+
+Bisharp @ Choice Band  
+Ability: Defiant  
+EVs: 252 Atk / 4 SpD / 252 Spe  
+Adamant Nature  
+- Knock Off  
+- Sucker Punch  
+- Iron Head  
+- Assurance  
+
+Buzzwole @ Rocky Helmet  
+Ability: Beast Boost  
+EVs: 252 HP / 72 Atk / 184 Def  
+Adamant Nature  
+- Close Combat  
+- Ice Punch  
+- Roost  
+- Leech Life  
+
+Garchomp @ Leftovers  
+Ability: Rough Skin  
+EVs: 252 HP / 112 Def / 88 SpD / 56 Spe  
+Impish Nature  
+- Stealth Rock  
+- Earthquake  
+- Toxic  
+- Protect  

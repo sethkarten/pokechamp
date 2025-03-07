@@ -1,0 +1,63 @@
+
+
+Darkrai @ Expert Belt  
+Ability: Bad Dreams  
+Tera Type: Poison  
+EVs: 252 SpA / 4 SpD / 252 Spe  
+Timid Nature  
+IVs: 0 Atk  
+- Ice Beam  
+- Sludge Bomb  
+- Dark Pulse  
+- Focus Blast  
+
+Kingambit @ Air Balloon  
+Ability: Supreme Overlord  
+Tera Type: Fire  
+EVs: 112 HP / 252 Atk / 144 Spe  
+Adamant Nature  
+- Swords Dance  
+- Sucker Punch  
+- Kowtow Cleave  
+- Iron Head  
+
+Roaring Moon @ Booster Energy  
+Ability: Protosynthesis  
+Tera Type: Flying  
+EVs: 252 Atk / 4 Def / 252 Spe  
+Jolly Nature  
+- Dragon Dance  
+- Acrobatics  
+- Knock Off  
+- Taunt  
+
+Zamazenta @ Leftovers  
+Ability: Dauntless Shield  
+Tera Type: Ghost  
+EVs: 16 HP / 216 Def / 40 SpD / 236 Spe  
+Impish Nature  
+- Iron Defense  
+- Body Press  
+- Heavy Slam  
+- Roar  
+
+Glimmora @ Red Card  
+Ability: Toxic Debris  
+Tera Type: Ghost  
+EVs: 252 SpA / 4 SpD / 252 Spe  
+Timid Nature  
+- Stealth Rock  
+- Mortal Spin  
+- Earth Power  
+- Power Gem  
+
+Enamorus @ Choice Scarf  
+Ability: Contrary  
+Tera Type: Ground  
+EVs: 252 SpA / 4 SpD / 252 Spe  
+Timid Nature  
+IVs: 0 Atk  
+- Moonblast  
+- Earth Power  
+- Mystical Fire  
+- Healing Wish  
