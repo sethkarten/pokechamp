@@ -1,0 +1,66 @@
+
+
+Ribombee @ Focus Sash  
+Ability: Shield Dust  
+Tera Type: Ghost  
+EVs: 8 HP / 136 Def / 196 SpA / 168 Spe  
+Timid Nature  
+IVs: 0 Atk  
+- Sticky Web  
+- Moonblast  
+- Stun Spore  
+- Psychic Noise  
+
+Glimmora @ Power Herb  
+Ability: Toxic Debris  
+Tera Type: Fairy  
+EVs: 16 Def / 240 SpA / 252 Spe  
+Modest Nature  
+IVs: 0 Atk  
+- Sludge Bomb  
+- Meteor Beam  
+- Earth Power  
+- Dazzling Gleam  
+
+Manaphy @ Leftovers  
+Ability: Hydration  
+Tera Type: Fairy  
+EVs: 112 HP / 216 SpA / 180 Spe  
+Modest Nature  
+IVs: 0 Atk  
+- Surf  
+- Stored Power  
+- Acid Armor  
+- Tail Glow  
+
+Zamazenta @ Mirror Herb  
+Ability: Dauntless Shield  
+Tera Type: Fire  
+EVs: 8 HP / 60 Atk / 252 Def / 188 Spe  
+Jolly Nature  
+- Body Press  
+- Iron Head  
+- Stone Edge  
+- Iron Defense  
+
+Gholdengo @ Air Balloon  
+Ability: Good as Gold  
+Tera Type: Fairy  
+EVs: 248 HP / 16 Def / 72 SpA / 172 Spe  
+Modest Nature  
+IVs: 0 Atk  
+- Make It Rain  
+- Hex  
+- Recover  
+- Thunder Wave  
+
+Roaring Moon @ Booster Energy  
+Ability: Protosynthesis  
+Tera Type: Flying  
+EVs: 252 Atk / 4 Def / 252 Spe  
+Adamant Nature  
+- Knock Off  
+- Earthquake  
+- Acrobatics  
+- Dragon Dance  
+

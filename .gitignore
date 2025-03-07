@@ -1,0 +1,9 @@
+# data/
+.idea/*
+.DS_Store
+*.pyc
+*.html
+*.pkl
+*.jsonl
+*.log
+__pycache__

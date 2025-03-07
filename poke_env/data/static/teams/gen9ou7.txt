@@ -1,0 +1,66 @@
+
+
+Ogerpon-Wellspring (F) @ Wellspring Mask  
+Ability: Water Absorb  
+Tera Type: Water  
+EVs: 252 Atk / 4 SpD / 252 Spe  
+Jolly Nature  
+- Swords Dance  
+- Play Rough  
+- Ivy Cudgel  
+- Trailblaze  
+
+Raging Bolt @ Choice Specs  
+Ability: Protosynthesis  
+Tera Type: Fairy  
+EVs: 252 SpA / 252 Spe  
+Modest Nature  
+IVs: 20 Atk  
+- Dragon Pulse  
+- Volt Switch  
+- Draco Meteor  
+- Thunderclap  
+
+Great Tusk @ Rocky Helmet  
+Ability: Protosynthesis  
+Tera Type: Steel  
+EVs: 252 HP / 4 Atk / 252 Spe  
+Jolly Nature  
+- Rapid Spin  
+- Ice Spinner  
+- Headlong Rush  
+- Taunt  
+
+Heatran @ Leftovers  
+Ability: Flash Fire  
+Shiny: Yes  
+Tera Type: Grass  
+EVs: 248 HP / 216 SpD / 44 Spe  
+Calm Nature  
+IVs: 0 Atk  
+- Stealth Rock  
+- Magma Storm  
+- Taunt  
+- Earth Power  
+
+Enamorus @ Choice Scarf  
+Ability: Contrary  
+Tera Type: Ground  
+EVs: 252 SpA / 4 SpD / 252 Spe  
+Timid Nature  
+IVs: 0 Atk  
+- Moonblast  
+- Earth Power  
+- Mystical Fire  
+- Healing Wish  
+
+Kingambit @ Air Balloon  
+Ability: Supreme Overlord  
+Tera Type: Dark  
+EVs: 248 HP / 252 Atk / 8 Spe  
+Adamant Nature  
+- Swords Dance  
+- Kowtow Cleave  
+- Sucker Punch  
+- Iron Head
+

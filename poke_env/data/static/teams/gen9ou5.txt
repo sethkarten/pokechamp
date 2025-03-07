@@ -1,0 +1,62 @@
+Gliscor @ Toxic Orb  
+Ability: Poison Heal  
+Tera Type: Normal  
+EVs: 244 HP / 240 SpD / 24 Spe  
+Careful Nature  
+- Swords Dance  
+- Facade  
+- Earthquake  
+- Protect  
+
+Alomomola @ Red Card  
+Ability: Regenerator  
+Tera Type: Flying  
+EVs: 248 HP / 252 Def / 8 SpD  
+Relaxed Nature  
+IVs: 0 Spe  
+- Wish  
+- Protect  
+- Flip Turn  
+- Acrobatics  
+
+Gholdengo @ Choice Scarf  
+Ability: Good as Gold  
+Tera Type: Fighting  
+EVs: 4 Def / 252 SpA / 252 Spe  
+Timid Nature  
+IVs: 0 Atk  
+- Shadow Ball  
+- Make It Rain  
+- Trick  
+- Focus Blast  
+
+Hoopa-Unbound @ Assault Vest  
+Ability: Magician  
+Tera Type: Fairy  
+EVs: 248 HP / 244 Def / 16 SpA  
+Quiet Nature  
+- Knock Off  
+- Psychic Noise  
+- Thunderbolt  
+- Gunk Shot  
+
+Cinderace @ Heavy-Duty Boots  
+Ability: Libero  
+Tera Type: Fire  
+EVs: 252 Atk / 4 SpD / 252 Spe  
+Jolly Nature  
+- Pyro Ball  
+- Sucker Punch  
+- Will-O-Wisp  
+- Court Change  
+
+Zamazenta @ Leftovers  
+Ability: Dauntless Shield  
+Tera Type: Steel  
+EVs: 104 HP / 236 Def / 168 Spe  
+Jolly Nature  
+- Iron Defense  
+- Body Press  
+- Crunch  
+- Roar  
+

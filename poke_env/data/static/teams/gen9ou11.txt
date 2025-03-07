@@ -1,0 +1,65 @@
+
+
+Gholdengo @ Heavy-Duty Boots  
+Ability: Good as Gold  
+Tera Type: Fairy  
+EVs: 252 HP / 248 Def / 8 Spe  
+Bold Nature  
+IVs: 0 Atk  
+- Focus Blast  
+- Thunder Wave  
+- Hex  
+- Recover  
+
+Ting-Lu @ Heavy-Duty Boots  
+Ability: Vessel of Ruin  
+Tera Type: Water  
+EVs: 252 HP / 4 Def / 252 SpD  
+Careful Nature  
+- Whirlwind  
+- Earthquake  
+- Ruination  
+- Spikes  
+
+Deoxys-Speed @ Heavy-Duty Boots  
+Ability: Pressure  
+Tera Type: Fighting  
+EVs: 200 Atk / 252 SpA / 56 Spe  
+Naive Nature  
+- Knock Off  
+- Ice Beam  
+- Psycho Boost  
+- Superpower  
+
+Garganacl @ Leftovers  
+Ability: Purifying Salt  
+Tera Type: Water  
+EVs: 252 HP / 176 Def / 80 SpD  
+Impish Nature  
+- Salt Cure  
+- Protect  
+- Stealth Rock  
+- Recover  
+
+Ogerpon (F) @ Heavy-Duty Boots  
+Ability: Defiant  
+Tera Type: Grass  
+EVs: 252 Atk / 4 Def / 252 Spe  
+Jolly Nature  
+- Knock Off  
+- Ivy Cudgel  
+- U-turn  
+- Encore  
+
+Gliscor @ Toxic Orb  
+Ability: Poison Heal  
+Tera Type: Water  
+EVs: 244 HP / 12 Def / 252 SpD  
+Careful Nature  
+IVs: 28 Spe  
+- U-turn  
+- Toxic  
+- Earthquake  
+- Protect  
+
+

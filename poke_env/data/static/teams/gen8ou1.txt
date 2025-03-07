@@ -1,0 +1,55 @@
+Dragapult @ Leftovers  
+Ability: Clear Body  
+EVs: 4 HP / 252 Atk / 252 Spe  
+Adamant Nature  
+- Dragon Darts  
+- Dragon Dance  
+- Phantom Force  
+- Sucker Punch  
+
+Rillaboom @ Miracle Seed  
+Ability: Grassy Surge  
+EVs: 252 HP / 252 Atk / 4 Spe  
+Adamant Nature  
+- Drum Beating  
+- Grassy Glide  
+- Darkest Lariat  
+- Drain Punch  
+
+Tornadus-Therian (M) @ Zoom Lens  
+Ability: Regenerator  
+EVs: 4 HP / 252 SpA / 252 Spe  
+Timid Nature  
+IVs: 0 Atk  
+- Hurricane  
+- Heat Wave  
+- Grass Knot  
+- Nasty Plot  
+
+Melmetal @ Choice Band  
+Ability: Iron Fist  
+EVs: 252 HP / 252 Atk / 4 Def  
+Adamant Nature  
+- Double Iron Bash  
+- Darkest Lariat  
+- Body Press  
+- Ice Punch  
+
+Mew @ Leftovers  
+Ability: Synchronize  
+EVs: 252 HP / 128 Def / 128 SpD  
+Jolly Nature  
+- Stealth Rock  
+- Defog  
+- Fake Out  
+- Heal Bell  
+
+Volcarona @ Leftovers  
+Ability: Flame Body  
+EVs: 4 HP / 252 SpA / 252 Spe  
+Timid Nature  
+IVs: 0 Atk  
+- Bug Buzz  
+- Fiery Dance  
+- Quiver Dance  
+- Giga Drain  
