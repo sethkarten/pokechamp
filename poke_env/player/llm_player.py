@@ -43,14 +43,15 @@ class LLMPlayer(Player):
                  _use_strat_prompt=False,
                  prompt_translate: Callable=state_translate,
                  device=0,
-                 llm_backend=None
+                 llm_backend=None,
+                 **kwargs
                  ):
 
         super().__init__(battle_format=battle_format,
                          team=team,
                          save_replays=save_replays,
                          account_configuration=account_configuration,
-                         server_configuration=server_configuration)
+                         server_configuration=server_configuration, **kwargs)
 
         self._reward_buffer: Dict[AbstractBattle, float] = {}
         self._battle_last_action : Dict[AbstractBattle, Dict] = {}
