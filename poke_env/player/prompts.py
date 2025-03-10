@@ -583,7 +583,7 @@ def create_system_prompt(sim: LocalSim, forced_switch: bool=False):
     gen = int(battle_format[3])
     if forced_switch:
         system_prompt = (
-                f"You are an expert Generation {gen} Pokémon player in a game of {battle_format} on Pokémon Showdown. Your {battle.active_pokemon.species} just fainted. Choose a suitable pokemon to continue the battle. Here are some tips:"
+                f"You are an expert Generation {gen} Pokémon player in a game of {battle_format} on Pokémon Showdown. Your {sim.battle.active_pokemon.species} just fainted. Choose a suitable pokemon to continue the battle. Here are some tips:"
                 " Compare the speeds of your pokemon to the opposing pokemon, which determines who take the move first."
                 " Consider the defense state and type-resistance of your pokemon when its speed is lower than the opposing pokemon."
                 " Consider the move-type advantage of your pokemon pokemon when its speed is higher than the opposing pokemon."
@@ -1105,7 +1105,6 @@ def state_translate(sim: LocalSim,
         state_prompt = battle_prompt + opponent_prompt + active_pokemon_prompt + move_prompt + switch_prompt
         state_action_prompt = action_prompt + action_prompt_move + action_prompt_switch
 
-        breakpoint()
         return system_prompt, state_prompt, state_action_prompt
     
 def get_opp_move_summary(pokemon: Pokemon, seen_moves: list[Move], potential_moves: list[Move], battle: Battle, sim: LocalSim, is_active: bool=False):
