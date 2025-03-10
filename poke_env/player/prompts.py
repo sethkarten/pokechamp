@@ -577,6 +577,37 @@ def get_micro_strat(sim: LocalSim,
             
     return micro_prompt
 
+
+def create_system_prompt(sim: LocalSim, forced_switch: bool=False):
+    _, battle_format, _ = sim.battle.battle_tag.split("-")
+    gen = int(battle_format[3])
+    if forced_switch:
+        system_prompt = (
+                f"You are an expert Generation {gen} Pokémon player in a game of {battle_format} on Pokémon Showdown. Your {battle.active_pokemon.species} just fainted. Choose a suitable pokemon to continue the battle. Here are some tips:"
+                " Compare the speeds of your pokemon to the opposing pokemon, which determines who take the move first."
+                " Consider the defense state and type-resistance of your pokemon when its speed is lower than the opposing pokemon."
+                " Consider the move-type advantage of your pokemon pokemon when its speed is higher than the opposing pokemon."
+            )
+
+    else: # take a move or active switch
+
+        system_prompt = (
+            f"You are an expert Generation {gen} Pokémon player in a game of {battle_format} on Pokémon Showdown. You can choose to take a move or switch in another pokemon. Here are some battle tips:"
+            " Use status-boosting moves like swordsdance, calmmind, dragondance, nastyplot strategically. The boosting will be reset when pokemon switch out."
+            " Set traps like stickyweb, spikes, toxicspikes, stealthrock strategically."
+            " When face to a opponent is boosting or has already boosted its attack/special attack/speed, knock it out as soon as possible, even sacrificing your pokemon."
+            " if choose to switch, you forfeit to take a move this turn and the opposing pokemon will definitely move first. Therefore, you should pay attention to speed, type-resistance and defense of your switch-in pokemon to bear the damage from the opposing pokemon."
+            " And If the switch-in pokemon has a slower speed then the opposing pokemon, the opposing pokemon will move twice continuously."
+            )
+    
+    system_prompt += (
+        f"\nYou will receive hints about damage calculations, type effectiveness, and other statistics."
+        f" Treat this information as a suggestion, but be aware that the mechanics of each generation of Pokémon are slightly different."
+        f" Ultimately, you should rely on your knowledge of Generation {gen} to make the best decision."
+    )
+    return system_prompt
+
+
 def get_avail_actions(sim: LocalSim,
                       battle: Battle
                       ) -> str:
@@ -693,28 +724,15 @@ def prompt_translate(sim: LocalSim,
     action_prompt = f"Recall the information about each of {battle.active_pokemon.species}'s move actions and available switch actions. Which move or switch will KO the opponent's pokemon in the fewest turns in order to win against the opponent?\n"
      
     if battle.active_pokemon.fainted: # passive switching
-        
-        system_prompt = (
-            f"You are a pokemon battler that targets to win the pokemon battle. Your {battle.active_pokemon.species} just fainted. Choose a suitable pokemon to continue the battle. Here are some tips:"
-            " Compare the speeds of your pokemon to the opposing pokemon, which determines who take the move first."
-            " Consider the defense state and type-resistance of your pokemon when its speed is lower than the opposing pokemon."
-            " Consider the move-type advantage of your pokemon pokemon when its speed is higher than the opposing pokemon.")
 
+        system_prompt = create_system_prompt(sim, forced_switch=True)
         system_prompt = system_prompt + macro_prompt
         state_prompt = battle_prompt + micro_prompt + gimmick_prompt
         state_action_prompt = action_prompt + gimmick_motivation_prompt + action_prompt_switch
 
     else: # take a move or active switch
         
-        system_prompt = (
-            "You are a pokemon battler that targets to win the pokemon battle. You can choose to take a move or switch in another pokemon. Here are some battle tips:"
-            " Use status-boosting moves like swordsdance, calmmind, dragondance, nastyplot strategically. The boosting will be reset when pokemon switch out."
-            " Set traps like stickyweb, spikes, toxicspikes, stealthrock strategically."
-            " When face to a opponent is boosting or has already boosted its attack/special attack/speed, knock it out as soon as possible, even sacrificing your pokemon."
-            " if choose to switch, you forfeit to take a move this turn and the opposing pokemon will definitely move first. Therefore, you should pay attention to speed, type-resistance and defense of your switch-in pokemon to bear the damage from the opposing pokemon."
-            " And If the switch-in pokemon has a slower speed then the opposing pokemon, the opposing pokemon will move twice continuously."
-            )
-
+        system_prompt = create_system_prompt(sim, forced_switch=False)
         system_prompt = system_prompt + macro_prompt
 
         # state_prompt = battle_prompt + micro_prompt + gimmick_prompt
@@ -740,7 +758,6 @@ def prompt_translate(sim: LocalSim,
         # #input()
 
     return system_prompt, state_prompt, state_action_prompt
-
 
 
 
@@ -1074,12 +1091,7 @@ def state_translate(sim: LocalSim,
 
     if battle.active_pokemon.fainted: # passive switching
 
-        system_prompt = (
-            f"You are a pokemon battler that targets to win the pokemon battle. Your {battle.active_pokemon.species} just fainted. Choose a suitable pokemon to continue the battle. Here are some tips:"
-            " Compare the speeds of your pokemon to the opposing pokemon, which determines who take the move first."
-            " Consider the defense state and type-resistance of your pokemon when its speed is lower than the opposing pokemon."
-            " Consider the move-type advantage of your pokemon pokemon when its speed is higher than the opposing pokemon.")
-
+        system_prompt = create_system_prompt(sim, forced_switch=True)
         state_prompt = battle_prompt + opponent_prompt + switch_prompt
         state_action_prompt = action_prompt + action_prompt_switch
 
@@ -1087,20 +1099,13 @@ def state_translate(sim: LocalSim,
 
     else: # take a move or active switch
 
-        system_prompt = (
-            "You are a pokemon battler that targets to win the pokemon battle. You can choose to take a move or switch in another pokemon. Here are some battle tips:"
-            " Use status-boosting moves like swordsdance, calmmind, dragondance, nastyplot strategically. The boosting will be reset when pokemon switch out."
-            " Set traps like stickyweb, spikes, toxicspikes, stealthrock strategically."
-            " When face to a opponent is boosting or has already boosted its attack/special attack/speed, knock it out as soon as possible, even sacrificing your pokemon."
-            " if choose to switch, you forfeit to take a move this turn and the opposing pokemon will definitely move first. Therefore, you should pay attention to speed, type-resistance and defense of your switch-in pokemon to bear the damage from the opposing pokemon."
-            " And If the switch-in pokemon has a slower speed then the opposing pokemon, the opposing pokemon will move twice continuously."
-            )
-
+        system_prompt = create_system_prompt(sim, forced_switch=False)
         system_prompt = system_prompt + sim.strategy
 
         state_prompt = battle_prompt + opponent_prompt + active_pokemon_prompt + move_prompt + switch_prompt
         state_action_prompt = action_prompt + action_prompt_move + action_prompt_switch
 
+        breakpoint()
         return system_prompt, state_prompt, state_action_prompt
     
 def get_opp_move_summary(pokemon: Pokemon, seen_moves: list[Move], potential_moves: list[Move], battle: Battle, sim: LocalSim, is_active: bool=False):
@@ -1574,29 +1579,13 @@ def state_translate2(sim: LocalSim,
 
     if battle.active_pokemon.fainted: # passive switching
 
-        system_prompt = (
-            f"You are a pokemon battler that targets to win the pokemon battle. Your {battle.active_pokemon.species} just fainted. Choose a suitable pokemon to continue the battle. Here are some tips:"
-            " Compare the speeds of your pokemon to the opposing pokemon, which determines who take the move first."
-            " Consider the defense state and type-resistance of your pokemon when its speed is lower than the opposing pokemon."
-            " Consider the move-type advantage of your pokemon pokemon when its speed is higher than the opposing pokemon."
-            f" Player elo is {player_elo}. Player is P2. Opponent elo is {opponent_elo}. Opponent is P1.\n"
-            )
-
+        system_prompt = create_system_prompt(sim, forced_switch=True)
         state_prompt = battle_prompt + opponent_prompt + switch_prompt
         state_action_prompt = action_prompt + action_prompt_switch
 
     else: # take a move or active switch
 
-        system_prompt = (
-            "You are a pokemon battler that targets to win the pokemon battle. You can choose to take a move or switch in another pokemon. Here are some battle tips:"
-            " Use status-boosting moves like swordsdance, calmmind, dragondance, nastyplot strategically. The boosting will be reset when pokemon switch out."
-            " Set traps like stickyweb, spikes, toxicspikes, stealthrock strategically."
-            " When face to a opponent is boosting or has already boosted its attack/special attack/speed, knock it out as soon as possible, even sacrificing your pokemon."
-            " if choose to switch, you forfeit to take a move this turn and the opposing pokemon will definitely move first. Therefore, you should pay attention to speed, type-resistance and defense of your switch-in pokemon to bear the damage from the opposing pokemon."
-            " And If the switch-in pokemon has a slower speed then the opposing pokemon, the opposing pokemon will move twice continuously."
-            f" Player elo is {player_elo}. Player is P2. Opponent elo is {opponent_elo}. Opponent is P1.\n"
-            )
-
+        system_prompt = create_system_prompt(sim, forced_switch=False)
         system_prompt = system_prompt + sim.strategy
 
         state_prompt = battle_prompt + opponent_prompt + active_pokemon_prompt + move_prompt + switch_prompt
