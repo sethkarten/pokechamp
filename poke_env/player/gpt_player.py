@@ -1,7 +1,11 @@
-from openai import OpenAI
 from time import sleep
-from openai import RateLimitError
 import os
+
+from openai import OpenAI
+from openai import RateLimitError
+
+
+
 
 class GPTPlayer():
     def __init__(self, api_key=""):
@@ -19,7 +23,7 @@ class GPTPlayer():
             if json_format:
                 response = client.chat.completions.create(
                     response_format={"type": "json_object"},
-                    model='gpt-4o',
+                    model=model,
                     messages=[
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": user_prompt}
