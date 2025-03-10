@@ -1,6 +1,7 @@
 from __future__ import annotations
 import os
 
+import copy
 import json
 from typing import Any, Dict, List, Optional, Tuple, Union
 
@@ -1111,3 +1112,18 @@ class Pokemon:
         :rtype: float
         """
         return self._weightkg
+    
+    def __deepcopy__(self, memo):
+            cls = self.__class__
+            new_instance = cls.__new__(cls)
+            memo[id(self)] = new_instance  # Avoid infinite recursion
+
+            for slot in self.__slots__:
+                if hasattr(self, slot):
+                    value = getattr(self, slot)
+                    if slot in ["_sets"]:  # Shallow copy
+                        setattr(new_instance, slot, value)
+                    else:  # Deep copy everything else
+                        setattr(new_instance, slot, copy.deepcopy(value, memo))
+
+            return new_instance
