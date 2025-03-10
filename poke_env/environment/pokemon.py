@@ -1,11 +1,12 @@
 from __future__ import annotations
+import os
 
 import json
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 
-from poke_env.data import GenData, to_id_str
+from poke_env.data import GenData, to_id_str, DATA_PATH
 from poke_env.environment.effect import Effect
 from poke_env.environment.move import SPECIAL_MOVES, Move
 from poke_env.environment.pokemon_gender import PokemonGender
@@ -111,7 +112,8 @@ class Pokemon:
         self._status: Optional[Status] = None
         self._status_counter: int = 0
 
-        with open('poke_env/data/static/gen9/ou/sets_1825.json', 'r') as f:
+        #with open('poke_env/data/static/gen9/ou/sets_1825.json', 'r') as f:
+        with open(os.path.join(DATA_PATH, 'static', 'guess_sets', f'gen{self._data.gen}ou.json'), 'r') as f:
             sets = json.load(f)
         self._sets = sets
         
