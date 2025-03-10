@@ -645,17 +645,11 @@ def get_gimmick_prompt(sim: LocalSim, battle: Battle):
 
     if gen == 8:
         if battle.can_dynamax or battle.opponent_can_dynamax:
-            # gimmick_prompt = '\'dynamax\' temporarily increases a Pokemon\'s max hit points as well as the damage dealt by its moves for 3 turns. You can only \'dynamax\' one Pokemon per battle. You can choose to \'dynamax\' and use another move in this same turn.'
-            # gimmick_prompt += 'If you choose to \'dyanamax\' this turn, please structure your response as [<move_name>, \'dynamax\'], where <move_name> is your intended move.\n'
             gimmick_prompt = '\'dynamax\' temporarily increases a Pokemon\'s max hit points as well as the damage dealt by its moves for 3 turns. You can only \'dynamax\' one Pokemon per battle. You can choose to \'dynamax\' and use another move in the same turn.\n'
-            # gimmick_prompt += 'If you choose to \'dyanamax\' this turn, please structure your response as [<move_name>, \'dynamax\'], where <move_name> is your intended move.\n'
 
     elif gen == 9:
         if battle.can_tera or battle.opponent_can_tera:
-            # gimmick_prompt = '\'terastallize\' changes a Pokemon\'s defensive typing to solely their tera type, meaning their resistances and weaknesses can change. It also gives them a boost to moves of their new typing. You can only \'terastallize\' one Pokemon per battle, and it will last on that Pokemon until they are KO\'d or the battle ends. You can choose to \'terastallize\' and use another move in this same turn.'
-            # gimmick_prompt += 'If you choose to \'terastallize\' this turn, please structure your response as [<move_name>, \'terastallize\'], where <move_name> is your intended move.\n'
             gimmick_prompt = '\'terastallize\' changes a Pokemon\'s defensive typing to solely their tera type, meaning their resistances and weaknesses can change. It also gives them a boost to moves of their new typing. You can only \'terastallize\' one Pokemon per battle, and it will last on that Pokemon until they are KO\'d or the battle ends. You can choose to \'terastallize\' and use another move in the same turn.\n'
-            # gimmick_prompt += 'If you choose to \'terastallize\' this turn, please structure your response as [<move_name>, \'terastallize\'], where <move_name> is your intended move.\n'
 
     return gimmick_prompt
 
@@ -666,14 +660,10 @@ def get_gimmick_motivation(sim: LocalSim, battle: Battle):
 
 
     if gen == 8:
-        # if battle._dynamax_intent and not battle.active_pokemon.is_dynamaxed:
-        #     gimmick_motiviation_prompt += 'You are about to \'dynamax\' this turn, you should choose a move with this in mind.\n'
-
         if battle.can_dynamax:
             gimmick_motiviation_prompt += "You are able to use [\'dynamax\'] this turn as well.\n"
 
         if sim._should_dynamax(battle):
-            # gimmick_motiviation_prompt += "You are able to use [\'dynamax\'] this turn as well. It is recommended you choose \'dynamax\' this turn as your move over the other moves listed.\n"
             gimmick_motiviation_prompt += "It is recommended you choose to \'dynamax\' this turn paired with a move from your available moves.\n"
             
         elif battle.active_pokemon.is_dynamaxed:
@@ -689,14 +679,10 @@ def get_gimmick_motivation(sim: LocalSim, battle: Battle):
             gimmick_motiviation_prompt += f"Opponent is \'dynamaxed\' for {sim.battle.opponent_dynamax_turns_left} more turns.\n"
 
     elif gen == 9:
-        # if battle._tera_intent and not battle.active_pokemon.terastallized:
-        #     gimmick_motiviation_prompt += 'You are about to \'terastallize\', you should choose your next move with the knowledge that you will be a different type.\n'
-
         if battle.can_tera:
             gimmick_motiviation_prompt += "You are able to use [\'terastallize\'] this turn as well.\n"
 
         if sim._should_terastallize(battle):
-            # gimmick_motiviation_prompt += "You are able to use [\'terastallize\'] this turn as well. It is recommended you choose \'terastallize\' this turn as your move over the other moves listed.\n"
             gimmick_motiviation_prompt += "It is recommended you choose to \'terastallize\' this turn paired with a move from your available moves.\n"
 
 
@@ -708,9 +694,7 @@ def prompt_translate(sim: LocalSim,
                     ) -> str:
     battle_prompt = get_turn_summary(sim, battle, n_turn=16)
     macro_prompt = get_macro_strat(sim, battle)
-    # print(f'macro prompt:\n{macro_prompt}')
     micro_prompt = get_micro_strat(sim, battle)
-    # print(f'micro prompt:\n{micro_prompt}')
     action_prompt_move, action_prompt_switch = get_avail_actions(sim, battle)
 
     state_prompt = get_current_status(sim, battle)
@@ -718,9 +702,6 @@ def prompt_translate(sim: LocalSim,
     gimmick_prompt = get_gimmick_prompt(sim, battle)
 
     gimmick_motivation_prompt = get_gimmick_motivation(sim, battle)
-    # action_prompt_list = get_avail_actions_list(sim, battle)
-    # print(f'avail actions prompt:\n{action_prompt_move}\n{action_prompt_switch}')
-    # action_prompt = "Choose the best action to KO the opponent's pokemon in the least turns.\n"
     action_prompt = f"Recall the information about each of {battle.active_pokemon.species}'s move actions and available switch actions. Which move or switch will KO the opponent's pokemon in the fewest turns in order to win against the opponent?\n"
      
     if battle.active_pokemon.fainted: # passive switching
@@ -734,28 +715,11 @@ def prompt_translate(sim: LocalSim,
         
         system_prompt = create_system_prompt(sim, forced_switch=False)
         system_prompt = system_prompt + macro_prompt
-
-        # state_prompt = battle_prompt + micro_prompt + gimmick_prompt
-        # state_action_prompt = action_prompt + gimmick_motivation_prompt + action_prompt_switch + action_prompt_move
-
         state_prompt = battle_prompt + micro_prompt + gimmick_prompt + state_prompt
-        # state_action_prompt = action_prompt + action_prompt_switch + action_prompt_move
         state_action_prompt = action_prompt + gimmick_motivation_prompt + action_prompt_switch + action_prompt_move
 
-    # print(system_prompt)
-    # print(state_prompt)
-    # print(state_action_prompt)
-    # input()
-    
-
-    # state_action_prompt = action_prompt + action_prompt_list
     if return_actions:
         return system_prompt, state_prompt, action_prompt, action_prompt_switch, action_prompt_move
-
-        # print(system_prompt)
-        # print(state_prompt)
-        # print(state_action_prompt)
-        # #input()
 
     return system_prompt, state_prompt, state_action_prompt
 
@@ -1264,34 +1228,7 @@ def state_translate2(sim: LocalSim,
             type_2 = battle.opponent_active_pokemon.type_2.name
             opponent_type = opponent_type + " and " + type_2.capitalize()
             opponent_type_list.append(type_2)
-    # species = battle.opponent_active_pokemon.species
-    # if species == 'polteageistantique':
-    #     species = 'polteageist'
-    # if battle.opponent_active_pokemon.ability:
-    #     opponent_ability = battle.opponent_active_pokemon.ability
-    # elif species in sim.pokemon_ability_dict:
-    #     opponent_ability = sim.pokemon_ability_dict[species][0]
-    # else:
-    #     opponent_ability = ""
 
-    # if opponent_ability:
-    #     try:
-    #         ability_name = sim.ability_effect[opponent_ability]["name"]
-    #         ability_effect = sim.ability_effect[opponent_ability]["effect"]
-    #         opponent_ability = f"{ability_name}({ability_effect})"
-    #     except:
-    #         pass
-
-    # opponent_prompt = (
-    #         f"Opposing active pokemon:{battle.opponent_active_pokemon.species},Type:{opponent_type},HP:{opponent_hp_fraction}%" +
-    #         (f"Status:{sim.check_status(opponent_status)}," if sim.check_status(opponent_status) else "") +
-    #         (f"Attack:{opponent_stats['atk']}," if opponent_boosts['atk']==0 else f"Attack:{round(opponent_stats['atk'] * sim.boost_multiplier('atk', opponent_boosts['atk']))}({opponent_boosts['atk']} stage boosted),") +
-    #         (f"Defense:{opponent_stats['def']}," if opponent_boosts['def']==0 else f"Defense:{round(opponent_stats['def'] * sim.boost_multiplier('def', opponent_boosts['def']))}({opponent_boosts['def']} stage boosted),") +
-    #         (f"Special attack:{opponent_stats['spa']}," if opponent_boosts['spa']==0 else f"Special attack:{round(opponent_stats['spa'] * sim.boost_multiplier('spa', opponent_boosts['spa']))}({opponent_boosts['spa']} stage boosted),") +
-    #         (f"Special defense:{opponent_stats['spd']}," if opponent_boosts['spd']==0 else f"Special defense:{round(opponent_stats['spd'] * sim.boost_multiplier('spd', opponent_boosts['spd']))}({opponent_boosts['spd']} stage boosted),") +
-    #         (f"Speed:{opponent_stats['spe']}," if opponent_boosts['spe'] == 0 else f"Speed:{round(opponent_stats['spe'] * sim.boost_multiplier('spe', opponent_boosts['spe']))}({opponent_boosts['spe']} stage boosted),") +
-    #         (f"Ability:{opponent_ability}" if opponent_ability else "")
-    # )
     opponent_speed = round(opponent_stats['spe'] * sim.boost_multiplier('spe', opponent_boosts['spe']))
 
     team_move_type = []
@@ -1318,50 +1255,6 @@ def state_translate2(sim: LocalSim,
     if opponent_move_type_damage_prompt:
         opponent_prompt = opponent_prompt + opponent_move_type_damage_prompt + "\n"
 
-    # Opponent active pokemon move
-    # opponent_move_prompt = ""
-    # print('ACTIVE OPPONENT POKEMON FOUND', battle.opponent_active_pokemon, battle.opponent_active_pokemon.moves)
-    # if battle.opponent_active_pokemon.moves:
-    #     for move_id, opponent_move in battle.opponent_active_pokemon.moves.items():
-    #         if opponent_move.base_power == 0:
-    #             opponent_move_prompt += f"[{opponent_move.id},{opponent_move.type.name.capitalize()}],"
-    #             # continue # only count attack move
-    #         else:
-    #             if opponent_move.category.name == "SPECIAL":
-    #                 opponent_spa = opponent_stats['spa'] * sim.boost_multiplier('spa', opponent_boosts['spa'])
-    #                 active_spd = active_stats['spd'] * sim.boost_multiplier('spd', active_boosts['spd'])
-    #                 power = round(opponent_spa / active_spd * opponent_move.base_power)
-
-    #             elif opponent_move.category.name == "PHYSICAL":
-    #                 opponent_atk = opponent_stats['atk'] * sim.boost_multiplier('atk', opponent_boosts['atk'])
-    #                 active_def = active_stats['atk'] * sim.boost_multiplier('atk', active_boosts['atk'])
-    #                 power = round(opponent_atk/active_def * opponent_move.base_power)
-    #             else:
-    #                 power = 0
-
-    #             opponent_move_prompt += f"[{opponent_move.id},{opponent_move.type.name.capitalize()},Power:{power}],"
-    #             opponent_type_list.append(opponent_move.type.name)
-
-    # if opponent_move_prompt:
-    #     opponent_prompt = opponent_prompt + f"{battle.opponent_active_pokemon.species} used moves:" + opponent_move_prompt
-
-    # possible_move_prompt = ""
-    # try:
-    #     if species in sim.pokemon_move_dict:
-    #         possible_move_list = list(sim.pokemon_move_dict[species].values())
-    #         # possible_move_list.sort(key=lambda x: x[3], reverse=True)
-    #         for move in possible_move_list:
-    #             # if move[2]>0:
-    #             possible_move_prompt = possible_move_prompt + f"[{move[0]},{move[1].lower()},Power:{move[2]}],"
-    #             opponent_type_list.append(move[1].upper())
-    #     else:
-    #         possible_move_prompt = ""
-    # except:
-    #     possible_move_prompt = ""
-
-    # if possible_move_prompt:
-    #     opponent_prompt = opponent_prompt + f"{battle.opponent_active_pokemon.species}'s all the possible attacks:" + possible_move_prompt
-        
     # opponent possible switches
     opponent_prompt += f"\nOpponent has {opponent_unfainted_num} pokemons left.\n"
     opponent_prompt += 'Seen opponent pokemon:\n'
@@ -1549,7 +1442,6 @@ def state_translate2(sim: LocalSim,
                     damage_multiplier = "1"
 
                 switch_move_prompt += f"[{move.id},{move.type.name.capitalize()},{damage_multiplier}x damage],"
-        # print(switch_move_prompt)
         if stats['spe'] < opponent_speed:
             speed_prompt = f"(slower than {battle.opponent_active_pokemon.species})."
         else:
@@ -1561,7 +1453,6 @@ def state_translate2(sim: LocalSim,
                     f"Attack:{stats['atk']},Defense:{stats['def']},Special attack:{stats['spa']},Special defense:{stats['spd']},Speed:{stats['spe']}"
                     + speed_prompt
                     + switch_move_prompt)
-        # print(switch_prompt)
         pokemon_move_type_damage_prompt = move_type_damage_wrapper(pokemon, sim.gen.type_chart, opponent_type_list) # for defense
 
         if pokemon_move_type_damage_prompt:
