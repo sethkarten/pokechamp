@@ -8,13 +8,13 @@ from poke_env.player.llm_player import LLMPlayer
 from poke_env.ps_client.account_configuration import AccountConfiguration
 from poke_env.ps_client.server_configuration import ShowdownServerConfiguration, LocalhostServerConfiguration
 from poke_env.teambuilder import Teambuilder
+from poke_env.data import DATA_PATH
 
 from poke_env.player.prompts import prompt_translate
 
 def load_random_team(battle_format: str) -> str:
     battle_format = battle_format.lower()
-    path = os.path.join(os.path.dirname(__file__), "..", "data", "static", "teams", f"{battle_format}_sample_teams")
-    print(path)
+    path = os.path.join(DATA_PATH, "static", "teams", f"{battle_format}_sample_teams")
     if not os.path.exists(path):
         raise ValueError(
             f"Cannot locate valid team directory for format {battle_format}"
@@ -31,7 +31,7 @@ class UniformRandomTeambuilder(Teambuilder):
 
     def yield_team(self):
         team = load_random_team(self.battle_format)
-        with open(os.path.join(team), "r") as f:
+        with open(os.path.join(team), "r", encoding="utf-8") as f:
             team_data = f.read()
         self.team_name = os.path.basename(team)
         return self.join_team(self.parse_showdown_team(team_data))
