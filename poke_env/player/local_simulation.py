@@ -1,11 +1,13 @@
 import json
 import sys
 from time import sleep
+import os
 from typing import Callable, Dict, List
-import numpy as np
 from copy import deepcopy
 
 import orjson
+import numpy as np
+
 
 from poke_env.data.gen_data import GenData
 from poke_env.environment.battle import Battle
@@ -17,6 +19,7 @@ from poke_env.environment.status import Status
 from poke_env.player.battle_order import BattleOrder
 from poke_env.player.gpt_player import GPTPlayer
 from poke_env.player.llama_player import LLAMAPlayer
+from poke_env.data import DATA_PATH
 
 DEBUG = False
 
@@ -145,7 +148,9 @@ class LocalSim():
             file = f'poke_env/data/static/gen9/ou/sets_1000.json'
             with open(file, 'r') as f:
                 self.moves_set = orjson.loads(f.read())
-
+        else:
+            with open(os.path.join(DATA_PATH, "static", "guess_sets", f"{format}.json"), 'r') as f:
+                self.moves_set = orjson.loads(f.read())
 
     def get_llm_system_prompt(self, _format: str, llm: GPTPlayer | LLAMAPlayer = None, team_str: str=None, model: str='gpt-4o'):
         # sleep to make sure server has sent pokemon team information first
@@ -590,16 +595,11 @@ class LocalSim():
         # get possible moves for current pokemon
         species = mon.species
         possible_moves = []
-        if self.format == 'gen9ou':
-            try:
-                possible_moves = [move_set['name'].lower().replace(' ', '').replace('-','') for move_set in self.moves_set[species]['moves']]
-            except:
-                if species in self.pokemon_move_dict:
-                    possible_moves = [move[0] for move in self.pokemon_move_dict[species].values()]
-        else:
+        try:
+            possible_moves = [move_set['name'].lower().replace(' ', '').replace('-','') for move_set in self.moves_set[species]['moves']]
+        except:
             if species in self.pokemon_move_dict:
                 possible_moves = [move[0] for move in self.pokemon_move_dict[species].values()]
-                # possible_moves = self.pokemon_move_dict[species].keys()
         if return_separate:
             return opponent_moves, possible_moves
         
