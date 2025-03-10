@@ -1037,9 +1037,11 @@ class Pokemon:
                 'Serious': [],
                 'Timid': ['spe', 'atk'],
             }
-            buff, nerf = nature_boosts[nature]
-            new_stats[buff] = math.floor(1.1*new_stats[buff])
-            new_stats[nerf] = math.floor(0.9*new_stats[nerf])
+            stat_edits = nature_boosts[nature]
+            if stat_edits:
+                buff, nerf = stat_edits
+                new_stats[buff] = math.floor(1.1*new_stats[buff])
+                new_stats[nerf] = math.floor(0.9*new_stats[nerf])
         
         new_stats = {k: int(v) for k, v in new_stats.items()}
         return new_stats
