@@ -15,8 +15,11 @@ async def main(args):
                             PASSWORD=args.PASSWORD)
     await player.ladder(args.n_challenges)
     win_loss = [b.won for b in player.battles.values()]
+    wins = [b for b in win_loss if b is not None and b > 0]
+    losses = [b for b in win_loss if b is not None and b <= 0]
+    ties = [b for b in win_loss if b is None]
     rating = [b.rating for b in player.battles.values()]
-    print(f"Win Rate: {sum(win_loss) / len(win_loss)}")
+    print(f"Win-Loss-Tie: {len(wins)}-{len(losses)}-{len(ties)}")
     print(f"Rating History : {rating}")
 
 

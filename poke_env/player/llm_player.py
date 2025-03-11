@@ -263,6 +263,7 @@ class LLMPlayer(Player):
                                             actions=actions)
 
                 # load when llm does heavylifting for parsing
+                print(f"LLM io output: {llm_output}")
                 llm_action_json = json.loads(llm_output)
                 next_action = None
 
