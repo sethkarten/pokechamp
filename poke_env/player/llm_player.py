@@ -263,7 +263,7 @@ class LLMPlayer(Player):
                                             actions=actions)
 
                 # load when llm does heavylifting for parsing
-                print(f"LLM io output: {llm_output}")
+                # print(f"LLM io output: {llm_output}")
                 llm_action_json = json.loads(llm_output)
                 next_action = None
 
@@ -518,30 +518,30 @@ class LLMPlayer(Player):
                     if dmg_calc_turns <= opp_turns:
                         try:
                             # ask LLM to use heuristic tool or minimax search
-                            tool_prompt = '''Based on the current battle state, evaluate whether to use the damage calculator tool or the minimax tree search method. Consider the following factors:
+                            tool_prompt = '''Based on the current battle state, evaluate whether to use the damage calculator tool or the minimax tree search method. Consider the following factors:\n\n
 
-                                1. Damage calculator advantages:
-                                - Quick and efficient for finding optimal damaging moves
-                                - Useful when a clear type advantage or high-power move is available
-                                - Effective when the opponent's is not switching and current pokemon is likely to KO opponent
+                                1. Damage calculator advantages:\n
+                                - Quick and efficient for finding optimal damaging moves\n
+                                - Useful when a clear type advantage or high-power move is available\n
+                                - Effective when the opponent's is not switching and current pokemon is likely to KO opponent\n\n
 
-                                2. Minimax tree search advantages:
-                                - Can model opponent behavior and predict future moves
-                                - Useful in complex situations with multiple viable options
-                                - Effective when long-term strategy is crucial
+                                2. Minimax tree search advantages:\n
+                                - Can model opponent behavior and predict future moves\n
+                                - Useful in complex situations with multiple viable options\n
+                                - Effective when long-term strategy is crucial\n\n
 
-                                3. Current battle state:
-                                - Remaining Pokémon on each side
-                                - Health of active Pokémon
-                                - Type matchups
-                                - Available moves and their effects
-                                - Presence of status conditions or field effects
+                                3. Current battle state:\n
+                                - Remaining Pokémon on each side\n
+                                - Health of active Pokémon\n
+                                - Type matchups\n
+                                - Available moves and their effects\n
+                                - Presence of status conditions or field effects\n\n
 
-                                4. Uncertainty level:
-                                - How predictable is the opponent's next move?
-                                - Are there multiple equally viable options for your next move?
+                                4. Uncertainty level:\n
+                                - How predictable is the opponent's next move?\n
+                                - Are there multiple equally viable options for your next move?\n\n
 
-                                Evaluate these factors and decide which method would be more beneficial in the current situation. Output your choice in the following JSON format:
+                                Evaluate these factors and decide which method would be more beneficial in the current situation. Output your choice in the following JSON format:\n
 
                                 {"choice":"damage calculator"} or {"choice":"minimax"}'''
 

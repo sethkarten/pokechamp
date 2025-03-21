@@ -22,7 +22,7 @@ parser.add_argument("--opponent_device", type=int, default=0)
 
 # Shared arguments
 parser.add_argument("--temperature", type=float, default=0.3)
-parser.add_argument("--battle_format", default="gen9ou", choices=["gen8randombattle", "gen8ou", "gen9ou", "gen9randombattle"])
+parser.add_argument("--battle_format", default="gen9ou", choices=["gen8randombattle", "gen8ou", "gen9ou", "gen9randombattle",  "gen4ou"])
 parser.add_argument("--log_dir", type=str, default="./battle_log/one_vs_one")
 
 args = parser.parse_args()
@@ -41,15 +41,15 @@ async def main():
                             args.opponent_prompt_algo, 
                             args.opponent_name, 
                             device=args.opponent_device,
-                            PNUMBER1=PNUMBER1,  # for name uniqueness locally
+                            PNUMBER1=PNUMBER1+'p2',  # for name uniqueness locally
                             battle_format=args.battle_format)
 
     if not 'random' in args.battle_format:
-        player.update_team(load_random_team())
-        opponent.update_team(load_random_team())
+        player.update_team(load_random_team(args.battle_format))
+        opponent.update_team(load_random_team(args.battle_format))
 
     # play against bot for five battles
-    N = 5
+    N = 10
     pbar = tqdm(total=N)
     for i in range(N):
         x = np.random.randint(0, 100)
@@ -58,8 +58,8 @@ async def main():
         else:
             await opponent.battle_against(player, n_battles=1)
         if not 'random' in args.battle_format:
-            player.update_team(load_random_team())
-            opponent.update_team(load_random_team())
+            player.update_team(load_random_team(args.battle_format))
+            opponent.update_team(load_random_team(args.battle_format))
         pbar.set_description(f"{player.win_rate*100:.2f}%")
         pbar.update(1)
     print(f'player winrate: {player.win_rate*100}')
