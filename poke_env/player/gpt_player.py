@@ -20,7 +20,7 @@ class GPTPlayer():
         client = OpenAI(api_key=self.api_key)
         # client = AzureOpenAI()
         try:
-            if json_format:
+            if json_format or False:
                 response = client.chat.completions.create(
                     response_format={"type": "json_object"},
                     model=model,
@@ -52,6 +52,8 @@ class GPTPlayer():
             print('rate limit error')
             return self.get_LLM_action(system_prompt, user_prompt, model, temperature, json_format, seed, stop, max_tokens, actions)
         outputs = response.choices[0].message.content
+        # print('output', outputs.strip(), len(outputs))
+        # if len(outputs) == 500: print(user_prompt)
         # log completion tokens
         self.completion_tokens += response.usage.completion_tokens
         self.prompt_tokens += response.usage.prompt_tokens

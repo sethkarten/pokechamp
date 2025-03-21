@@ -62,7 +62,7 @@ class Player(ABC):
         start_listening: bool = True,
         ping_interval: Optional[float] = 20.0,
         ping_timeout: Optional[float] = 20.0,
-        team: Optional[Union[str, Teambuilder]] = None,
+        team: Optional[Union[str, Teambuilder]] = None,**args,
     ):
         """
         :param account_configuration: Player configuration. If empty, defaults to an

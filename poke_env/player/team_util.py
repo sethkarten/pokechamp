@@ -19,10 +19,11 @@ def load_random_team(battle_format: str) -> str:
         raise ValueError(
             f"Cannot locate valid team directory for format {battle_format}"
         )
-    print(path)
     choice = random.choice(os.listdir(path))
     path_to_choice = os.path.join(path, choice)
-    return path_to_choice
+    with open(path_to_choice, 'r') as f:
+        team = f.read()
+    return team
 
 
 class UniformRandomTeambuilder(Teambuilder):
@@ -57,6 +58,8 @@ def get_llm_player(args,
     else:
         raise ValueError(f"Invalid ladder type: {ladder}")
 
+    if USERNAME == '':
+        USERNAME = name
     player_kwargs = {
         "battle_format": battle_format,
         "account_configuration": AccountConfiguration(f'{USERNAME}{PNUMBER1}', PASSWORD),
@@ -73,9 +76,7 @@ def get_llm_player(args,
             "start_timer_on_battle_start" : False,
         })
 
-    if USERNAME == '':
-        USERNAME = name
-    if prompt_algo == 'abyssal':
+    if prompt_algo == 'abyssal' or 'abyssal' in name:
         return AbyssalPlayer(**player_kwargs)
     elif prompt_algo == 'max_power':
         return MaxBasePowerPlayer(**player_kwargs)

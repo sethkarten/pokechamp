@@ -189,7 +189,7 @@ class OneStepPlayer(Player):
                  save_replays=None,
                  account_configuration=None,
                  server_configuration=None,
-                 K=2):
+                 K=2, **args):
         super().__init__(battle_format=battle_format,
                          team=team,
                          save_replays=save_replays,

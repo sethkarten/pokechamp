@@ -7,9 +7,9 @@ prompt_algos = [
     "cot", 
     "tot", 
     "minimax", 
-    "heuristic", 
+    "abyssal", 
     'max_power',
-    'dmg_calc',
+    'one_step',
     'random'
     ]
 
