@@ -71,7 +71,60 @@ Open and log in: https://play.pokemonshowdown.com/
 python showdown_ladder.py --USERNAME $USERNAME --PASSWORD $PASSWORD # fill in your username and password for PokéChamp, no need to set up local server.
 ```
 
-### Benchmark Puzzles - Coming Soon with dataset release!
+### Dataset
+
+The PokéChamp dataset contains over 3 million competitive Pokémon battles, filtered to 2 million clean battles across various formats and skill levels. It represents the largest collection of real-player Pokémon battles available for research and AI development.
+
+#### Dataset Features
+
+- **Size**: 2 million clean battles (1.9M train, 213K test)
+- **Formats**: 37+ competitive formats from Gen 1-9
+- **Skill Distribution**: Battles across all Elo ranges (1000-1800+)
+- **Time Period**: Battles from multiple months (2024-2025)
+
+#### Dataset Usage
+
+The dataset is available on HuggingFace [milkkarten/pokechamp](https://huggingface.co/datasets/milkkarten/pokechamp) and can be loaded with:
+
+```python
+from datasets import load_dataset
+from battle_translate import load_filtered_dataset
+
+# Load the entire dataset performed in load_filtered_dataset
+# dataset = load_dataset("milkkarten/pokechamp")
+
+# Load filtered dataset with specific criteria
+filtered_dataset = load_filtered_dataset(
+    min_month="January2025",
+    max_month="March2025",
+    elo_ranges=["1600-1799", "1800+"],
+    split="train",
+    gamemode="gen9ou"
+)
+
+# Access battle data
+example = next(iter(filtered_dataset))
+print(f"Battle format: {example['gamemode']}, Elo: {example['elo']}")
+
+```
+
+We also provide `battle_translate.py` for converting raw battle logs into training data using the prompts from our paper:
+
+```python
+# Example usage of battle_translate.py
+python battle_translate.py \
+  --output data/gen9ou_high_elo.json \
+  --limit 5000 \
+  --gamemode gen9ou \
+  --elo_ranges 1600-1799 1800+ \
+  --min_month January2025 \
+  --max_month March2025 \
+  --split train
+```
+
+This script processes battles from the dataset and outputs structured JSON data with instruction-output pairs that can be used for training or evaluating Pokémon battle agents.
+
+### Benchmark Puzzles - Coming Soon!
 
 This requires download of our dataset (release TBD).
 To reproduce the action prediction results:
@@ -89,7 +142,7 @@ The environment is implemented based on [PokeLLMon](https://github.com/git-disl/
 
 ```
 @article{karten2025pokechamp,
-  title={PokéChamp: an Expert-level Minimax Language Agent for Competitive Pokémon},
+  title={PokéChamp: an Expert-level Minimax Language Agent},
   author={Karten, Seth and Nguyen, Andy Luu and Jin, Chi},
   journal={arXiv preprint arXiv:2503.04094},
   year={2025}

@@ -5,18 +5,8 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 import torch.nn.functional as F
     
 class LLAMAPlayer():
-    def __init__(self, model="meta-llama/Meta-Llama-3-8B-Instruct", device=3) -> None:
-        # self.model = model
-        # self.client = ollama.Client(host="http://0.0.0.0:11434/api/chat")
-        
-        # model_id = "meta-llama/Meta-Llama-3.1-8B-Instruct"
-        # model_id = "meta-llama/Llama-3.2-1B"
-        # model_id = "/data2/milkkarten/pokemon-LLM/train/checkpoints/llama1b_SFT_oct28_elo/checkpoint-5500"
-        # model_id = "/data2/milkkarten/pokemon-LLM/train/checkpoints/llama1b_SFT_oct28_elo_mix1/checkpoint-20000"
-        # model_id = "/data2/milkkarten/pokemon-LLM/train/checkpoints/llama1b_SFT_oct28_elo_corrected/checkpoint-45000"
-        # model_id = "meta-llama/Meta-Llama-3-70B-Instruct"
-        # model_id "= model
-        model_id = "meta-llama/Llama-3.2-3B"
+    def __init__(self, model="meta-llama/Meta-Llama-3.1-8B-Instruct", device=3) -> None:
+        model_id = model
         self.device = device
         self.tokenizer = AutoTokenizer.from_pretrained(model_id)
         quantization_config = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_compute_dtype=torch.bfloat16)
@@ -33,21 +23,6 @@ class LLAMAPlayer():
         self.model.generation_config.pad_token_id = self.tokenizer.pad_token_id
 
     def get_LLM_action(self, system_prompt, user_prompt, model, temperature=0.7, json_format=True, seed=None, stop=[], max_tokens=20, actions=None) -> str:
-        # assert json_format
-        # # send message
-        # response = self.client.generate(
-        #     model='llama3:8b', 
-        #     prompt=user_prompt,
-        #     system=system_prompt,
-        #     format='json',
-        #     stream=False,
-        #     options = {
-        #             "temperature": temperature,
-        #             "stop": stop,
-        #             "num_predict": max_tokens,
-        #         }
-        # )
-        # message = response['response']
         output_padding = ''
         if json_format:
             output_padding  = '\n{"'

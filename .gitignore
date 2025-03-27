@@ -1,8 +1,7 @@
-# data/
+data
 .idea/*
 .DS_Store
 *.pyc
-*.html
 *.pkl
 *.jsonl
 *.log
