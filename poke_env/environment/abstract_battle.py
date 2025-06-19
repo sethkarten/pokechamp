@@ -713,6 +713,7 @@ class AbstractBattle(ABC):
             pokemon = split_message[2]
             self.get_pokemon(pokemon).used_z_move()
         elif split_message[1] == "clearpoke":
+            print("Battle.")
             self.in_team_preview = True
             for mon in self.team.values():
                 mon.clear_active()

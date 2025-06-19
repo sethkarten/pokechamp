@@ -655,9 +655,15 @@ class Player(ABC):
         from_teampreview_request: bool = False,
         maybe_default_order: bool = False,
     ):
+        
+        #print("BATTLE REQUEST BRANCH")
+        #print("from_teampreview_request", from_teampreview_request)
+        #print("battle.teampreview", battle.teampreview)
+        #print("battle.in_team_preview", battle.in_team_preview)
+
         if maybe_default_order and random.random() < self.DEFAULT_CHOICE_CHANCE:
             message = self.choose_default_move().message
-        elif battle.teampreview:
+        elif battle.in_team_preview:        # changed from battle.teampreview which look like it is irrelevant in abstract_battle for some reason
             if not from_teampreview_request:
                 return
             message = self.teampreview(battle)
@@ -667,7 +673,7 @@ class Player(ABC):
                 message = await message
             if isinstance(message, str):
                 print(message)
-            # print( message)
+            print("Choose Move Message:", message)
             message = message.message
 
         await self.ps_client.send_message(message, battle.battle_tag)
@@ -769,7 +775,7 @@ class Player(ABC):
         :param battle: The battle.
         :type battle: AbstractBattle
         :return: The move order.
-        :rtype: str
+        :rtype: str (should be of type BattleOrder?)
         """
         pass
 

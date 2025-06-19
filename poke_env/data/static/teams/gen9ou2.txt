@@ -1,66 +1,62 @@
-
-
-Ribombee @ Focus Sash  
-Ability: Shield Dust  
-Tera Type: Ghost  
-EVs: 8 HP / 136 Def / 196 SpA / 168 Spe  
+Zapdos @ Heavy-Duty Boots  
+Ability: Static  
+Tera Type: Grass  
+EVs: 248 HP / 76 Def / 184 Spe  
 Timid Nature  
 IVs: 0 Atk  
-- Sticky Web  
-- Moonblast  
-- Stun Spore  
-- Psychic Noise  
+- Hurricane  
+- Weather Ball  
+- Volt Switch  
+- Roost  
 
-Glimmora @ Power Herb  
-Ability: Toxic Debris  
-Tera Type: Fairy  
-EVs: 16 Def / 240 SpA / 252 Spe  
+Hydrapple @ Heavy-Duty Boots  
+Ability: Regenerator  
+Tera Type: Steel  
+EVs: 248 HP / 176 Def / 16 SpA / 56 SpD / 12 Spe  
 Modest Nature  
 IVs: 0 Atk  
-- Sludge Bomb  
-- Meteor Beam  
+- Draco Meteor  
+- Giga Drain  
 - Earth Power  
-- Dazzling Gleam  
+- Nasty Plot  
 
-Manaphy @ Leftovers  
-Ability: Hydration  
-Tera Type: Fairy  
-EVs: 112 HP / 216 SpA / 180 Spe  
-Modest Nature  
-IVs: 0 Atk  
-- Surf  
-- Stored Power  
-- Acid Armor  
-- Tail Glow  
-
-Zamazenta @ Mirror Herb  
+Zamazenta @ Heavy-Duty Boots  
 Ability: Dauntless Shield  
-Tera Type: Fire  
-EVs: 8 HP / 60 Atk / 252 Def / 188 Spe  
+Tera Type: Steel  
+EVs: 252 Atk / 4 SpD / 252 Spe  
 Jolly Nature  
-- Body Press  
-- Iron Head  
+- Close Combat  
+- Crunch  
 - Stone Edge  
-- Iron Defense  
+- Heavy Slam  
 
-Gholdengo @ Air Balloon  
-Ability: Good as Gold  
-Tera Type: Fairy  
-EVs: 248 HP / 16 Def / 72 SpA / 172 Spe  
-Modest Nature  
-IVs: 0 Atk  
-- Make It Rain  
-- Hex  
-- Recover  
+Slowking-Galar @ Heavy-Duty Boots  
+Ability: Regenerator  
+Tera Type: Water  
+EVs: 248 HP / 8 Def / 252 SpD  
+Sassy Nature  
+IVs: 0 Atk / 0 Spe  
+- Sludge Bomb  
+- Future Sight  
+- Flamethrower  
+- Chilly Reception  
+
+Tinkaton @ Air Balloon  
+Ability: Mold Breaker  
+Tera Type: Water  
+EVs: 248 HP / 24 SpD / 236 Spe  
+Jolly Nature  
+- Gigaton Hammer  
 - Thunder Wave  
+- Encore  
+- Stealth Rock  
 
-Roaring Moon @ Booster Energy  
-Ability: Protosynthesis  
-Tera Type: Flying  
-EVs: 252 Atk / 4 Def / 252 Spe  
-Adamant Nature  
-- Knock Off  
+Ting-Lu @ Leftovers  
+Ability: Vessel of Ruin  
+Tera Type: Ghost  
+EVs: 248 HP / 244 Def / 16 Spe  
+Impish Nature  
 - Earthquake  
-- Acrobatics  
-- Dragon Dance  
-
+- Body Press  
+- Ruination  
+- Whirlwind  
