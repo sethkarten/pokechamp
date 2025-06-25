@@ -632,9 +632,9 @@ class Player(ABC):
                     " Pokémon."
                 ):
                     await self._handle_battle_request(battle, maybe_default_order=True)
-                elif split_message[2].startswith(
-                    "[Invalid choice] Can't move: You can only Terastallize once per battle."
-                ):
+                elif split_message[2].startswith( #changed to accomodate new already Terastallizedmessage
+                    "[Invalid choice] Can't move: "
+                ) and split_message[2].endswith("can't Terastallize."):
                     await self._handle_battle_request(battle, maybe_default_order=True)
                 else:
                     self.logger.critical("Unexpected error message: %s", split_message)
