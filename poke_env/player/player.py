@@ -60,8 +60,8 @@ class Player(ABC):
         server_configuration: Optional[ServerConfiguration] = None,
         start_timer_on_battle_start: bool = False,
         start_listening: bool = True,
-        ping_interval: Optional[float] = 20.0,
-        ping_timeout: Optional[float] = 20.0,
+        ping_interval: Optional[float] = None, #20.0
+        ping_timeout: Optional[float] = None,   #20.0
         team: Optional[Union[str, Teambuilder]] = None,
     ):
         """
@@ -75,7 +75,7 @@ class Player(ABC):
             gen8randombattle.
         :type battle_format: str
         :param log_level: The player's logger level.
-        :type log_level: int. Defaults to logging's default level.
+        :type log_level: int. Defaults to logging's default level.z
         :param max_concurrent_battles: Maximum number of battles this player will play
             concurrently. If 0, no limit will be applied. Defaults to 1.
         :type max_concurrent_battles: int
