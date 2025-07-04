@@ -674,7 +674,11 @@ class Player(ABC):
             if isinstance(message, str):
                 print(message)
             print("Choose Move Message:", message)
-            message = message.message
+            
+            if message is None:            # dealing with the occasional return of None by choose_move
+                message = self.choose_default_move().message
+            else:
+                message = message.message
 
         await self.ps_client.send_message(message, battle.battle_tag)
 
