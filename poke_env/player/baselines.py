@@ -678,7 +678,6 @@ class AbyssalPlayer(Player):
         else:
             next_action = self.choose_random_move(battle)
 
-        print("move chosen")
 
         return next_action
 
