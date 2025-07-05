@@ -27,7 +27,7 @@ async def main():
         opponent.update_team(load_random_team())                      
     
     # Playing 5 games on local
-    for i in tqdm(range(1)):
+    for i in tqdm(range(5)):
         await opponent.ladder(1)
         if not 'random' in args.battle_format:
             opponent.update_team(load_random_team())
