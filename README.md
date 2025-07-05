@@ -22,10 +22,8 @@ pip install -r requirements.txt
 2. Clone the Pokémon Showdown repository and set it up:
 
 ```sh
-git clone https://github.com/smogon/pokemon-showdown.git
+git clone git@github.com:jakegrigsby/pokemon-showdown.git
 cd pokemon-showdown
-# Optional: All repo features were tested with the following showdown version.
-# git reset --hard dd4b004e54d4ef8c66c8b583a8fa64b020574727
 npm install
 cp config/config-example.js config/config.js
 node pokemon-showdown start --no-security
@@ -146,5 +144,17 @@ The environment is implemented based on [PokeLLMon](https://github.com/git-disl/
   author={Karten, Seth and Nguyen, Andy Luu and Jin, Chi},
   journal={arXiv preprint arXiv:2503.04094},
   year={2025}
+}
+```
+
+If you find this work useful, please also cite the following:
+```
+@inproceedings{karten2025pokeagent,
+  title        = {The PokeAgent Challenge: Competitive and Long-Context Learning at Scale},
+  author       = {Karten, Seth and Grigsby, Jake and Milani, Stephanie and Vodrahalli, Kiran
+                  and Zhang, Amy and Fang, Fei and Zhu, Yuke and Jin, Chi},
+  booktitle    = {NeurIPS Competition Track},
+  year         = {2025},
+  month        = apr,
 }
 ```
