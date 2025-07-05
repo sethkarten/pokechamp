@@ -1,63 +1,61 @@
-
-
-Darkrai @ Expert Belt  
-Ability: Bad Dreams  
-Tera Type: Poison  
-EVs: 252 SpA / 4 SpD / 252 Spe  
-Timid Nature  
-IVs: 0 Atk  
-- Ice Beam  
-- Sludge Bomb  
-- Dark Pulse  
-- Focus Blast  
-
-Kingambit @ Air Balloon  
-Ability: Supreme Overlord  
-Tera Type: Fire  
-EVs: 112 HP / 252 Atk / 144 Spe  
-Adamant Nature  
-- Swords Dance  
-- Sucker Punch  
-- Kowtow Cleave  
-- Iron Head  
-
-Roaring Moon @ Booster Energy  
-Ability: Protosynthesis  
-Tera Type: Flying  
+Lokix @ Heavy-Duty Boots  
+Ability: Tinted Lens  
+Tera Type: Bug  
 EVs: 252 Atk / 4 Def / 252 Spe  
-Jolly Nature  
-- Dragon Dance  
-- Acrobatics  
+Adamant Nature  
+- First Impression  
+- U-turn  
 - Knock Off  
-- Taunt  
+- Sucker Punch  
 
-Zamazenta @ Leftovers  
-Ability: Dauntless Shield  
-Tera Type: Ghost  
-EVs: 16 HP / 216 Def / 40 SpD / 236 Spe  
-Impish Nature  
-- Iron Defense  
-- Body Press  
-- Heavy Slam  
-- Roar  
-
-Glimmora @ Red Card  
-Ability: Toxic Debris  
-Tera Type: Ghost  
-EVs: 252 SpA / 4 SpD / 252 Spe  
-Timid Nature  
-- Stealth Rock  
-- Mortal Spin  
-- Earth Power  
-- Power Gem  
-
-Enamorus @ Choice Scarf  
-Ability: Contrary  
-Tera Type: Ground  
-EVs: 252 SpA / 4 SpD / 252 Spe  
-Timid Nature  
+Pecharunt @ Heavy-Duty Boots  
+Ability: Poison Puppeteer  
+Tera Type: Dark  
+EVs: 252 HP / 228 Def / 28 Spe  
+Bold Nature  
 IVs: 0 Atk  
-- Moonblast  
-- Earth Power  
-- Mystical Fire  
-- Healing Wish  
+- Malignant Chain  
+- Foul Play  
+- Parting Shot  
+- Recover  
+
+Zamazenta @ Heavy-Duty Boots  
+Ability: Dauntless Shield  
+Tera Type: Fire  
+EVs: 252 Atk / 4 SpD / 252 Spe  
+Jolly Nature  
+- Close Combat  
+- Crunch  
+- Stone Edge  
+- Ice Fang  
+
+Ting-Lu @ Leftovers  
+Ability: Vessel of Ruin  
+Tera Type: Ghost  
+EVs: 252 HP / 240 SpD / 16 Spe  
+Careful Nature  
+- Stealth Rock  
+- Whirlwind  
+- Earthquake  
+- Ruination  
+
+Latios (M) @ Soul Dew  
+Ability: Levitate  
+Tera Type: Steel  
+EVs: 4 Def / 252 SpA / 252 Spe  
+Timid Nature  
+- Draco Meteor  
+- Psychic Noise  
+- Flip Turn  
+- Recover  
+
+Gliscor @ Toxic Orb  
+Ability: Poison Heal  
+Tera Type: Water  
+EVs: 244 HP / 36 Def / 228 SpD  
+Careful Nature  
+IVs: 30 Spe  
+- Spikes  
+- Knock Off  
+- U-turn  
+- Protect  
