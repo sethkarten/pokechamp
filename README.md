@@ -51,6 +51,42 @@ This script will run battles between PokéChamp and the baseline bots, including
 python local_1v1.py 
 ```
 
+#### Available Bots
+
+The system includes several built-in bots and supports custom bots from the `bots/` folder:
+
+**Built-in Bots:**
+- `pokechamp` - The main PokéChamp agent using minimax algorithm
+- `pokellmon` - LLM-based agent using various prompt algorithms
+- `abyssal` - Abyssal Bot baseline
+- `max_power` - Maximum base power move selection
+- `one_step` - One-step lookahead agent
+- `random` - Random move selection
+
+**Custom Bots:**
+- `starter_kit` - A simple example LLM-based bot demonstrating how to create custom bots
+
+**Example Usage:**
+```sh
+# Battle starter_kit against random bot
+python local_1v1.py --player_name starter_kit --opponent_name random
+
+# Battle two custom bots
+python local_1v1.py --player_name starter_kit --opponent_name starter_kit
+
+# Use different LLM backends
+python local_1v1.py --player_name starter_kit --player_backend gpt-4o --opponent_name pokellmon
+```
+
+#### Creating Custom Bots
+
+To create your own custom bot:
+
+1. Create a new file in the `bots/` folder (e.g., `bots/my_bot_bot.py`)
+2. Define a class that inherits from `LLMPlayer` (see `bots/starter_kit_bot.py` for an example)
+3. Override the `choose_move()` method to implement your bot's strategy
+4. Your bot will automatically be available in `local_1v1.py` and other scripts
+
 ### Battle Against Any Agent Locally
 
 First, log into your other account manually on the local server, choosing "[Gen 9] Random Battle".

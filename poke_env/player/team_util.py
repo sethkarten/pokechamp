@@ -7,6 +7,9 @@ from poke_env.ps_client.server_configuration import ShowdownServerConfiguration
 
 from poke_env.player.prompts import prompt_translate, state_translate2
 from numpy.random import randint
+import importlib
+import inspect
+import os
 
 def load_random_team(id=None):
     if id == None:
@@ -16,6 +19,32 @@ def load_random_team(id=None):
     with open(f'poke_env/data/static/teams/gen9ou{team_id}.txt', 'r') as f:
         team = f.read()
     return team
+
+def get_custom_bot_class(bot_name: str):
+    """
+    Get a custom bot class by name from the bots folder.
+    
+    Args:
+        bot_name: The name of the bot (without _bot suffix)
+        
+    Returns:
+        The bot class if found, None otherwise
+    """
+    try:
+        # Import the bot module
+        module_name = f"bots.{bot_name}_bot"
+        module = importlib.import_module(module_name)
+        
+        # Find the bot class in the module
+        for name, obj in inspect.getmembers(module):
+            if (inspect.isclass(obj) and 
+                issubclass(obj, LLMPlayer) and 
+                obj != LLMPlayer):
+                return obj
+        
+        return None
+    except ImportError:
+        return None
 
 def get_llm_player(args, 
                    backend: str, 
@@ -81,4 +110,20 @@ def get_llm_player(args,
                        device=device,
                        llm_backend=llm_backend)
     else:
-        raise ValueError('Bot not found')
+        # Try to find a custom bot in the bots folder
+        custom_bot_class = get_custom_bot_class(name)
+        if custom_bot_class:
+            return custom_bot_class(
+                battle_format=battle_format,
+                api_key=KEY,
+                backend=backend,
+                temperature=args.temperature,
+                log_dir=args.log_dir,
+                account_configuration=AccountConfiguration(f'{USERNAME}{PNUMBER1}', PASSWORD),
+                server_configuration=server_config,
+                save_replays=args.log_dir,
+                device=device,
+                llm_backend=llm_backend
+            )
+        else:
+            raise ValueError(f'Bot not found: {name}')
