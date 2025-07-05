@@ -21,6 +21,7 @@ import json
 from poke_env.data.gen_data import GenData
 from poke_env.player.gpt_player import GPTPlayer
 from poke_env.player.llama_player import LLAMAPlayer
+from poke_env.player.openrouter_player import OpenRouterPlayer
 from poke_env.player.local_simulation import LocalSim, SimNode
 from difflib import get_close_matches
 from poke_env.player.prompts import get_number_turns_faint, get_status_num_turns_fnt, state_translate, get_gimmick_motivation
@@ -91,10 +92,13 @@ class LLMPlayer(Player):
         self.last_plan = ""
 
         if llm_backend is None:
-            if 'gpt' in backend:
+            if 'gpt' in backend and not backend.startswith('openai/'):
                 self.llm = GPTPlayer(self.api_key)
             elif 'llama' == backend:
                 self.llm = LLAMAPlayer(device=device)
+            elif backend.startswith(('openai/', 'anthropic/', 'google/', 'meta/', 'mistral/', 'cohere/', 'perplexity/', 'deepseek/', 'microsoft/', 'nvidia/', 'huggingface/', 'together/', 'replicate/', 'fireworks/', 'ollama/', 'localai/', 'vllm/', 'sagemaker/', 'vertex/', 'bedrock/', 'azure/', 'custom/')):
+                # OpenRouter supports hundreds of models from various providers
+                self.llm = OpenRouterPlayer(self.api_key)
             else:
                 raise NotImplementedError('LLM type not implemented:', backend)
         else:
