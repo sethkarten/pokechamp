@@ -11,7 +11,7 @@ accelerate
 wandb
 evaluate
 datasets
-flash_attn
+# flash_attn # optional
 asyncio
 websockets
 openai

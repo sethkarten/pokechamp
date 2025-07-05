@@ -134,7 +134,7 @@ def get_loadout_str(data, mon):
 
 async def hand_benchmark(args, PNUMBER1, total=1):
     # find 1v1 mons
-    file = f'poke_env/data/static/gen9/ou/sets_1825.json'
+    file = f'poke_env/data/static/gen9/ou/sets_1500.json'
     with open(file, 'r') as f:
         data = orjson.loads(f.read())
     available_mons = list(data.keys())
@@ -240,7 +240,7 @@ async def one_vs_one(args, PNUMBER1, total=1, compare_bots=False):
     1v1 Eval
     '''
     # find 1v1 mons
-    file = f'poke_env/data/static/gen9/ou/sets_1825.json'
+    file = f'poke_env/data/static/gen9/ou/sets_1500.json'
     with open(file, 'r') as f:
         data = orjson.loads(f.read())
     available_mons = list(data.keys())
