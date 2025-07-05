@@ -678,6 +678,7 @@ class AbyssalPlayer(Player):
         else:
             next_action = self.choose_random_move(battle)
 
+
         return next_action
 
     def state_translate(self, battle: AbstractBattle):

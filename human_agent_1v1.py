@@ -24,7 +24,7 @@ async def main():
                             PNUMBER1=PNUMBER1,
                             battle_format=args.battle_format)
     if not 'random' in args.battle_format:
-        opponent.update_team(load_random_team(1))                      
+        opponent.update_team(load_random_team())                      
     
     # Playing 5 games on local
     for i in tqdm(range(5)):

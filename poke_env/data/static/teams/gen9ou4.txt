@@ -1,25 +1,43 @@
-
-
-Iron Treads @ Booster Energy  
-Ability: Quark Drive  
-Tera Type: Ghost  
-EVs: 252 SpA / 4 SpD / 252 Spe  
-Timid Nature  
+Enamorus @ Heavy-Duty Boots  
+Ability: Contrary  
+Tera Type: Stellar  
+EVs: 4 Atk / 252 SpA / 252 Spe  
+Naive Nature  
+- Moonblast  
+- Tera Blast  
 - Earth Power  
-- Steel Beam  
-- Rapid Spin  
-- Stealth Rock  
+- Superpower  
 
-Skeledirge (M) @ Heavy-Duty Boots  
-Ability: Unaware  
-Tera Type: Fairy  
-EVs: 248 HP / 16 Def / 244 SpD  
-Bold Nature  
+Kyurem @ Choice Scarf  
+Ability: Pressure  
+Tera Type: Dragon  
+EVs: 252 SpA / 4 SpD / 252 Spe  
+Modest Nature  
 IVs: 0 Atk  
-- Torch Song  
-- Alluring Voice  
-- Will-O-Wisp  
-- Slack Off  
+- Ice Beam  
+- Freeze-Dry  
+- Earth Power  
+- Draco Meteor  
+
+Landorus-Therian @ Rocky Helmet  
+Ability: Intimidate  
+Tera Type: Ghost  
+EVs: 248 HP / 8 Def / 252 Spe  
+Jolly Nature  
+- Earthquake  
+- U-turn  
+- Stealth Rock  
+- Taunt  
+
+Kingambit (F) @ Air Balloon  
+Ability: Supreme Overlord  
+Tera Type: Ghost  
+EVs: 252 Atk / 4 SpD / 252 Spe  
+Jolly Nature  
+- Swords Dance  
+- Iron Head  
+- Low Kick  
+- Sucker Punch  
 
 Ogerpon-Wellspring (F) @ Wellspring Mask  
 Ability: Water Absorb  
@@ -27,38 +45,16 @@ Tera Type: Water
 EVs: 252 Atk / 4 SpD / 252 Spe  
 Jolly Nature  
 - Ivy Cudgel  
-- Power Whip  
+- Knock Off  
 - U-turn  
-- Encore  
-
-Enamorus @ Focus Sash  
-Ability: Cute Charm  
-Tera Type: Ground  
-EVs: 4 Def / 252 SpA / 252 Spe  
-Modest Nature  
-IVs: 0 Atk  
-- Moonblast  
-- Earth Power  
-- Calm Mind  
 - Taunt  
 
-Zamazenta @ Leftovers  
-Ability: Dauntless Shield  
-Tera Type: Steel  
-EVs: 88 HP / 252 Def / 168 Spe  
-Jolly Nature  
-- Body Press  
-- Crunch  
-- Iron Defense  
-- Roar  
-
-Roaring Moon @ Booster Energy  
-Ability: Protosynthesis  
-Tera Type: Flying  
-EVs: 252 Atk / 4 Def / 252 Spe  
-Jolly Nature  
-- Knock Off  
-- Acrobatics  
-- Earthquake  
-- Dragon Dance  
-
+Glimmora (F) @ Red Card  
+Ability: Toxic Debris  
+Tera Type: Ghost  
+EVs: 244 HP / 216 Def / 48 Spe  
+Bold Nature  
+- Power Gem  
+- Earth Power  
+- Mortal Spin  
+- Spikes

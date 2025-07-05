@@ -17,7 +17,7 @@ parser.add_argument("--player_device", type=int, default=0)
 # Opponent arguments
 parser.add_argument("--opponent_prompt_algo", default="io", choices=prompt_algos)
 parser.add_argument("--opponent_backend", type=str, default="gpt-4o", choices=["gpt-4o-mini", "gpt-4o", "gpt-4o-2024-05-13", "llama", 'None'])
-parser.add_argument("--opponent_name", type=str, default='pokellmon', choices=['pokechamp', 'pokellmon', 'one_step', 'abyssal', 'max_power', 'random'])
+parser.add_argument("--opponent_name", type=str, default='pokellmon', choices=['pokechamp', 'pokechamp2', 'pokellmon', 'one_step', 'abyssal', 'max_power', 'random'])
 parser.add_argument("--opponent_device", type=int, default=0)
 
 # Shared arguments
