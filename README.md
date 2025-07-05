@@ -1,10 +1,17 @@
 # Pokémon Champion
+<!-- project badges -->
+[![Paper (ICML ’25)](https://img.shields.io/badge/Paper-ICML-blue?style=flat)](https://openreview.net/pdf?id=SnZ7SKykHh)
+[![Dataset on HuggingFace](https://img.shields.io/badge/Dataset-HuggingFace-brightgreen?logo=huggingface&logoColor=white&style=flat)](https://huggingface.co/datasets/milkkarten/pokechamp)
+[![Source Code](https://img.shields.io/badge/Code-GitHub-black?logo=github&logoColor=white&style=flat)](https://github.com/sethkarten/pokechamp)
+
 
 This is the implementation for the paper "PokéChamp: an Expert-level Minimax Language Agent for Competitive Pokémon"
 
 <div align="center">
   <img src="./resource/method.png" alt="PokemonChamp">
 </div>
+
+
 
 ## Requirements:
 
@@ -65,6 +72,45 @@ The system includes several built-in bots and supports custom bots from the `bot
 
 **Custom Bots:**
 - `starter_kit` - A simple example LLM-based bot demonstrating how to create custom bots
+
+#### LLM Backends
+
+The system supports multiple LLM backends through OpenRouter, providing access to hundreds of models from various providers:
+
+**OpenAI Models:**
+- `gpt-4o`, `gpt-4o-mini`, `gpt-4-turbo`, `gpt-4`, `gpt-3.5-turbo`
+
+**Anthropic Models:**
+- `anthropic/claude-3.5-sonnet`, `anthropic/claude-3-opus`, `anthropic/claude-3-haiku`
+
+**Google Models:**
+- `google/gemini-pro`, `google/gemini-flash-1.5`
+
+**Meta Models:**
+- `meta-llama/llama-3.1-70b-instruct`, `meta-llama/llama-3.1-8b-instruct`
+
+**Mistral Models:**
+- `mistralai/mistral-7b-instruct`, `mistralai/mixtral-8x7b-instruct`
+
+**Other Providers:**
+- Cohere, Perplexity, DeepSeek, Microsoft, and many more
+
+**Setup:**
+1. Get your API key from [OpenRouter](https://openrouter.ai/keys)
+2. Set the environment variable: `export OPENROUTER_API_KEY='your-api-key-here'`
+3. Use any supported model as the backend parameter
+
+**Example Usage:**
+```sh
+# Use Claude for player, Gemini for opponent
+python local_1v1.py --player_backend anthropic/claude-3-haiku --opponent_backend google/gemini-flash-1.5
+
+# Use Mistral for both players
+python local_1v1.py --player_backend mistralai/mixtral-8x7b-instruct --opponent_backend mistralai/mixtral-8x7b-instruct
+
+# Test different models
+python test_openrouter.py
+```
 
 **Example Usage:**
 ```sh
