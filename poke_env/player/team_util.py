@@ -34,22 +34,22 @@ def get_llm_player(args,
         server_config = ShowdownServerConfiguration
     if USERNAME == '':
         USERNAME = name
-    if prompt_algo == 'abyssal':
+    if name == 'abyssal':
         return AbyssalPlayer(battle_format=battle_format,
                             account_configuration=AccountConfiguration(f'{USERNAME}{PNUMBER1}', PASSWORD),
                             server_configuration=server_config
                             )
-    elif prompt_algo == 'max_power':
+    elif name == 'max_power':
         return MaxBasePowerPlayer(battle_format=battle_format,
                             account_configuration=AccountConfiguration(f'{USERNAME}{PNUMBER1}', PASSWORD),
                             server_configuration=server_config
                             )
-    elif prompt_algo == 'random':
+    elif name == 'random':
         return RandomPlayer(battle_format=battle_format,
                             account_configuration=AccountConfiguration(f'{USERNAME}{PNUMBER1}', PASSWORD),
                             server_configuration=server_config
                             )
-    elif prompt_algo == 'one_step':
+    elif name == 'one_step':
         return OneStepPlayer(battle_format=battle_format,
                             account_configuration=AccountConfiguration(f'{USERNAME}{PNUMBER1}', PASSWORD),
                             server_configuration=server_config
