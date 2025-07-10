@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<meta charset="utf-8" />
+<!-- version 1 -->
+<title>battle-gen9ou-128</title>
+<style>
+    html,
+    body {
+        font-family: Verdana, sans-serif;
+        font-size: 10pt;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        padding: 12px 0;
+    }
+
+    .battle-log {
+        font-family: Verdana, sans-serif;
+        font-size: 10pt;
+    }
+
+    .battle-log-inline {
+        border: 1px solid #AAAAAA;
+        background: #EEF2F5;
+        color: black;
+        max-width: 640px;
+        margin: 0 auto 80px;
+        padding-bottom: 5px;
+    }
+
+    .battle-log .inner {
+        padding: 4px 8px 0px 8px;
+    }
+
+    .battle-log .inner-preempt {
+        padding: 0 8px 4px 8px;
+    }
+
+    .battle-log .inner-after {
+        margin-top: 0.5em;
+    }
+
+    .battle-log h2 {
+        margin: 0.5em -8px;
+        padding: 4px 8px;
+        border: 1px solid #AAAAAA;
+        background: #E0E7EA;
+        border-left: 0;
+        border-right: 0;
+        font-family: Verdana, sans-serif;
+        font-size: 13pt;
+    }
+
+    .backprop {
+        top: 0;
+    }
+
+    .battle-log .chat {
+        vertical-align: middle;
+        padding: 3px 0 3px 0;
+        font-size: 8pt;
+    }
+
+    .battle-log .chat strong {
+        color: #40576A;
+    }
+
+    .battle-log .chat em {
+        padding: 1px 4px 1px 3px;
+        color: #000000;
+        font-style: normal;
+    }
+
+    .chat.mine {
+        background: rgba(0, 0, 0, 0.05);
+        margin-left: -8px;
+        margin-right: -8px;
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+
+    .spoiler {
+        color: #BBBBBB;
+        background: #BBBBBB;
+        padding: 0px 3px;
+    }
+
+    .spoiler:hover,
+    .spoiler:active,
+    .spoiler-shown {
+        color: #000000;
+        background: #E2E2E2;
+        padding: 0px 3px;
+    }
+
+    .spoiler a {
+        color: #BBBBBB;
+    }
+
+    .spoiler:hover a,
+    .spoiler:active a,
+    .spoiler-shown a {
+        color: #2288CC;
+    }
+
+    .chat code,
+    .chat .spoiler:hover code,
+    .chat .spoiler:active code,
+    .chat .spoiler-shown code {
+        border: 1px solid #C0C0C0;
+        background: #EEEEEE;
+        color: black;
+        padding: 0 2px;
+    }
+
+    .chat .spoiler code {
+        border: 1px solid #CCCCCC;
+        background: #CCCCCC;
+        color: #CCCCCC;
+    }
+
+    .battle-log .rated {
+        padding: 3px 4px;
+    }
+
+    .battle-log .rated strong {
+        color: white;
+        background: #89A;
+        padding: 1px 4px;
+        border-radius: 4px;
+    }
+
+    .spacer {
+        margin-top: 0.5em;
+    }
+
+    .message-announce {
+        background: #6688AA;
+        color: white;
+        padding: 1px 4px 2px;
+    }
+
+    .message-announce a,
+    .broadcast-green a,
+    .broadcast-blue a,
+    .broadcast-red a {
+        color: #DDEEFF;
+    }
+
+    .broadcast-green {
+        background-color: #559955;
+        color: white;
+        padding: 2px 4px;
+    }
+
+    .broadcast-blue {
+        background-color: #6688AA;
+        color: white;
+        padding: 2px 4px;
+    }
+
+    .infobox {
+        border: 1px solid #6688AA;
+        padding: 2px 4px;
+    }
+
+    .infobox-limited {
+        max-height: 200px;
+        overflow: auto;
+        overflow-x: hidden;
+    }
+
+    .broadcast-red {
+        background-color: #AA5544;
+        color: white;
+        padding: 2px 4px;
+    }
+
+    .message-learn-canlearn {
+        font-weight: bold;
+        color: #228822;
+        text-decoration: underline;
+    }
+
+    .message-learn-cannotlearn {
+        font-weight: bold;
+        color: #CC2222;
+        text-decoration: underline;
+    }
+
+    .message-effect-weak {
+        font-weight: bold;
+        color: #CC2222;
+    }
+
+    .message-effect-resist {
+        font-weight: bold;
+        color: #6688AA;
+    }
+
+    .message-effect-immune {
+        font-weight: bold;
+        color: #666666;
+    }
+
+    .message-learn-list {
+        margin-top: 0;
+        margin-bottom: 0;
+    }
+
+    .message-throttle-notice,
+    .message-error {
+        color: #992222;
+    }
+
+    .message-overflow,
+    .chat small.message-overflow {
+        font-size: 0pt;
+    }
+
+    .message-overflow::before {
+        font-size: 9pt;
+        content: '...';
+    }
+
+    .subtle {
+        color: #3A4A66;
+    }
+</style>
+<div class="wrapper replay-wrapper" style="max-width:1180px;margin:0 auto">
+    <input type="hidden" name="replayid" value="unregisteredserver-gen8randombattle-320064" />
+    <div class="battle"></div>
+    <div class="battle-log"></div>
+    <div class="replay-controls"></div>
+    <div class="replay-controls-2"></div>
+    <h1 style="font-weight:normal;text-align:center"><strong>poke-env battle replay</strong><br />battle-gen9ou-128<br /><a
+            href="http://pokemonshowdown.com/users/randomplayer1" class="subtle" target="_blank">pokechamp7438</a>
+        vs. <a href="http://pokemonshowdown.com/users/randomplayer2" class="subtle"
+            target="_blank">abyssal7438</a></h1>
+    <script type="text/plain" class="battle-log-data">
+    >battle-gen9ou-128|init|battle
+|title|pokechamp7438 vs. abyssal7438
+|j|☆pokechamp7438
+|j|☆abyssal7438
+|gametype|singles
+|player|p1|pokechamp7438|169|
+|player|p2|abyssal7438|169|
+|teamsize|p1|6
+|teamsize|p2|6
+|gen|9
+|tier|Gen 9 OU
+|rule|HP Percentage Mod: HP is shown in percentages
+|rule|Endless Battle Clause: Forcing endless battles is banned
+|rule|Species Clause: Limit one of each Pokémon
+|rule|OHKO Clause: OHKO moves are banned
+|rule|Evasion Items Clause: Evasion items are banned
+|rule|Evasion Moves Clause: Evasion moves are banned
+|rule|Evasion Abilities Clause: Evasion abilities are banned
+|rule|Sleep Moves Clause: Sleep-inducing moves are banned
+|clearpoke
+|poke|p1|Skarmory, M|
+|poke|p1|Ting-Lu|
+|poke|p1|Zamazenta-*|
+|poke|p1|Weavile, F|
+|poke|p1|Kyurem|
+|poke|p1|Slowking-Galar, F|
+|poke|p2|Skarmory, M|
+|poke|p2|Ting-Lu|
+|poke|p2|Zamazenta-*|
+|poke|p2|Weavile, M|
+|poke|p2|Kyurem|
+|poke|p2|Slowking-Galar, M|
+|teampreview
+|start
+|switch|p1a: Skarmory|Skarmory, M|333/333
+|switch|p2a: Kyurem|Kyurem|100/100
+|-ability|p2a: Kyurem|Pressure
+|turn|1
+|switch|p2a: Ting-Lu|Ting-Lu|100/100
+|-ability|p2a: Ting-Lu|Vessel of Ruin
+|switch|p1a: Zamazenta|Zamazenta|325/325
+|-ability|p1a: Zamazenta|Dauntless Shield|boost
+|-boost|p1a: Zamazenta|def|1
+|upkeep
+|turn|2
+|switch|p1a: Weavile|Weavile, F|281/281
+|move|p2a: Ting-Lu|Spikes|p1a: Weavile
+|-sidestart|p1: pokechamp7438|Spikes
+|upkeep
+|turn|3
+|move|p1a: Weavile|Triple Axel|p2a: Ting-Lu
+|-supereffective|p2a: Ting-Lu
+|-damage|p2a: Ting-Lu|90/100
+|-hitcount|p2a: Ting-Lu|1
+|move|p2a: Ting-Lu|Earthquake|p1a: Weavile
+|-damage|p1a: Weavile|115/281
+|upkeep
+|turn|4
+|move|p1a: Weavile|Triple Axel|p2a: Ting-Lu
+|-supereffective|p2a: Ting-Lu
+|-damage|p2a: Ting-Lu|79/100
+|-supereffective|p2a: Ting-Lu
+|-crit|p2a: Ting-Lu
+|-damage|p2a: Ting-Lu|49/100
+|-supereffective|p2a: Ting-Lu
+|-damage|p2a: Ting-Lu|15/100
+|-hitcount|p2a: Ting-Lu|3
+|move|p2a: Ting-Lu|Earthquake|p1a: Weavile
+|-damage|p1a: Weavile|0 fnt
+|faint|p1a: Weavile
+|upkeep
+|switch|p1a: Zamazenta|Zamazenta|325/325
+|turn|5
+|switch|p1a: Skarmory|Skarmory, M|333/333
+|switch|p2a: Slowking|Slowking-Galar, M|100/100
+|upkeep
+|turn|6
+|move|p1a: Skarmory|Brave Bird|p2a: Slowking
+|-damage|p2a: Slowking|67/100
+|-damage|p1a: Skarmory|289/333|[from] Recoil
+|move|p2a: Slowking|Future Sight|p1a: Skarmory
+|-start|p2a: Slowking|move: Future Sight
+|upkeep
+|turn|7
+|move|p1a: Skarmory|Brave Bird|p2a: Slowking
+|-damage|p2a: Slowking|31/100
+|-damage|p1a: Skarmory|242/333|[from] Recoil
+|move|p2a: Slowking|Future Sight||[still]
+|-fail|p2a: Slowking
+|upkeep
+|turn|8
+|move|p1a: Skarmory|Brave Bird|p2a: Slowking
+|-damage|p2a: Slowking|0 fnt
+|faint|p2a: Slowking
+|-damage|p1a: Skarmory|203/333|[from] Recoil
+|-end|p1a: Skarmory|move: Future Sight
+|-resisted|p1a: Skarmory
+|-damage|p1a: Skarmory|107/333
+|upkeep
+|switch|p2a: Skarmory|Skarmory, M|100/100
+|turn|9
+|switch|p1a: Zamazenta|Zamazenta|325/325
+|move|p2a: Skarmory|Brave Bird|p1a: Zamazenta
+|-supereffective|p1a: Zamazenta
+|-damage|p1a: Zamazenta|127/325
+|-damage|p2a: Skarmory|81/100|[from] Recoil
+|upkeep
+|turn|10
+|switch|p1a: Kyurem|Kyurem|391/391
+|-ability|p1a: Kyurem|Pressure
+|move|p2a: Skarmory|Brave Bird|p1a: Kyurem
+|-damage|p1a: Kyurem|259/391
+|-damage|p2a: Skarmory|68/100|[from] Recoil
+|upkeep
+|turn|11
+|move|p1a: Kyurem|Ice Beam|p2a: Skarmory
+|-damage|p2a: Skarmory|7/100
+|move|p2a: Skarmory|Brave Bird|p1a: Kyurem
+|-damage|p1a: Kyurem|129/391
+|-damage|p2a: Skarmory|0 fnt|[from] Recoil
+|faint|p2a: Skarmory
+|upkeep
+|switch|p2a: Zamazenta|Zamazenta|100/100
+|-ability|p2a: Zamazenta|Dauntless Shield|boost
+|-boost|p2a: Zamazenta|def|1
+|turn|12
+|switch|p1a: Skarmory|Skarmory, M|107/333
+|move|p2a: Zamazenta|Close Combat|p1a: Skarmory
+|-damage|p1a: Skarmory|0 fnt
+|-unboost|p2a: Zamazenta|def|1
+|-unboost|p2a: Zamazenta|spd|1
+|-damage|p2a: Zamazenta|84/100|[from] item: Rocky Helmet|[of] p1a: Skarmory
+|faint|p1a: Skarmory
+|upkeep
+|switch|p1a: Kyurem|Kyurem|129/391
+|-ability|p1a: Kyurem|Pressure
+|turn|13
+|switch|p2a: Weavile|Weavile, M|100/100
+|switch|p1a: Ting-Lu|Ting-Lu|514/514
+|-ability|p1a: Ting-Lu|Vessel of Ruin
+|upkeep
+|turn|14
+|move|p2a: Weavile|Triple Axel|p1a: Ting-Lu|[miss]
+|-miss|p2a: Weavile|p1a: Ting-Lu
+|move|p1a: Ting-Lu|Earthquake|p2a: Weavile
+|-damage|p2a: Weavile|38/100
+|upkeep
+|turn|15
+|move|p2a: Weavile|Triple Axel|p1a: Ting-Lu
+|-supereffective|p1a: Ting-Lu
+|-damage|p1a: Ting-Lu|458/514
+|-supereffective|p1a: Ting-Lu
+|-damage|p1a: Ting-Lu|336/514
+|-supereffective|p1a: Ting-Lu
+|-damage|p1a: Ting-Lu|178/514
+|-hitcount|p1a: Ting-Lu|3
+|move|p1a: Ting-Lu|Earthquake|p2a: Weavile
+|-damage|p2a: Weavile|0 fnt
+|faint|p2a: Weavile
+|upkeep
+|switch|p2a: Kyurem|Kyurem|100/100
+|-ability|p2a: Kyurem|Pressure
+|turn|16
+|switch|p1a: Kyurem|Kyurem|129/391
+|-ability|p1a: Kyurem|Pressure
+|move|p2a: Kyurem|Ice Beam|p1a: Kyurem
+|-damage|p1a: Kyurem|0 fnt
+|faint|p1a: Kyurem
+|upkeep
+|switch|p1a: Zamazenta|Zamazenta|127/325
+|turn|17
+|switch|p1a: Ting-Lu|Ting-Lu|178/514
+|-ability|p1a: Ting-Lu|Vessel of Ruin
+|switch|p2a: Zamazenta|Zamazenta|84/100
+|upkeep
+|turn|18
+|move|p2a: Zamazenta|Close Combat|p1a: Ting-Lu
+|-supereffective|p1a: Ting-Lu
+|-damage|p1a: Ting-Lu|0 fnt
+|-unboost|p2a: Zamazenta|def|1
+|-unboost|p2a: Zamazenta|spd|1
+|faint|p1a: Ting-Lu
+|upkeep
+|switch|p1a: Zamazenta|Zamazenta|127/325
+|turn|19
+|switch|p2a: Kyurem|Kyurem|100/100
+|-ability|p2a: Kyurem|Pressure
+|switch|p1a: Slowking|Slowking-Galar, F|394/394
+|upkeep
+|turn|20
+|move|p2a: Kyurem|Earth Power|p1a: Slowking
+|-supereffective|p1a: Slowking
+|-damage|p1a: Slowking|246/394
+|move|p1a: Slowking|Future Sight|p2a: Kyurem
+|-start|p1a: Slowking|move: Future Sight
+|upkeep
+|turn|21
+|switch|p1a: Zamazenta|Zamazenta|127/325
+|move|p2a: Kyurem|Earth Power|p1a: Zamazenta
+|-damage|p1a: Zamazenta|29/325
+|upkeep
+|turn|22
+|move|p1a: Zamazenta|Close Combat|p2a: Kyurem
+|-supereffective|p2a: Kyurem
+|-damage|p2a: Kyurem|0 fnt
+|-unboost|p1a: Zamazenta|def|1
+|-unboost|p1a: Zamazenta|spd|1
+|faint|p2a: Kyurem
+|-hint|Future Sight did not hit because the target is fainted.
+|upkeep
+|switch|p2a: Zamazenta|Zamazenta|84/100
+|turn|23
+|switch|p1a: Slowking|Slowking-Galar, F|377/394
+|move|p2a: Zamazenta|Close Combat|p1a: Slowking
+|-resisted|p1a: Slowking
+|-damage|p1a: Slowking|313/394
+|-unboost|p2a: Zamazenta|def|1
+|-unboost|p2a: Zamazenta|spd|1
+|upkeep
+|turn|24
+|move|p2a: Zamazenta|Crunch|p1a: Slowking
+|-supereffective|p1a: Slowking
+|-damage|p1a: Slowking|63/394
+|move|p1a: Slowking|Future Sight|p2a: Zamazenta
+|-start|p1a: Slowking|move: Future Sight
+|upkeep
+|turn|25
+|move|p2a: Zamazenta|Crunch|p1a: Slowking
+|-supereffective|p1a: Slowking
+|-damage|p1a: Slowking|0 fnt
+|faint|p1a: Slowking
+|upkeep
+|switch|p1a: Zamazenta|Zamazenta|29/325
+|turn|26
+|switch|p2a: Ting-Lu|Ting-Lu|15/100
+|-ability|p2a: Ting-Lu|Vessel of Ruin
+|move|p1a: Zamazenta|Close Combat|p2a: Ting-Lu
+|-supereffective|p2a: Ting-Lu
+|-damage|p2a: Ting-Lu|0 fnt
+|-unboost|p1a: Zamazenta|def|1
+|-unboost|p1a: Zamazenta|spd|1
+|faint|p2a: Ting-Lu
+|-hint|Future Sight did not hit because the target is fainted.
+|upkeep
+|switch|p2a: Zamazenta|Zamazenta|84/100
+|turn|27
+|move|p1a: Zamazenta|Close Combat|p2a: Zamazenta
+|-crit|p2a: Zamazenta
+|-damage|p2a: Zamazenta|0 fnt
+|-unboost|p1a: Zamazenta|def|1
+|-unboost|p1a: Zamazenta|spd|1
+|faint|p2a: Zamazenta
+    </script>
+</div>
+
+<div class="battle-log battle-log-inline" style="display:none"></div>
+
+<script>
+    let daily = Math.floor(Date.now() / 1000 / 60 / 60 / 24); document.write('<script src="https://play.pokemonshowdown.com/js/replay-embed.js?version' + daily + '"></' + 'script>');
+</script>
+
+<p style="text-align:center"> Replay created by <a href="https://github.com/hsahovic/poke-env">poke-env</a>, with code from <a
+        href="https://github.com/smogon/pokemon-showdown"> pokemon-showdown</a>. If something goes wrong, don't hesitate
+    to open an <a href="https://github.com/hsahovic/poke-env/issues">issue!</a></p>
