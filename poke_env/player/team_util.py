@@ -8,14 +8,19 @@ from poke_env.ps_client.server_configuration import ShowdownServerConfiguration
 from poke_env.player.prompts import prompt_translate, state_translate2
 from numpy.random import randint
 
-def load_random_team(id=None):
+def load_random_team(id=None, vcg=False):
     if id == None:
         team_id = randint(1, 14)
     else:
         team_id = id
-    with open(f'poke_env/data/static/teams/gen9ou{team_id}.txt', 'r') as f:
-        team = f.read()
+    if vcg is True:
+        with open(f'poke_env/data/static/teams/gen9vgc2025regi{team_id}.txt', 'r') as f:
+            team = f.read()
+    else:
+        with open(f'poke_env/data/static/teams/gen9ou{team_id}.txt', 'r') as f:
+            team = f.read()
     return team
+
 
 def get_llm_player(args, 
                    backend: str, 

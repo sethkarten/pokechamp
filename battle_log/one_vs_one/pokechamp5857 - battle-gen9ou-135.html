@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<meta charset="utf-8" />
+<!-- version 1 -->
+<title>battle-gen9ou-135</title>
+<style>
+    html,
+    body {
+        font-family: Verdana, sans-serif;
+        font-size: 10pt;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        padding: 12px 0;
+    }
+
+    .battle-log {
+        font-family: Verdana, sans-serif;
+        font-size: 10pt;
+    }
+
+    .battle-log-inline {
+        border: 1px solid #AAAAAA;
+        background: #EEF2F5;
+        color: black;
+        max-width: 640px;
+        margin: 0 auto 80px;
+        padding-bottom: 5px;
+    }
+
+    .battle-log .inner {
+        padding: 4px 8px 0px 8px;
+    }
+
+    .battle-log .inner-preempt {
+        padding: 0 8px 4px 8px;
+    }
+
+    .battle-log .inner-after {
+        margin-top: 0.5em;
+    }
+
+    .battle-log h2 {
+        margin: 0.5em -8px;
+        padding: 4px 8px;
+        border: 1px solid #AAAAAA;
+        background: #E0E7EA;
+        border-left: 0;
+        border-right: 0;
+        font-family: Verdana, sans-serif;
+        font-size: 13pt;
+    }
+
+    .backprop {
+        top: 0;
+    }
+
+    .battle-log .chat {
+        vertical-align: middle;
+        padding: 3px 0 3px 0;
+        font-size: 8pt;
+    }
+
+    .battle-log .chat strong {
+        color: #40576A;
+    }
+
+    .battle-log .chat em {
+        padding: 1px 4px 1px 3px;
+        color: #000000;
+        font-style: normal;
+    }
+
+    .chat.mine {
+        background: rgba(0, 0, 0, 0.05);
+        margin-left: -8px;
+        margin-right: -8px;
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+
+    .spoiler {
+        color: #BBBBBB;
+        background: #BBBBBB;
+        padding: 0px 3px;
+    }
+
+    .spoiler:hover,
+    .spoiler:active,
+    .spoiler-shown {
+        color: #000000;
+        background: #E2E2E2;
+        padding: 0px 3px;
+    }
+
+    .spoiler a {
+        color: #BBBBBB;
+    }
+
+    .spoiler:hover a,
+    .spoiler:active a,
+    .spoiler-shown a {
+        color: #2288CC;
+    }
+
+    .chat code,
+    .chat .spoiler:hover code,
+    .chat .spoiler:active code,
+    .chat .spoiler-shown code {
+        border: 1px solid #C0C0C0;
+        background: #EEEEEE;
+        color: black;
+        padding: 0 2px;
+    }
+
+    .chat .spoiler code {
+        border: 1px solid #CCCCCC;
+        background: #CCCCCC;
+        color: #CCCCCC;
+    }
+
+    .battle-log .rated {
+        padding: 3px 4px;
+    }
+
+    .battle-log .rated strong {
+        color: white;
+        background: #89A;
+        padding: 1px 4px;
+        border-radius: 4px;
+    }
+
+    .spacer {
+        margin-top: 0.5em;
+    }
+
+    .message-announce {
+        background: #6688AA;
+        color: white;
+        padding: 1px 4px 2px;
+    }
+
+    .message-announce a,
+    .broadcast-green a,
+    .broadcast-blue a,
+    .broadcast-red a {
+        color: #DDEEFF;
+    }
+
+    .broadcast-green {
+        background-color: #559955;
+        color: white;
+        padding: 2px 4px;
+    }
+
+    .broadcast-blue {
+        background-color: #6688AA;
+        color: white;
+        padding: 2px 4px;
+    }
+
+    .infobox {
+        border: 1px solid #6688AA;
+        padding: 2px 4px;
+    }
+
+    .infobox-limited {
+        max-height: 200px;
+        overflow: auto;
+        overflow-x: hidden;
+    }
+
+    .broadcast-red {
+        background-color: #AA5544;
+        color: white;
+        padding: 2px 4px;
+    }
+
+    .message-learn-canlearn {
+        font-weight: bold;
+        color: #228822;
+        text-decoration: underline;
+    }
+
+    .message-learn-cannotlearn {
+        font-weight: bold;
+        color: #CC2222;
+        text-decoration: underline;
+    }
+
+    .message-effect-weak {
+        font-weight: bold;
+        color: #CC2222;
+    }
+
+    .message-effect-resist {
+        font-weight: bold;
+        color: #6688AA;
+    }
+
+    .message-effect-immune {
+        font-weight: bold;
+        color: #666666;
+    }
+
+    .message-learn-list {
+        margin-top: 0;
+        margin-bottom: 0;
+    }
+
+    .message-throttle-notice,
+    .message-error {
+        color: #992222;
+    }
+
+    .message-overflow,
+    .chat small.message-overflow {
+        font-size: 0pt;
+    }
+
+    .message-overflow::before {
+        font-size: 9pt;
+        content: '...';
+    }
+
+    .subtle {
+        color: #3A4A66;
+    }
+</style>
+<div class="wrapper replay-wrapper" style="max-width:1180px;margin:0 auto">
+    <input type="hidden" name="replayid" value="unregisteredserver-gen8randombattle-320064" />
+    <div class="battle"></div>
+    <div class="battle-log"></div>
+    <div class="replay-controls"></div>
+    <div class="replay-controls-2"></div>
+    <h1 style="font-weight:normal;text-align:center"><strong>poke-env battle replay</strong><br />battle-gen9ou-135<br /><a
+            href="http://pokemonshowdown.com/users/randomplayer1" class="subtle" target="_blank">pokechamp5857</a>
+        vs. <a href="http://pokemonshowdown.com/users/randomplayer2" class="subtle"
+            target="_blank">abyssal5857</a></h1>
+    <script type="text/plain" class="battle-log-data">
+    >battle-gen9ou-135|init|battle
+|title|pokechamp5857 vs. abyssal5857
+|j|☆pokechamp5857
+|j|☆abyssal5857
+|gametype|singles
+|player|p1|pokechamp5857|101|
+|player|p2|abyssal5857|265|
+|teamsize|p1|6
+|teamsize|p2|6
+|gen|9
+|tier|Gen 9 OU
+|rule|HP Percentage Mod: HP is shown in percentages
+|rule|Endless Battle Clause: Forcing endless battles is banned
+|rule|Species Clause: Limit one of each Pokémon
+|rule|OHKO Clause: OHKO moves are banned
+|rule|Evasion Items Clause: Evasion items are banned
+|rule|Evasion Moves Clause: Evasion moves are banned
+|rule|Evasion Abilities Clause: Evasion abilities are banned
+|rule|Sleep Moves Clause: Sleep-inducing moves are banned
+|clearpoke
+|poke|p1|Dragapult, F|
+|poke|p1|Primarina, M|
+|poke|p1|Iron Crown|
+|poke|p1|Samurott-Hisui, F|
+|poke|p1|Kingambit, M|
+|poke|p1|Landorus-Therian, M|
+|poke|p2|Dragapult, M|
+|poke|p2|Primarina, F|
+|poke|p2|Iron Crown|
+|poke|p2|Samurott-Hisui, M|
+|poke|p2|Kingambit, M|
+|poke|p2|Landorus-Therian, M|
+|teampreview
+|start
+|switch|p1a: Iron Crown|Iron Crown|321/321
+|switch|p2a: Primarina|Primarina, F|100/100
+|turn|1
+|switch|p2a: Samurott|Samurott-Hisui, M|100/100
+|move|p1a: Iron Crown|Future Sight|p2a: Samurott
+|-start|p1a: Iron Crown|move: Future Sight
+|upkeep
+|turn|2
+|move|p1a: Iron Crown|Volt Switch|p2a: Samurott
+|-supereffective|p2a: Samurott
+|-damage|p2a: Samurott|24/100
+|-end|p1a: Iron Crown|Quark Drive|[silent]
+|switch|p1a: Landorus|Landorus-Therian, M|382/382|[from] Volt Switch
+|-ability|p1a: Landorus|Intimidate|boost
+|-unboost|p2a: Samurott|atk|1
+|move|p2a: Samurott|Knock Off|p1a: Landorus
+|-damage|p1a: Landorus|300/382
+|-damage|p2a: Samurott|8/100|[from] item: Rocky Helmet|[of] p1a: Landorus
+|-enditem|p1a: Landorus|Rocky Helmet|[from] move: Knock Off|[of] p2a: Samurott
+|upkeep
+|turn|3
+|switch|p2a: Primarina|Primarina, F|100/100
+|switch|p1a: Samurott|Samurott-Hisui, F|321/321
+|-end|p2a: Primarina|move: Future Sight
+|-damage|p2a: Primarina|49/100
+|upkeep
+|turn|4
+|switch|p1a: Iron Crown|Iron Crown|321/321
+|move|p2a: Primarina|Moonblast|p1a: Iron Crown
+|-resisted|p1a: Iron Crown
+|-damage|p1a: Iron Crown|271/321
+|upkeep
+|turn|5
+|move|p1a: Iron Crown|Volt Switch|p2a: Primarina
+|-supereffective|p2a: Primarina
+|-damage|p2a: Primarina|7/100
+|-end|p1a: Iron Crown|Quark Drive|[silent]
+|switch|p1a: Samurott|Samurott-Hisui, F|321/321|[from] Volt Switch
+|move|p2a: Primarina|Surf|p1a: Samurott
+|-resisted|p1a: Samurott
+|-damage|p1a: Samurott|156/321
+|upkeep
+|turn|6
+|switch|p1a: Primarina|Primarina, M|363/363
+|switch|p2a: Samurott|Samurott-Hisui, M|8/100
+|upkeep
+|turn|7
+|move|p2a: Samurott|Razor Shell|p1a: Primarina
+|-resisted|p1a: Primarina
+|-damage|p1a: Primarina|241/363
+|move|p1a: Primarina|Surf|p2a: Samurott
+|-resisted|p2a: Samurott
+|-crit|p2a: Samurott
+|-damage|p2a: Samurott|0 fnt
+|faint|p2a: Samurott
+|upkeep
+|switch|p2a: Iron Crown|Iron Crown|100/100
+|turn|8
+|switch|p1a: Iron Crown|Iron Crown|271/321
+|move|p2a: Iron Crown|Future Sight|p1a: Iron Crown
+|-start|p2a: Iron Crown|move: Future Sight
+|upkeep
+|turn|9
+|-terastallize|p1a: Iron Crown|Fighting
+|move|p2a: Iron Crown|Focus Blast|p1a: Iron Crown
+|-damage|p1a: Iron Crown|178/321
+|move|p1a: Iron Crown|Tachyon Cutter|p2a: Iron Crown
+|-resisted|p2a: Iron Crown
+|-damage|p2a: Iron Crown|92/100
+|-resisted|p2a: Iron Crown
+|-damage|p2a: Iron Crown|84/100
+|-hitcount|p2a: Iron Crown|2
+|upkeep
+|turn|10
+|move|p2a: Iron Crown|Focus Blast|p1a: Iron Crown
+|-damage|p1a: Iron Crown|89/321
+|move|p1a: Iron Crown|Tachyon Cutter|p2a: Iron Crown
+|-resisted|p2a: Iron Crown
+|-damage|p2a: Iron Crown|75/100
+|-resisted|p2a: Iron Crown
+|-damage|p2a: Iron Crown|67/100
+|-hitcount|p2a: Iron Crown|2
+|-end|p1a: Iron Crown|move: Future Sight
+|-supereffective|p1a: Iron Crown
+|-damage|p1a: Iron Crown|0 fnt
+|faint|p1a: Iron Crown
+|-end|p1a: Iron Crown|Quark Drive|[silent]
+|upkeep
+|switch|p1a: Dragapult|Dragapult, F, shiny|317/317
+|turn|11
+|switch|p1a: Landorus|Landorus-Therian, M|300/382
+|-ability|p1a: Landorus|Intimidate|boost
+|-unboost|p2a: Iron Crown|atk|1
+|-end|p2a: Iron Crown|Quark Drive|[silent]
+|switch|p2a: Kingambit|Kingambit, M|100/100
+|-activate|p2a: Kingambit|ability: Supreme Overlord
+|-start|p2a: Kingambit|fallen1|[silent]
+|upkeep
+|turn|12
+|switch|p1a: Primarina|Primarina, M|241/363
+|move|p2a: Kingambit|Kowtow Cleave|p1a: Primarina
+|-resisted|p1a: Primarina
+|-damage|p1a: Primarina|115/363
+|upkeep
+|turn|13
+|switch|p1a: Landorus|Landorus-Therian, M|300/382
+|-ability|p1a: Landorus|Intimidate|boost
+|-unboost|p2a: Kingambit|atk|1
+|move|p2a: Kingambit|Swords Dance|p2a: Kingambit
+|-boost|p2a: Kingambit|atk|2
+|upkeep
+|turn|14
+|move|p1a: Landorus|Earth Power|p2a: Kingambit
+|-supereffective|p2a: Kingambit
+|-damage|p2a: Kingambit|41/100
+|move|p2a: Kingambit|Kowtow Cleave|p1a: Landorus
+|-damage|p1a: Landorus|71/382
+|-heal|p2a: Kingambit|47/100|[from] item: Leftovers
+|upkeep
+|turn|15
+|move|p1a: Landorus|Earth Power|p2a: Kingambit
+|-supereffective|p2a: Kingambit
+|-damage|p2a: Kingambit|0 fnt
+|faint|p2a: Kingambit
+|-end|p2a: Kingambit|fallen1|[silent]
+|upkeep
+|switch|p2a: Primarina|Primarina, F|7/100
+|turn|16
+|switch|p1a: Primarina|Primarina, M|115/363
+|move|p2a: Primarina|Surf|p1a: Primarina
+|-resisted|p1a: Primarina
+|-damage|p1a: Primarina|13/363
+|upkeep
+|turn|17
+|move|p1a: Primarina|Surf|p2a: Primarina
+|-resisted|p2a: Primarina
+|-damage|p2a: Primarina|0 fnt
+|faint|p2a: Primarina
+|upkeep
+|switch|p2a: Iron Crown|Iron Crown|67/100
+|turn|18
+|switch|p1a: Kingambit|Kingambit, M|393/393
+|-activate|p1a: Kingambit|ability: Supreme Overlord
+|-start|p1a: Kingambit|fallen1|[silent]
+|move|p2a: Iron Crown|Future Sight|p1a: Kingambit
+|-start|p2a: Iron Crown|move: Future Sight
+|upkeep
+|turn|19
+|move|p2a: Iron Crown|Focus Blast|p1a: Kingambit
+|-supereffective|p1a: Kingambit
+|-damage|p1a: Kingambit|0 fnt
+|faint|p1a: Kingambit
+|-end|p1a: Kingambit|fallen1|[silent]
+|upkeep
+|switch|p1a: Dragapult|Dragapult, F, shiny|317/317
+|turn|20
+|switch|p1a: Samurott|Samurott-Hisui, F|156/321
+|-end|p2a: Iron Crown|Quark Drive|[silent]
+|switch|p2a: Dragapult|Dragapult, M, shiny|100/100
+|-end|p1a: Samurott|move: Future Sight
+|-immune|p1a: Samurott
+|upkeep
+|turn|21
+|switch|p1a: Primarina|Primarina, M|13/363
+|move|p2a: Dragapult|Dragon Darts|p1a: Primarina
+|-immune|p1a: Primarina
+|upkeep
+|turn|22
+|move|p2a: Dragapult|Dragon Darts|p1a: Primarina
+|-immune|p1a: Primarina
+|move|p1a: Primarina|Moonblast|p2a: Dragapult
+|-supereffective|p2a: Dragapult
+|-damage|p2a: Dragapult|0 fnt
+|faint|p2a: Dragapult
+|upkeep
+|switch|p2a: Iron Crown|Iron Crown|67/100
+|turn|23
+|switch|p1a: Samurott|Samurott-Hisui, F|156/321
+|move|p2a: Iron Crown|Future Sight|p1a: Samurott
+|-start|p2a: Iron Crown|move: Future Sight
+|upkeep
+|turn|24
+|move|p2a: Iron Crown|Focus Blast|p1a: Samurott
+|-supereffective|p1a: Samurott
+|-damage|p1a: Samurott|0 fnt
+|faint|p1a: Samurott
+|upkeep
+|switch|p1a: Dragapult|Dragapult, F, shiny|317/317
+|turn|25
+|switch|p1a: Primarina|Primarina, M|13/363
+|-end|p2a: Iron Crown|Quark Drive|[silent]
+|switch|p2a: Landorus|Landorus-Therian, M|100/100
+|-ability|p2a: Landorus|Intimidate|boost
+|-unboost|p1a: Primarina|atk|1
+|-end|p1a: Primarina|move: Future Sight
+|-damage|p1a: Primarina|0 fnt
+|faint|p1a: Primarina
+|upkeep
+|switch|p1a: Dragapult|Dragapult, F, shiny|317/317
+|turn|26
+|switch|p1a: Landorus|Landorus-Therian, M|71/382
+|-ability|p1a: Landorus|Intimidate|boost
+|-unboost|p2a: Landorus|atk|1
+|switch|p2a: Iron Crown|Iron Crown|67/100
+|upkeep
+|turn|27
+|move|p2a: Iron Crown|Future Sight|p1a: Landorus
+|-start|p2a: Iron Crown|move: Future Sight
+|move|p1a: Landorus|Earth Power|p2a: Iron Crown
+|-supereffective|p2a: Iron Crown
+|-damage|p2a: Iron Crown|22/100
+|-unboost|p2a: Iron Crown|spd|1
+|upkeep
+|turn|28
+|move|p2a: Iron Crown|Future Sight||[still]
+|-fail|p2a: Iron Crown
+|move|p1a: Landorus|Earth Power|p2a: Iron Crown
+|-supereffective|p2a: Iron Crown
+|-damage|p2a: Iron Crown|0 fnt
+|faint|p2a: Iron Crown
+|-end|p2a: Iron Crown|Quark Drive|[silent]
+|upkeep
+|switch|p2a: Landorus|Landorus-Therian, M|100/100
+|-ability|p2a: Landorus|Intimidate|boost
+|-unboost|p1a: Landorus|atk|1
+|turn|29
+|switch|p1a: Dragapult|Dragapult, F, shiny|317/317
+|move|p2a: Landorus|U-turn|p1a: Dragapult
+|-resisted|p1a: Dragapult
+|-damage|p1a: Dragapult|273/317
+|-end|p1a: Dragapult|move: Future Sight
+|-damage|p1a: Dragapult|23/317
+|upkeep
+|turn|30
+|move|p1a: Dragapult|Dragon Darts|p2a: Landorus
+|-crit|p2a: Landorus
+|-damage|p2a: Landorus|63/100
+|-anim|p1a: Dragapult|Dragon Darts|p2a: Landorus
+|-damage|p2a: Landorus|39/100
+|move|p2a: Landorus|Earth Power|p1a: Dragapult
+|-damage|p1a: Dragapult|0 fnt
+|faint|p1a: Dragapult
+|upkeep
+|switch|p1a: Landorus|Landorus-Therian, M|71/382
+|-ability|p1a: Landorus|Intimidate|boost
+|-unboost|p2a: Landorus|atk|1
+|turn|31
+|move|p1a: Landorus|Grass Knot|p2a: Landorus
+|-damage|p2a: Landorus|17/100
+|-damage|p1a: Landorus|8/382|[from] item: Rocky Helmet|[of] p2a: Landorus
+|move|p2a: Landorus|Stealth Rock|p1a: Landorus
+|-sidestart|p1: pokechamp5857|move: Stealth Rock
+|upkeep
+|turn|32
+|move|p2a: Landorus|U-turn|p1a: Landorus
+|-resisted|p1a: Landorus
+|-damage|p1a: Landorus|0 fnt
+|faint|p1a: Landorus
+    </script>
+</div>
+
+<div class="battle-log battle-log-inline" style="display:none"></div>
+
+<script>
+    let daily = Math.floor(Date.now() / 1000 / 60 / 60 / 24); document.write('<script src="https://play.pokemonshowdown.com/js/replay-embed.js?version' + daily + '"></' + 'script>');
+</script>
+
+<p style="text-align:center"> Replay created by <a href="https://github.com/hsahovic/poke-env">poke-env</a>, with code from <a
+        href="https://github.com/smogon/pokemon-showdown"> pokemon-showdown</a>. If something goes wrong, don't hesitate
+    to open an <a href="https://github.com/hsahovic/poke-env/issues">issue!</a></p>

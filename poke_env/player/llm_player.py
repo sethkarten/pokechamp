@@ -181,7 +181,7 @@ class LLMPlayer(Player):
 
         retries = 2
         # Chain-of-thought
-        if self.prompt_algo == "io":
+        if self.prompt_algo == "io":  
             return self.io(retries, system_prompt, state_prompt, constraint_prompt_cot, constraint_prompt_io, state_action_prompt, battle, sim, actions=actions)
 
         # Self-consistency with k = 3
@@ -238,7 +238,11 @@ class LLMPlayer(Player):
 
         elif self.prompt_algo == "minimax":
             try:
-                return self.tree_search(retries, battle)
+                temp = self.tree_search(retries, battle)
+                if temp is None:
+                    print("minimax branch is None")
+                return temp
+                #return self.tree_search(retries, battle)
             except Exception as e:
                 print('minimax step failed. Using dmg calc')
                 print(f'Exception: {e}', 'passed')
@@ -642,6 +646,8 @@ class LLMPlayer(Player):
         # choose best action according to max or min rule
         def get_tree_action(root: SimNode):
             if len(root.children) == 0:
+                if root.action is None or root.action_opp is None:
+                    print("root children branch none")
                 return root.action, root.hp_diff, root.action_opp
             score_dict = {}
             action_dict = {}
@@ -660,10 +666,16 @@ class LLMPlayer(Player):
                     opp_dict[action] = child.action_opp
             scores = list(score_dict.values())
             best_action_str = list(action_dict.keys())[np.argmax(scores)]
+            if action_dict[best_action_str] is None:
+                print("minimax algo branch is None")
             return action_dict[best_action_str], score_dict[best_action_str], opp_dict[best_action_str]
         
         action, _, action_opp = get_tree_action(root)
         end_time = time.time()
+        if action is None:
+            print("tree search action is None")
+        if action_opp is None:
+            print("tree search opponent action is none")
         if return_opp:
             return action, action_opp
         return action
