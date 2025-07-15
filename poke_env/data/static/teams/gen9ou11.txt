@@ -1,65 +1,61 @@
+Blissey @ Heavy-Duty Boots  
+Ability: Natural Cure  
+Tera Type: Water  
+EVs: 4 HP / 252 Def / 252 SpD  
+Calm Nature  
+IVs: 0 Atk  
+- Stealth Rock  
+- Seismic Toss  
+- Calm Mind  
+- Soft-Boiled  
 
+Ditto @ Air Balloon  
+Ability: Imposter  
+Tera Type: Normal  
+EVs: 248 HP / 8 Def / 252 SpA  
+Quiet Nature  
+IVs: 0 Spe  
+- Transform  
 
-Gholdengo @ Heavy-Duty Boots  
-Ability: Good as Gold  
+Dondozo (F) @ Heavy-Duty Boots  
+Ability: Unaware  
+Tera Type: Ghost  
+EVs: 248 HP / 252 Def / 8 SpD  
+Impish Nature  
+- Rest  
+- Sleep Talk  
+- Body Press  
+- Avalanche  
+
+Toxapex @ Heavy-Duty Boots  
+Ability: Regenerator  
 Tera Type: Fairy  
-EVs: 252 HP / 248 Def / 8 Spe  
+EVs: 248 HP / 252 Def / 8 SpD  
 Bold Nature  
 IVs: 0 Atk  
-- Focus Blast  
-- Thunder Wave  
-- Hex  
+- Toxic  
+- Haze  
 - Recover  
+- Toxic Spikes  
+
+Alomomola @ Heavy-Duty Boots  
+Ability: Regenerator  
+Tera Type: Flying  
+EVs: 252 HP / 252 Def / 4 SpD  
+Bold Nature  
+IVs: 0 Atk  
+- Wish  
+- Protect  
+- Whirlpool  
+- Chilling Water  
 
 Ting-Lu @ Heavy-Duty Boots  
 Ability: Vessel of Ruin  
-Tera Type: Water  
-EVs: 252 HP / 4 Def / 252 SpD  
+Tera Type: Steel  
+EVs: 252 HP / 4 Atk / 252 SpD  
 Careful Nature  
-- Whirlwind  
-- Earthquake  
-- Ruination  
+IVs: 29 Spe  
 - Spikes  
-
-Deoxys-Speed @ Heavy-Duty Boots  
-Ability: Pressure  
-Tera Type: Fighting  
-EVs: 200 Atk / 252 SpA / 56 Spe  
-Naive Nature  
-- Knock Off  
-- Ice Beam  
-- Psycho Boost  
-- Superpower  
-
-Garganacl @ Leftovers  
-Ability: Purifying Salt  
-Tera Type: Water  
-EVs: 252 HP / 176 Def / 80 SpD  
-Impish Nature  
-- Salt Cure  
 - Protect  
-- Stealth Rock  
-- Recover  
-
-Ogerpon (F) @ Heavy-Duty Boots  
-Ability: Defiant  
-Tera Type: Grass  
-EVs: 252 Atk / 4 Def / 252 Spe  
-Jolly Nature  
-- Knock Off  
-- Ivy Cudgel  
-- U-turn  
-- Encore  
-
-Gliscor @ Toxic Orb  
-Ability: Poison Heal  
-Tera Type: Water  
-EVs: 244 HP / 12 Def / 252 SpD  
-Careful Nature  
-IVs: 28 Spe  
-- U-turn  
-- Toxic  
+- Rest  
 - Earthquake  
-- Protect  
-
-
