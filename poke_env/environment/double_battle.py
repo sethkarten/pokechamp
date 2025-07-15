@@ -41,6 +41,11 @@ class DoubleBattle(AbstractBattle):
         self._maybe_trapped: List[bool] = [False, False]
         self._trapped: List[bool] = [False, False]
 
+        self.battle_msg_history = ""
+        self.pokemon_hp_log_dict = {}
+        self.speed_list = []
+
+
         # Battle state attributes
         self._active_pokemon: Dict[str, Pokemon] = {}
         self._opponent_active_pokemon: Dict[str, Pokemon] = {}

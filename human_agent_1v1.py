@@ -25,7 +25,7 @@ async def main():
                             battle_format=args.battle_format)
     if not 'random' in args.battle_format:
         if 'vgc' in args.battle_format:
-            opponent.update_team(load_random_team(vgc=True))
+            opponent.update_team(load_random_team(id=1, vgc=True))
         else: 
             opponent.update_team(load_random_team())                      
     
