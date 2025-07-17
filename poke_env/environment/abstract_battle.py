@@ -807,6 +807,25 @@ class AbstractBattle(ABC):
             if pokemon.terastallized:
                 if pokemon in set(self.opponent_team.values()):
                     self._opponent_can_terrastallize = False
+        elif split_message[1] == "showteam":
+            player = split_message[2]
+            details = split_message[3:]
+            
+            joined = "|".join(details)
+            mons = joined.split(']')
+
+            for raw in mons:
+                raw = raw.strip()
+                if not raw:
+                    continue
+                    
+                details = raw + ']'
+                try:
+                    mon = Pokemon(details=details, gen=self._data.gen)
+                    if player != self._player_role:
+                        self._teampreview_opponent_team.add(mon)
+                except Exception as e:
+                    print(f"Failed to parse mon details for {player}: {details} due to {e}")
         else:
             print("split_message[1]:", split_message[1])
             raise NotImplementedError(split_message)
@@ -816,6 +835,7 @@ class AbstractBattle(ABC):
         pass
 
     def _register_teampreview_pokemon(self, player: str, details: str):
+        print("details", details)
         if player != self._player_role:
             mon = Pokemon(details=details, gen=self._data.gen)
             self._teampreview_opponent_team.add(mon)
