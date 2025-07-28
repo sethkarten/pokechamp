@@ -9,6 +9,7 @@ import orjson
 
 from poke_env.data.gen_data import GenData
 from poke_env.environment.battle import Battle
+from poke_env.environment.double_battle import DoubleBattle
 from poke_env.environment.move import Move
 from poke_env.environment.move_category import MoveCategory
 from poke_env.environment.pokemon import Pokemon
@@ -21,6 +22,16 @@ from poke_env.player.llama_player import LLAMAPlayer
 DEBUG = False
 
 def calculate_move_type_damage_multipier(type_1, type_2, type_chart, constraint_type_list):
+    """
+    calculates effectivness of all attacking move types against a Pokémon with the given type1 and type 2
+
+    return: a tuple of five lists containing attacking types that are:
+        - extremely effective (4x)
+        - effective (2x)
+        - resistant (0.5x)
+        - extremely resistant (0.25x)
+        - immune (0x)
+    """
     TYPE_list = 'BUG,DARK,DRAGON,ELECTRIC,FAIRY,FIGHTING,FIRE,FLYING,GHOST,GRASS,GROUND,ICE,NORMAL,POISON,PSYCHIC,ROCK,STEEL,WATER'.split(",")
 
     move_type_damage_multiplier_list = []
@@ -71,7 +82,17 @@ def calculate_move_type_damage_multipier(type_1, type_2, type_chart, constraint_
            list(map(lambda x: x.capitalize(), immune_type_list)))
 
 def move_type_damage_wrapper(pokemon, type_chart, constraint_type_list=None):
+    """
+    Generates nlp describing what the effectiveness of all attack types against the given pokemon
 
+    param pokemon: pokemon to be evaluated
+    return: example
+        "Fairy, Ice-type attack is extremely-effective (4x damage) to Garchomp. 
+         Dragon-type attack is super-effective (2x damage) to Garchomp. 
+         Fire, Poison, Rock-type attack is ineffective (0.5x damage) to Garchomp. 
+         None-type attack is zero effect (0x damage) to Garchomp."
+    rtype: str
+    """
     type_1 = None
     type_2 = None
     if pokemon.type_1:
@@ -145,6 +166,8 @@ class LocalSim():
             file = f'poke_env/data/static/gen9/ou/sets_1000.json'
             with open(file, 'r') as f:
                 self.moves_set = orjson.loads(f.read())
+
+        # TODO: create/load sets for vgc
 
 
     def get_llm_system_prompt(self, _format: str, llm: GPTPlayer | LLAMAPlayer = None, team_str: str=None, model: str='gpt-4o'):
@@ -577,9 +600,24 @@ class LocalSim():
                 
         
     def get_opponent_current_moves(self, mon=None, return_switch=False, is_player=False, return_separate=False):
+        """
+        Retrives known/likely moves for either the player's currently active pokemon, the opponent's currently active pokemon, or a specfic mon
+
+        :param return_switch: unused #TODO remove this param or implement it
+        :param is_player: if true, returns moves for the player's active pokemon (if Singles), or one of the players active pokemon (Doubles)
+        :param return_separate: if true, returns a tuple that separates the known opponent moves from the likely ones
+
+        :return:
+            if return_separate is false: returns a list of up to 4 moves combining known and possible
+            else, return a tuple (known, possible)
+        :rtype: List[str] or Tuple[List[str], List[str]]
+        """
+        #TODO implement set searching for vgc
         if is_player:
+            if(isinstance(self.battle, DoubleBattle)): #in this case, get_move_prompt in prompts.py will have passed the mon whose moveset is to be fetched
+                return list(mon.moves.keys())
             return list(self.battle.active_pokemon.moves.keys())
-        if mon == None:
+        if not isinstance(self.battle, DoubleBattle):   # if Singles format, can simply use the active pokemon, otherwise, mon will be passed in
             mon = self.battle.opponent_active_pokemon
         # get definite moves for the current pokemon
         opponent_moves = []

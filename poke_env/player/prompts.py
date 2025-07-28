@@ -2,6 +2,7 @@
 from typing import Dict
 import numpy as np
 from poke_env.environment.battle import Battle
+from poke_env.environment.double_battle import DoubleBattle
 from poke_env.environment.move import Move
 from poke_env.environment.move_category import MoveCategory
 from poke_env.environment.pokemon import Pokemon
@@ -12,6 +13,11 @@ def get_turn_summary(sim: LocalSim,
                      battle: Battle,
                      n_turn: int=5
                      ) -> str:
+    """
+    fetches the past n turns from the battle history
+
+    rtype: str
+    """
     if "p1" in list(battle.team.keys())[0]:
         context_prompt = (f"Historical turns:\n" + "\n".join(
             battle.battle_msg_history.split("[sep]")[-1 * (n_turn + 1):]).
@@ -106,6 +112,11 @@ def get_current_status(sim, battle):
     return opponent_prompt + active_pokemon_prompt
 
 def get_status_mon(mon: Pokemon, sim: LocalSim):
+    """
+    Describes the hp fraction, type, ability, item and terastallized status of a Pokemon
+
+    rtype: str
+    """
     active_hp_fraction = round(mon.current_hp / mon.max_hp * 100)
     active_type = ""
     if mon.type_1:
@@ -379,7 +390,7 @@ def get_move_opp_prompt(mon: Pokemon,
                     sim: LocalSim,
                     ):
     move_prompt = ''
-    moves = sim.get_opponent_current_moves()
+    moves = sim.get_opponent_current_moves(mon=mon_opp)
     
     def call_dmg_calc(mon: Pokemon, mon_opp: Pokemon, move: Move):
         move_prompt = ''
@@ -525,57 +536,100 @@ def get_micro_strat(sim: LocalSim,
     Create matchup information about moves, speed
     '''
     micro_prompt = ''
-    for mon in battle.team.values():
-        micro_prompt += get_status_mon(mon, sim)
-    for mon_opp in battle.opponent_team.values():
-        micro_prompt += get_status_mon(mon_opp, sim)
-    for mon in battle.team.values():
-        if mon.fainted: continue
+
+    if(isinstance(battle, DoubleBattle)):
+        # Add status of all player's Pokémon
+        for mon in battle.team.values():
+            micro_prompt += get_status_mon(mon, sim)
+
+        # Add status of all opponent's Pokémon
         for mon_opp in battle.opponent_team.values():
-            if mon_opp.fainted: continue
-            if battle.active_pokemon.species == mon.species:
-                micro_prompt += 'Current pokemon:\n'
+            micro_prompt += get_status_mon(mon_opp, sim)
+
+        # Generate matchup and move info
+        for mon in battle.team.values():
+            if mon.fainted:
+                continue
+            for mon_opp in battle.opponent_team.values():
+                if mon_opp.fainted:
+                    continue
+
+                is_active = mon in battle.active_pokemon
+
+                if is_active:
+                    micro_prompt += 'Current pokemon:\n'
+                else:
+                    micro_prompt += 'Requires switch:\n'
+
                 micro_prompt += f'{mon.species} vs. {mon_opp.species}:\n'
                 micro_prompt += get_speed_prompt(mon, mon_opp, sim)
+
                 micro_prompt += f'{mon.species}\'s moves:\n'
                 micro_prompt += get_move_prompt(mon, mon_opp, sim, is_player=True)
-                # opponent moves
+
                 micro_prompt += f'Opponent moves: {mon_opp.species}\n'
                 micro_prompt += get_move_opp_prompt(mon, mon_opp, sim)
+
                 micro_prompt += '\n'
-            else:
-                micro_prompt += 'Requires switch:\n'
-                micro_prompt += f'{mon.species} vs. {mon_opp.species}:\n'
-                micro_prompt += get_speed_prompt(mon, mon_opp, sim)
-                micro_prompt += f'{mon.species}\'s moves:\n'
-                micro_prompt += get_move_prompt(mon, mon_opp, sim)
-                # opponent moves
-                micro_prompt += f'Opponent moves: {mon_opp.species}\n'
-                micro_prompt += get_move_opp_prompt(mon, mon_opp, sim)
-                micro_prompt += '\n'
-            # else:
-            #     mon_opp_stats = mon_opp.calculate_stats(battle_format=sim.format)
-            #     mon_stats = mon.calculate_stats(battle_format=sim.format)
-            #     # estimate player side matchup
-            #     _, best_move_turns = estimate_matchup(sim, battle, mon, mon_opp)
-            #     best_move_turns = best_move_turns + 1   # switch
-            #     # estimate opponent side matchup
-            #     _, opp_move_turns = estimate_matchup(sim, battle, mon_opp, mon, is_opp=True)
-            #     # ignore scenario where opponent wins
-            #     macro_prompt = f'{best_move_turns} turns to KO opponent. '
-            #     if opp_move_turns > best_move_turns or (opp_move_turns == best_move_turns and mon_stats['spe'] <= mon_opp_stats['spe']):
-            #         macro_prompt = 'Opponent wins matchup'
-            #     micro_prompt += 'Requires switch:\n'
-            #     micro_prompt += f'{mon.species} vs. {mon_opp.species}:\n'
-            #     micro_prompt += get_speed_prompt(mon, mon_opp, sim)
-            #     micro_prompt += f'{mon.species}\'s moves:\n'
-            #     micro_prompt += macro_prompt
-            #     # opponent moves
-            #     micro_prompt += f'Opponent moves: {mon_opp.species}\n'
-            #     micro_prompt += get_move_opp_prompt(mon, mon_opp, sim)
-            #     micro_prompt += '\n'
+
+        return micro_prompt
+
+    elif isinstance(battle, Battle):
+        for mon in battle.team.values():
+            micro_prompt += get_status_mon(mon, sim)
+        for mon_opp in battle.opponent_team.values():
+            micro_prompt += get_status_mon(mon_opp, sim)
+        for mon in battle.team.values():
+            if mon.fainted: continue
+            for mon_opp in battle.opponent_team.values():
+                if mon_opp.fainted: continue
+                if battle.active_pokemon.species == mon.species:
+                    micro_prompt += 'Current pokemon:\n'
+                    micro_prompt += f'{mon.species} vs. {mon_opp.species}:\n'
+                    micro_prompt += get_speed_prompt(mon, mon_opp, sim)
+                    micro_prompt += f'{mon.species}\'s moves:\n'
+                    micro_prompt += get_move_prompt(mon, mon_opp, sim, is_player=True)
+                    # opponent moves
+                    micro_prompt += f'Opponent moves: {mon_opp.species}\n'
+                    micro_prompt += get_move_opp_prompt(mon, mon_opp, sim)
+                    micro_prompt += '\n'
+                else:
+                    micro_prompt += 'Requires switch:\n'
+                    micro_prompt += f'{mon.species} vs. {mon_opp.species}:\n'
+                    micro_prompt += get_speed_prompt(mon, mon_opp, sim)
+                    micro_prompt += f'{mon.species}\'s moves:\n'
+                    micro_prompt += get_move_prompt(mon, mon_opp, sim)
+                    # opponent moves
+                    micro_prompt += f'Opponent moves: {mon_opp.species}\n'
+                    micro_prompt += get_move_opp_prompt(mon, mon_opp, sim)
+                    micro_prompt += '\n'
+                # else:
+                #     mon_opp_stats = mon_opp.calculate_stats(battle_format=sim.format)
+                #     mon_stats = mon.calculate_stats(battle_format=sim.format)
+                #     # estimate player side matchup
+                #     _, best_move_turns = estimate_matchup(sim, battle, mon, mon_opp)
+                #     best_move_turns = best_move_turns + 1   # switch
+                #     # estimate opponent side matchup
+                #     _, opp_move_turns = estimate_matchup(sim, battle, mon_opp, mon, is_opp=True)
+                #     # ignore scenario where opponent wins
+                #     macro_prompt = f'{best_move_turns} turns to KO opponent. '
+                #     if opp_move_turns > best_move_turns or (opp_move_turns == best_move_turns and mon_stats['spe'] <= mon_opp_stats['spe']):
+                #         macro_prompt = 'Opponent wins matchup'
+                #     micro_prompt += 'Requires switch:\n'
+                #     micro_prompt += f'{mon.species} vs. {mon_opp.species}:\n'
+                #     micro_prompt += get_speed_prompt(mon, mon_opp, sim)
+                #     micro_prompt += f'{mon.species}\'s moves:\n'
+                #     micro_prompt += macro_prompt
+                    #     # opponent moves
+                    #     micro_prompt += f'Opponent moves: {mon_opp.species}\n'
+                    #     micro_prompt += get_move_opp_prompt(mon, mon_opp, sim)
+                    #     micro_prompt += '\n'
             
-    return micro_prompt
+            return micro_prompt
+    else:
+            raise ValueError(
+                "battle should be Battle or DoubleBattle. Received %d" % (type(battle))
+            )
 
 def get_avail_actions(sim: LocalSim,
                       battle: Battle

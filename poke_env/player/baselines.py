@@ -176,10 +176,34 @@ class Human(Player):
 class MaxBasePowerPlayer(Player):
     
     def choose_move(self, battle: AbstractBattle):
-        if battle.available_moves:
-            best_move = max(battle.available_moves, key=lambda move: move.base_power)
-            return self.create_order(best_move)
-        return self.choose_random_move(battle)
+        if isinstance(battle, Battle):  
+            if battle.available_moves:
+                best_move = max(battle.available_moves, key=lambda move: move.base_power)
+                return self.create_order(best_move)
+            return self.choose_random_move(battle)
+        elif isinstance(battle, DoubleBattle):
+            available_moves_per_pokemon = battle.available_moves
+            orders = []
+
+            for moves in available_moves_per_pokemon:
+                if moves:
+                    best_move = max(moves, key=lambda move: move.base_power)
+                    orders.append(best_move)
+                else:
+                    orders.append(None)
+
+            for i, move in enumerate(orders):
+                if move is None:
+                    fallback = self.choose_random_move(battle)
+                    if hasattr(fallback, 'order'):
+                        orders[i] = fallback.order
+                    else:
+                        orders[i] = fallback  # Just in case it's already a Move
+            return DoubleBattleOrder(*orders)
+        else:
+            raise ValueError(
+                "battle should be Battle or DoubleBattle. Received %d" % (type(battle))
+            )
 
 class OneStepPlayer(Player):
     def __init__(self,
@@ -658,7 +682,7 @@ class AbyssalPlayer(Player):
                     key=lambda s: self._estimate_matchup(s, opponent),
                 )
             )
-
+        
         if next_action:
             # action = next_action.message.split(" ")[1]
             # object = next_action.message.split(" ")[2]

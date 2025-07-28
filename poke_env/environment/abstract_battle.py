@@ -818,10 +818,9 @@ class AbstractBattle(ABC):
                 raw = raw.strip()
                 if not raw:
                     continue
-                    
                 details = raw + ']'
                 try:
-                    mon = Pokemon(details=details, gen=self._data.gen)
+                    mon = self._register_showteam_pokemon(details)
                     if player != self._player_role:
                         self._teampreview_opponent_team.add(mon)
                 except Exception as e:
@@ -830,12 +829,40 @@ class AbstractBattle(ABC):
             print("split_message[1]:", split_message[1])
             raise NotImplementedError(split_message)
 
+    def _register_showteam_pokemon(self, details: str):
+        parts = details.strip().split("|")
+
+        # Basic fields
+        species = parts[0].strip()
+        item = parts[2].strip().lower() if parts[2] else None
+        ability = parts[3].strip().lower() if parts[3] else None
+        moves = [m.strip().lower() for m in parts[4].split(",") if m.strip()] if parts[4] else []
+        level = int(parts[10]) if len(parts) > 10 and parts[10].isdigit() else 100
+
+        # Extract Tera type if available
+        tera_type = None
+        if len(parts) > 11 and parts[11]:
+            # Example: ,,,,,Grass]
+            fields = parts[11].split(",")
+            if fields and fields[-1].strip().endswith("]"):
+                tera_type = fields[-1].strip().rstrip("]").lower()
+
+        # Instantiate and populate the Pokemon object
+        pokemon = Pokemon(gen=self._data.gen, species=species)
+        pokemon._level = level
+        pokemon._item = item
+        pokemon._ability = ability
+        pokemon._moves = {move: None for move in moves}
+        if tera_type:
+            pokemon._terastallized_type = tera_type
+
+        return pokemon
+
     @abstractmethod
     def parse_request(self, request: Dict[str, Any]):
         pass
 
     def _register_teampreview_pokemon(self, player: str, details: str):
-        print("details", details)
         if player != self._player_role:
             mon = Pokemon(details=details, gen=self._data.gen)
             self._teampreview_opponent_team.add(mon)
