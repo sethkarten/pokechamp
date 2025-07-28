@@ -27,7 +27,7 @@ async def main():
         if 'vgc' in args.battle_format:
             opponent.update_team(load_random_team(id=1, vgc=True))
         else: 
-            opponent.update_team(load_random_team())                      
+            opponent.update_team(load_random_team())                     
     
     # Playing 5 games on local
     for i in tqdm(range(1)):

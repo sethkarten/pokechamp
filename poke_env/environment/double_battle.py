@@ -37,6 +37,7 @@ class DoubleBattle(AbstractBattle):
         self._opponent_can_dynamax: List[bool] = [True, True]
         self._opponent_can_mega_evolve: List[bool] = [True, True]
         self._opponent_can_z_move: List[bool] = [True, True]
+        self._opponent_can_tera: List[bool] = [False, False]
         self._force_switch: List[bool] = [False, False]
         self._maybe_trapped: List[bool] = [False, False]
         self._trapped: List[bool] = [False, False]
@@ -449,6 +450,21 @@ class DoubleBattle(AbstractBattle):
         else:
             self._opponent_can_dynamax = value
 
+    @property
+    def opponent_can_tera(self) -> List[bool]:
+        """
+        :return: Whether or not opponent's current active pokemon can terastallize
+        :rtype: List[bool]
+        """
+        return self._opponent_can_tera
+    
+    @opponent_can_tera.setter
+    def opponent_can_tera(self, value: Union[bool, List[bool]]):
+        if isinstance(value, bool):
+            self._opponent_can_tera = [value, value]
+        else:
+            self._opponent_can_tera = value
+    
     @property
     def opponent_can_mega_evolve(self) -> List[bool]:
         """
