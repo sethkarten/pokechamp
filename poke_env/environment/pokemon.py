@@ -110,8 +110,9 @@ class Pokemon:
         self._revealed: bool = False
         self._status: Optional[Status] = None
         self._status_counter: int = 0
-
-        with open('poke_env/data/static/gen9/ou/sets_1825.json', 'r') as f:
+        
+        with open('poke_env/data/static/gen9/ou/sets_0.json', 'r') as f:
+        #with open('poke_env/data/static/gen9/vgc/sets_1760.json', 'r') as f:
             sets = json.load(f)
         self._sets = sets
         
@@ -135,7 +136,7 @@ class Pokemon:
 
         return (
             f"{self._species} (pokemon object) "
-            f"[Active: {self._active}, Status: {status_repr}]"
+            f"[Active: {self._active}, Status: {status_repr}, Item: {self._item}, Moves: {self._moves}]"
         )
 
     def _add_move(self, move_id: str, use: bool = False) -> Optional[Move]:

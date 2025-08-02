@@ -748,8 +748,9 @@ class AbstractBattle(ABC):
                 }
             )
         elif split_message[1] == "poke":
-            player, details = split_message[2:4]
-            self._register_teampreview_pokemon(player, details)
+            pass    #TODO make this not register teampreview pokemon while playing VGC b/c it messes with showteam
+            #player, details = split_message[2:4]
+            #self._register_teampreview_pokemon(player, details)
         elif split_message[1] == "premove":
             pokemon, details = split_message[2:4]
             mon = self.get_pokemon(pokemon, force_self_team=True)
@@ -822,7 +823,7 @@ class AbstractBattle(ABC):
                 try:
                     mon = self._register_showteam_pokemon(details)
                     if player != self._player_role:
-                        self._teampreview_opponent_team.add(mon)
+                        self._teampreview_opponent_team.add(mon)        # should I set up the opponent_team rn?
                 except Exception as e:
                     print(f"Failed to parse mon details for {player}: {details} due to {e}")
         else:

@@ -73,41 +73,92 @@ def get_current_status(sim, battle):
 
     if side_condition_prompt:
         active_pokemon_prompt = active_pokemon_prompt + "Your team's side condition: " + side_condition_prompt + "\n"
+    
+    if(isinstance(battle, DoubleBattle)):
+        active_pokemon_prompt = "Your current Pokémon on the field:\n"
+
+        for idx, mon in enumerate(battle.active_pokemon):
+            if mon is None or mon.fainted:
+                continue
+            active_hp_fraction = round(mon.current_hp / mon.max_hp * 100)
+
+            active_type = ""
+            if mon.type_1:
+                active_type += mon.type_1.name.capitalize()
+                if mon.type_2:
+                    active_type += " and " + mon.type_2.name.capitalize()
+
+            try:
+                active_ability = sim.ability_effect[mon.ability]["name"]
+                ability_effect = sim.ability_effect[mon.ability]["effect"]
+            except:
+                active_ability = mon.ability
+                ability_effect = ""
+
+            if mon.item:
+                try:
+                    item_name = sim.item_effect[mon.item]["name"]
+                    item_effect = sim.item_effect[mon.item]["effect"]
+                    active_item = f"{item_name}({item_effect})"
+                except:
+                    active_item = mon.item
+            else:
+                active_item = ""
+
+            mon_prompt = (
+                f"Slot {idx + 1} — {mon.species}, Type: {active_type}, HP: {active_hp_fraction}%, "
+            )
+
+            if sim.check_status(mon.status):
+                mon_prompt += f"Status: {sim.check_status(mon.status)}, "
+            if ability_effect:
+                mon_prompt += f"Ability: {active_ability} ({ability_effect}), "
+            else:
+                mon_prompt += f"Ability: {active_ability}, "
+            if active_item:
+                mon_prompt += f"Item: {active_item}"
+
+            active_pokemon_prompt += mon_prompt.strip(", ") + "\n"
 
 
-    # The active pokemon
-    active_hp_fraction = round(battle.active_pokemon.current_hp / battle.active_pokemon.max_hp * 100)
-    active_type = ""
-    if battle.active_pokemon.type_1:
-        active_type += battle.active_pokemon.type_1.name.capitalize()
-        if battle.active_pokemon.type_2:
-            active_type = active_type + " and " + battle.active_pokemon.type_2.name.capitalize()
+    elif(isinstance(battle, Battle)):
+        # The active pokemon
+        active_hp_fraction = round(battle.active_pokemon.current_hp / battle.active_pokemon.max_hp * 100)
+        active_type = ""
+        if battle.active_pokemon.type_1:
+            active_type += battle.active_pokemon.type_1.name.capitalize()
+            if battle.active_pokemon.type_2:
+                active_type = active_type + " and " + battle.active_pokemon.type_2.name.capitalize()
 
-    try:
-        active_ability = sim.ability_effect[battle.active_pokemon.ability]["name"]
-        ability_effect = sim.ability_effect[battle.active_pokemon.ability]["effect"]
-    except:
-        active_ability = battle.active_pokemon.ability
-        ability_effect = ""
-
-    # item
-    if battle.active_pokemon.item:
         try:
-            active_item = sim.item_effect[battle.active_pokemon.item]["name"]
-            item_effect = sim.item_effect[battle.active_pokemon.item]["effect"]
-            active_item = f"{active_item}({item_effect})"
+            active_ability = sim.ability_effect[battle.active_pokemon.ability]["name"]
+            ability_effect = sim.ability_effect[battle.active_pokemon.ability]["effect"]
         except:
-            active_item = battle.active_pokemon.item
+            active_ability = battle.active_pokemon.ability
+            ability_effect = ""
+
+        # item
+        if battle.active_pokemon.item:
+            try:
+                active_item = sim.item_effect[battle.active_pokemon.item]["name"]
+                item_effect = sim.item_effect[battle.active_pokemon.item]["effect"]
+                active_item = f"{active_item}({item_effect})"
+            except:
+                active_item = battle.active_pokemon.item
+        else:
+            active_item = ""
+
+
+        active_pokemon_prompt = (
+                f"Your current pokemon:{battle.active_pokemon.species},Type:{active_type},HP:{active_hp_fraction}%" +
+                (f"Status:{sim.check_status(battle.active_pokemon.status)}," if sim.check_status(battle.active_pokemon.status) else "" ) +
+                (f"Ability:{active_ability}({ability_effect})," if ability_effect else f"Ability:{active_ability},") +
+                (f"Item:{active_item}" if active_item else "")
+            )
     else:
-        active_item = ""
-
-
-    active_pokemon_prompt = (
-            f"Your current pokemon:{battle.active_pokemon.species},Type:{active_type},HP:{active_hp_fraction}%" +
-            (f"Status:{sim.check_status(battle.active_pokemon.status)}," if sim.check_status(battle.active_pokemon.status) else "" ) +
-            (f"Ability:{active_ability}({ability_effect})," if ability_effect else f"Ability:{active_ability},") +
-            (f"Item:{active_item}" if active_item else "")
-        )
+        raise ValueError(
+                "battle should be Battle or DoubleBattle. Received %d" % (type(battle))
+            )
     
     return opponent_prompt + active_pokemon_prompt
 
@@ -546,6 +597,8 @@ def get_micro_strat(sim: LocalSim,
         for mon_opp in battle.opponent_team.values():
             micro_prompt += get_status_mon(mon_opp, sim)
 
+        #incorporate teamsheet info somehow: item and moveset essential
+
         # Generate matchup and move info
         for mon in battle.team.values():
             if mon.fainted:
@@ -634,32 +687,56 @@ def get_micro_strat(sim: LocalSim,
 def get_avail_actions(sim: LocalSim,
                       battle: Battle
                       ) -> str:
-    move_choices = [move.id for move in battle.available_moves]
 
-    # add gimmick action to available actions
-    # if battle._data.gen == 8:
-    #     if battle.can_dynamax and not battle._dynamax_intent:
-    #         move_choices.append('dynamax')
+    if(isinstance(battle, DoubleBattle)):
+        action_prompt_move = "Your available actions this turn (VGC double battle):\n"
+        action_prompt_switch = ""
 
-    # if battle._data.gen == 9:
-    #     if battle.can_tera and not battle._tera_intent:
-    #         move_choices.append('terastallize')
+        for idx, active_mon in enumerate(battle.active_pokemon):
+            if active_mon is None or active_mon.fainted:
+                continue
+            print(battle.available_moves)
+            moves = [move.id for move in battle.available_moves[idx]]
+            action_prompt_move += f"\nSlot {idx + 1} — Active Pokémon: {active_mon.species}\n"
+            action_prompt_move += f"Available moves: {moves}\n"
 
-    action_prompt_move = f' Your current Pokemon: {battle.active_pokemon.species}.\nChoose only from the following action choices:\n'
-    if len(move_choices) > 0:
-        action_prompt_move += f"[<move_name>] = {move_choices}\n"
 
-    # Switch
-    action_prompt_switch = f"You have {len(battle.available_switches)} pokemons:\n"
-    switch_choices = []
-    for mon in battle.available_switches:
-        if mon.species not in switch_choices:
-            switch_choices.append(mon.species)
-    # switch_choices = [pokemon.species for pokemon in battle.available_switches]
-    if len(switch_choices) > 0:
-        action_prompt_switch += f"[<switch_pokemon_name>] = {switch_choices}\n"
+        return action_prompt_move, action_prompt_switch
 
-    return action_prompt_move, action_prompt_switch
+    elif(isinstance(battle, Battle)):
+        move_choices = [move.id for move in battle.available_moves]
+
+        # add gimmick action to available actions
+        # if battle._data.gen == 8:
+        #     if battle.can_dynamax and not battle._dynamax_intent:
+        #         move_choices.append('dynamax')
+
+        # if battle._data.gen == 9:
+        #     if battle.can_tera and not battle._tera_intent:
+        #         move_choices.append('terastallize')
+
+        action_prompt_move = f' Your current Pokemon: {battle.active_pokemon.species}.\nChoose only from the following action choices:\n'
+        if len(move_choices) > 0:
+            action_prompt_move += f"[<move_name>] = {move_choices}\n"
+
+        # Switch
+        action_prompt_switch = f"You have {len(battle.available_switches)} pokemons:\n"
+        switch_choices = []
+        for mon in battle.available_switches:
+            if mon.species not in switch_choices:
+                switch_choices.append(mon.species)
+        # switch_choices = [pokemon.species for pokemon in battle.available_switches]
+        if len(switch_choices) > 0:
+            action_prompt_switch += f"[<switch_pokemon_name>] = {switch_choices}\n"
+
+
+        print(action_prompt_move)
+
+        return action_prompt_move, action_prompt_switch
+    else:
+            raise ValueError(
+                "battle should be Battle or DoubleBattle. Received %d" % (type(battle))
+            )
 
 def get_gimmick_prompt(sim: LocalSim, battle: Battle):
     gen = battle._data.gen
@@ -717,12 +794,16 @@ def get_gimmick_motivation(sim: LocalSim, battle: Battle):
 
         if battle.can_tera:
             gimmick_motiviation_prompt += "You are able to use [\'terastallize\'] this turn as well.\n"
-
-        if sim._should_terastallize(battle):
-            # gimmick_motiviation_prompt += "You are able to use [\'terastallize\'] this turn as well. It is recommended you choose \'terastallize\' this turn as your move over the other moves listed.\n"
-            gimmick_motiviation_prompt += "It is recommended you choose to \'terastallize\' this turn paired with a move from your available moves.\n"
-
-
+        if(isinstance(battle, Battle)):
+            if sim._should_terastallize(battle):
+                # gimmick_motiviation_prompt += "You are able to use [\'terastallize\'] this turn as well. It is recommended you choose \'terastallize\' this turn as your move over the other moves listed.\n"
+                gimmick_motiviation_prompt += "It is recommended you choose to \'terastallize\' this turn paired with a move from your available moves.\n"
+        elif(isinstance(battle, DoubleBattle)):
+            gimmick_motiviation_prompt += "Use your own judgment to choose whether or not to \'terastallize\' this turn paired with move from your available moves."
+        else:
+            raise ValueError(
+                "battle should be Battle or DoubleBattle. Received %d" % (type(battle))
+            )
     return gimmick_motiviation_prompt
     
 def prompt_translate(sim: LocalSim, 
@@ -731,58 +812,101 @@ def prompt_translate(sim: LocalSim,
                     ) -> str:
     battle_prompt = get_turn_summary(sim, battle, n_turn=16)
     macro_prompt = get_macro_strat(sim, battle)
-    # print(f'macro prompt:\n{macro_prompt}')
+    # print(f'macro prompt:\n{macro_prompt}') CURRENTLY NOT IN USE
     micro_prompt = get_micro_strat(sim, battle)
     # print(f'micro prompt:\n{micro_prompt}')
     action_prompt_move, action_prompt_switch = get_avail_actions(sim, battle)
-
+    # print(f'action prompt move :\n{action_prompt_move}')
+    # print(f'action prompt switch :\n{action_prompt_switch}')
     state_prompt = get_current_status(sim, battle)
-
+    # print(f'state prompt :\n{state_prompt}')
     gimmick_prompt = get_gimmick_prompt(sim, battle)
-
     gimmick_motivation_prompt = get_gimmick_motivation(sim, battle)
+    #print(f'gimmick motivation prompt: \n{gimmick_motivation_prompt}')
     # action_prompt_list = get_avail_actions_list(sim, battle)
     # print(f'avail actions prompt:\n{action_prompt_move}\n{action_prompt_switch}')
     # action_prompt = "Choose the best action to KO the opponent's pokemon in the least turns.\n"
-    action_prompt = f"Recall the information about each of {battle.active_pokemon.species}'s move actions and available switch actions. Which move or switch will KO the opponent's pokemon in the fewest turns in order to win against the opponent?\n"
-     
-    if battle.active_pokemon.fainted: # passive switching
-        
-        system_prompt = (
-            f"You are a pokemon battler that targets to win the pokemon battle. Your {battle.active_pokemon.species} just fainted. Choose a suitable pokemon to continue the battle. Here are some tips:"
-            " Compare the speeds of your pokemon to the opposing pokemon, which determines who take the move first."
-            " Consider the defense state and type-resistance of your pokemon when its speed is lower than the opposing pokemon."
-            " Consider the move-type advantage of your pokemon pokemon when its speed is higher than the opposing pokemon.")
 
-        system_prompt = system_prompt + macro_prompt
-        state_prompt = battle_prompt + micro_prompt + gimmick_prompt
-        state_action_prompt = action_prompt + gimmick_motivation_prompt + action_prompt_switch
+    if(isinstance(battle, DoubleBattle)):
+        # Set up base action prompt for doubles
+        action_prompt = (
+            f"Recall the information about each of your active Pokémon's move actions and available switch actions. "
+            f"Which combination of moves or switches will KO the opponent's Pokémon in the fewest turns to win the battle?\n"
+            "You must decide an action for each of your active Pokémon. Remember:"
+            "\n- Moves can target either opponent, and some affect both (e.g., Earthquake, Heat Wave)."
+            "\n- Switching forfeits that Pokémon’s move for the turn."
+            "\n- Pay attention to which opponent Pokémon are more dangerous or more likely to switch."
+        )
 
-    else: # take a move or active switch
-        
-        system_prompt = (
-            "You are a pokemon battler that targets to win the pokemon battle. You can choose to take a move or switch in another pokemon. Here are some battle tips:"
-            " Use status-boosting moves like swordsdance, calmmind, dragondance, nastyplot strategically. The boosting will be reset when pokemon switch out."
-            " Set traps like stickyweb, spikes, toxicspikes, stealthrock strategically."
-            " When face to a opponent is boosting or has already boosted its attack/special attack/speed, knock it out as soon as possible, even sacrificing your pokemon."
-            " if choose to switch, you forfeit to take a move this turn and the opposing pokemon will definitely move first. Therefore, you should pay attention to speed, type-resistance and defense of your switch-in pokemon to bear the damage from the opposing pokemon."
-            " And If the switch-in pokemon has a slower speed then the opposing pokemon, the opposing pokemon will move twice continuously."
+        if any(mon.fainted for mon in battle.active_pokemon):  # One or both active Pokémon fainted
+            system_prompt = (
+                f"You are a doubles Pokémon battler aiming to win the match. One or more of your active Pokémon have fainted. "
+                "Choose suitable Pokémon to continue the battle. Consider:"
+                "\n- Speed comparison: Faster Pokémon move first."
+                "\n- Type resistance and defenses: Can your switch-in Pokémon survive incoming attacks?"
+                "\n- Offensive potential: Can your Pokémon immediately threaten the opponents?"
             )
 
-        system_prompt = system_prompt + macro_prompt
+            system_prompt += macro_prompt
+            state_prompt = battle_prompt + micro_prompt + gimmick_prompt 
+            state_action_prompt = action_prompt + gimmick_motivation_prompt + action_prompt_switch + action_prompt_move
+        
 
-        # state_prompt = battle_prompt + micro_prompt + gimmick_prompt
-        # state_action_prompt = action_prompt + gimmick_motivation_prompt + action_prompt_switch + action_prompt_move
+        else:  # Both Pokémon are active and able to move/switch
+            system_prompt = (
+                "You are a doubles Pokémon battler aiming to win the match. "
+                "Choose a move or switch for each of your two active Pokémon. Tips:"
+                "\n- Coordinate your moves between the two Pokémon: double-targeting or combo setups (e.g., Fake Out + Swords Dance)."
+                "\n- Spread moves like Rock Slide, Dazzling Gleam can hit both opponents."
+                "\n- Consider support roles: redirection (Follow Me), speed control (Icy Wind, Trick Room), or protection (Protect, Wide Guard)."
+                "\n- If switching, consider whether the incoming Pokémon can survive the opponent's attacks."
+                "\n- If both of your Pokémon are slower, the opponent may act twice before you."
+            )
+            
+            system_prompt += macro_prompt
+            state_prompt = battle_prompt + micro_prompt + gimmick_prompt + state_prompt
+            state_action_prompt = action_prompt + gimmick_motivation_prompt + action_prompt_switch + action_prompt_move
 
-        state_prompt = battle_prompt + micro_prompt + gimmick_prompt + state_prompt
-        # state_action_prompt = action_prompt + action_prompt_switch + action_prompt_move
-        state_action_prompt = action_prompt + gimmick_motivation_prompt + action_prompt_switch + action_prompt_move
+
+    elif(isinstance(battle, Battle)):
+        action_prompt = f"Recall the information about each of {battle.active_pokemon.species}'s move actions and available switch actions. Which move or switch will KO the opponent's pokemon in the fewest turns in order to win against the opponent?\n"
+        
+        if battle.active_pokemon.fainted: # passive switching
+            
+            system_prompt = (
+                f"You are a pokemon battler that targets to win the pokemon battle. Your {battle.active_pokemon.species} just fainted. Choose a suitable pokemon to continue the battle. Here are some tips:"
+                " Compare the speeds of your pokemon to the opposing pokemon, which determines who take the move first."
+                " Consider the defense state and type-resistance of your pokemon when its speed is lower than the opposing pokemon."
+                " Consider the move-type advantage of your pokemon pokemon when its speed is higher than the opposing pokemon.")
+
+            system_prompt = system_prompt + macro_prompt
+            state_prompt = battle_prompt + micro_prompt + gimmick_prompt
+            state_action_prompt = action_prompt + gimmick_motivation_prompt + action_prompt_switch + action_prompt_move
+
+        else: # take a move or active switch
+            
+            system_prompt = (
+                "You are a pokemon battler that targets to win the pokemon battle. You can choose to take a move or switch in another pokemon. Here are some battle tips:"
+                " Use status-boosting moves like swordsdance, calmmind, dragondance, nastyplot strategically. The boosting will be reset when pokemon switch out."
+                " Set traps like stickyweb, spikes, toxicspikes, stealthrock strategically."
+                " When face to a opponent is boosting or has already boosted its attack/special attack/speed, knock it out as soon as possible, even sacrificing your pokemon."
+                " if choose to switch, you forfeit to take a move this turn and the opposing pokemon will definitely move first. Therefore, you should pay attention to speed, type-resistance and defense of your switch-in pokemon to bear the damage from the opposing pokemon."
+                " And If the switch-in pokemon has a slower speed then the opposing pokemon, the opposing pokemon will move twice continuously."
+                )
+
+            system_prompt = system_prompt + macro_prompt
+
+            # state_prompt = battle_prompt + micro_prompt + gimmick_prompt
+            # state_action_prompt = action_prompt + gimmick_motivation_prompt + action_prompt_switch + action_prompt_move
+
+            state_prompt = battle_prompt + micro_prompt + gimmick_prompt + state_prompt
+            # state_action_prompt = action_prompt + action_prompt_switch + action_prompt_move
+            state_action_prompt = action_prompt + gimmick_motivation_prompt + action_prompt_switch + action_prompt_move
 
     # print(system_prompt)
     # print(state_prompt)
     # print(state_action_prompt)
     # input()
-    
 
     # state_action_prompt = action_prompt + action_prompt_list
     if return_actions:

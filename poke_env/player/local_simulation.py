@@ -173,6 +173,7 @@ class LocalSim():
     def get_llm_system_prompt(self, _format: str, llm: GPTPlayer | LLAMAPlayer = None, team_str: str=None, model: str='gpt-4o'):
         # sleep to make sure server has sent pokemon team information first
         # llm = GPTPlayer(api_key=KEY)
+
         if 'random' in _format:
             if llm is not None:
                 sleep(1)

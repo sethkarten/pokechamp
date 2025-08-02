@@ -145,8 +145,17 @@ class LLMPlayer(Player):
         )
 
         if isinstance(battle, DoubleBattle):
-            
+            # if battle.turn <=1 and self.use_strat_prompt:
+            #     self.strategy_prompt = sim.get_llm_system_prompt(self.format, self.llm, team_str=self._team.yield_team(), model='gpt-4o-2024-05-13')
             system_prompt, state_prompt, state_action_prompt = sim.state_translate(battle) 
+
+            moves = [move.id for l in battle.available_moves for move in l]
+            print(moves)
+                
+
+            gimmick_output_format = ''
+            if 'pokellmon' not in self.ps_client.account_configuration.username: # make sure we dont mess with pokellmon original strat
+                gimmick_output_format = f'{f' or {{"dynamax":"<move_name>"}}' if battle.can_dynamax else ''}{f' or {{"terastallize":"<move_name>"}}' if battle.can_tera else ''}'
 
             return self.choose_random_doubles_move(battle)
 
