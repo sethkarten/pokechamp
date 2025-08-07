@@ -695,7 +695,6 @@ def get_avail_actions(sim: LocalSim,
         for idx, active_mon in enumerate(battle.active_pokemon):
             if active_mon is None or active_mon.fainted:
                 continue
-            print(battle.available_moves)
             moves = [move.id for move in battle.available_moves[idx]]
             action_prompt_move += f"\nSlot {idx + 1} — Active Pokémon: {active_mon.species}\n"
             action_prompt_move += f"Available moves: {moves}\n"
@@ -730,7 +729,7 @@ def get_avail_actions(sim: LocalSim,
             action_prompt_switch += f"[<switch_pokemon_name>] = {switch_choices}\n"
 
 
-        print(action_prompt_move)
+        # print(action_prompt_move)
 
         return action_prompt_move, action_prompt_switch
     else:
@@ -838,7 +837,8 @@ def prompt_translate(sim: LocalSim,
             "\n- Pay attention to which opponent Pokémon are more dangerous or more likely to switch."
         )
 
-        if any(mon.fainted for mon in battle.active_pokemon):  # One or both active Pokémon fainted
+        # print("active pokemon", battle.active_pokemon)
+        if any(mon is None or mon.fainted for mon in battle.active_pokemon):  # One or both active Pokémon fainted
             system_prompt = (
                 f"You are a doubles Pokémon battler aiming to win the match. One or more of your active Pokémon have fainted. "
                 "Choose suitable Pokémon to continue the battle. Consider:"

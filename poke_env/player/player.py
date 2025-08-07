@@ -598,6 +598,10 @@ class Player(ABC):
                 ):
                     await self._handle_battle_request(battle, maybe_default_order=True)
                 elif split_message[2].startswith(
+                    "[Invalid choice] Can't switch: You do not have a Pokémon named " 
+                ) and split_message[2].endswith("to switch to"):
+                    await self._handle_battle_request(battle, maybe_default_order=True)
+                elif split_message[2].startswith(
                     "[Invalid choice] Can't switch: You can't switch to a fainted "
                     "Pokémon"
                 ):
