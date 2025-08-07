@@ -111,7 +111,7 @@ class Pokemon:
         self._status: Optional[Status] = None
         self._status_counter: int = 0
         
-        with open('poke_env/data/static/gen9/ou/sets_0.json', 'r') as f:
+        with open('poke_env/data/static/gen9/vgc/sets_0.json', 'r') as f:
         #with open('poke_env/data/static/gen9/vgc/sets_1760.json', 'r') as f:
             sets = json.load(f)
         self._sets = sets

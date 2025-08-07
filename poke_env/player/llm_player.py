@@ -150,13 +150,100 @@ class LLMPlayer(Player):
             system_prompt, state_prompt, state_action_prompt = sim.state_translate(battle) 
 
             moves = [move.id for l in battle.available_moves for move in l]
-            print(moves)
-                
-
+            switches = [mon.species for l in battle.available_switches for mon in l]
+            actions = [moves, switches]
+            constraint_prompt_cot = ""
             gimmick_output_format = ''
             if 'pokellmon' not in self.ps_client.account_configuration.username: # make sure we dont mess with pokellmon original strat
                 gimmick_output_format = f'{f' or {{"dynamax":"<move_name>"}}' if battle.can_dynamax else ''}{f' or {{"terastallize":"<move_name>"}}' if battle.can_tera else ''}'
 
+            if any(mon is None or mon.fainted for mon in battle.active_pokemon):
+                constraint_prompt_io = '''Choose the most suitable pokemon to switch. Your output MUST be a JSON like: {"switch":"<switch_pokemon_name>"}\n'''
+            else:
+                constraint_prompt_io =f'''Choose the best action for each of your active Pokémon. Your output MUST be a JSON like:
+                {{
+                  "actions": [
+                        {{"move": "<move_name_1>"{gimmick_output_format}}},
+                        {{"move": "<move_name_2>"{gimmick_output_format}}}
+                    ]
+                }} 
+                
+                or, if you decide that one Pokémon should switch: 
+
+                {{
+                  "actions": [
+                    {{"switch": "<switch_pokemon_name_1>"}},
+                    {{"move": "<move_name_2>"{gimmick_output_format}}}
+                  ]
+                }}
+                
+                or if you decide that both Pokémon should switch:
+                
+                {{
+                  "actions": [
+                    {{"switch": "<switch_pokemon_name_1>"}},
+                    {{"switch": "<switch_pokemon_name_2>"}}
+                  ]
+                }}
+
+                Constraints:
+                - Only use the keys: "actions", "move", "target", "switch"
+                - You must provide exactly 2 items in the "actions" list, one for each active Pokémon
+                - The "target" field is optional and should be a string like "-2", "1", etc., only if the move requires a target
+                - The "target" field is a 1-based target slot number. Add a - in front of it to refer to allies, and a + to refer to foes
+                - Do NOT include any explanation or additional text before or after the JSON
+                - Do NOT output Python-style code or markdown formatting
+                - All strings should be lowercase with no spaces (e.g., "pollenpuff", "kyogre", not "Pollen Puff")
+
+                Return ONLY the JSON.
+
+                \n'''
+                constraint_prompt_cot = f'''
+                Choose the best action by thinking step by step. Your thought should no more than 4 sentences. Your output MUST be a JSON like: 
+                {{
+                  "actions": [
+                        {{"move": "<move_name_1>"{gimmick_output_format}}},
+                        {{"move": "<move_name_2>"{gimmick_output_format}}}
+                    ]
+                }} 
+                
+                or, if you decide that one Pokémon should switch: 
+
+                {{
+                  "actions": [
+                    {{"switch": "<switch_pokemon_name_1>"}},
+                    {{"move": "<move_name_2>"{gimmick_output_format}}}
+                  ]
+                }}
+                
+                or if you decide that both Pokémon should switch:
+                
+                {{
+                  "actions": [
+                    {{"switch": "<switch_pokemon_name_1>"}},
+                    {{"switch": "<switch_pokemon_name_2>"}}
+                  ]
+                }}
+
+                Constraints:
+                - Only use the keys: "actions", "move", "target", "switch"
+                - You must provide exactly 2 items in the "actions" list, one for each active Pokémon
+                - The "target" field is optional and should be a string like "-2", "1", etc., only if the move requires a target
+                - The "target" field is a 1-based target slot number. Add a - in front of it to refer to allies, and a + to refer to foes
+                - Do NOT include any explanation or additional text before or after the JSON
+                - Do NOT output Python-style code or markdown formatting
+                - All strings should be lowercase with no spaces (e.g., "pollenpuff", "kyogre", not "Pollen Puff")
+
+                Return ONLY the JSON.
+                \n
+                '''
+
+            state_prompt_io = state_prompt + state_action_prompt + constraint_prompt_io
+            state_prompt_cot = state_prompt + state_action_prompt + constraint_prompt_cot
+            retries = 2
+            # Chain-of-thought
+            if self.prompt_algo == "io":  
+                return self.io(retries, system_prompt, state_prompt, constraint_prompt_cot, constraint_prompt_io, state_action_prompt, battle, sim, actions=actions)
             return self.choose_random_doubles_move(battle)
 
         elif isinstance(battle, Battle):
@@ -280,7 +367,20 @@ class LLMPlayer(Player):
         next_action = None
         cot_prompt = 'In fewer than 3 sentences, let\'s think step by step:'
         state_prompt_io = state_prompt + state_action_prompt + constraint_prompt_io + cot_prompt
-
+        if(isinstance(battle, DoubleBattle)):
+            try:
+                llm_output = self.get_LLM_action(system_prompt=system_prompt,
+                                            user_prompt=state_prompt_io,
+                                            model=self.backend,
+                                            temperature=self.temperature,
+                                            max_tokens=300,
+                                            # stop=["reason"],
+                                            json_format=True,
+                                            actions=actions)
+                print("llm output: ", llm_output)
+            except Exception as e:
+                print(f'Exception: {e}', 'passed')
+        return self.choose_random_doubles_move(battle)
         for i in range(retries):
             try:
                 llm_output = self.get_LLM_action(system_prompt=system_prompt,
