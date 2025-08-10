@@ -12,7 +12,7 @@ prompt_algos = [
     "minimax", 
     "heuristic", 
     'max_power',
-    'dmg_calc',
+    'one_step',
     'random'
     ]
 

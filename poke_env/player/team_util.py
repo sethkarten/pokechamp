@@ -1,15 +1,77 @@
+from poke_env.data.download import download_teams
 from poke_env.player.player import Player
 from poke_env.player.baselines import AbyssalPlayer, MaxBasePowerPlayer, OneStepPlayer
 from poke_env.player.random_player import RandomPlayer
 from poke_env.player.llm_player import LLMPlayer
 from poke_env.ps_client.account_configuration import AccountConfiguration
 from poke_env.ps_client.server_configuration import ShowdownServerConfiguration
-
+from poke_env.teambuilder import Teambuilder
 from poke_env.player.prompts import prompt_translate, state_translate2
 from numpy.random import randint
 import importlib
 import inspect
 import os
+import random
+
+class TeamSet(Teambuilder):
+    """Sample from a directory of Showdown team files.
+
+    A simple wrapper around poke-env's Teambuilder that randomly samples a team from a
+    directory of team files.
+
+    Args:
+        team_file_dir: The directory containing the team files (searched recursively).
+            Team files are just text files in the standard Showdown export format. See
+            https://pokepast.es/syntax.html for details.
+        battle_format: The battle format of the team files (e.g. "gen1ou", "gen2ubers",
+            etc.). Note that we assume files have a matching extension (e.g.
+            "any_name.gen1ou_team").
+    """
+
+    def __init__(self, team_file_dir: str, battle_format: str):
+        super().__init__()
+        self.team_file_dir = team_file_dir
+        self.battle_format = battle_format
+        self.team_files = self._find_team_files()
+
+    def _find_team_files(self):
+        team_files = []
+        for root, _, files in os.walk(self.team_file_dir):
+            for file in files:
+                if file.endswith(f".{self.battle_format}_team"):
+                    team_files.append(os.path.join(root, file))
+        return team_files
+
+    def yield_team(self):
+        file = random.choice(self.team_files)
+        with open(file, "r") as f:
+            team_data = f.read()
+        return self.join_team(self.parse_showdown_team(team_data))
+
+def get_metamon_teams(battle_format: str, set_name: str) -> TeamSet:
+    """
+    Download a set of teams from huggingface (if necessary) and return a TeamSet.
+
+    Args:
+        battle_format: The battle format of the team files (e.g. "gen1ou", "gen2ubers", etc.).
+        set_name: The name of the set of teams to download. See the README for options.
+    """
+    if set_name not in {
+        "competitive",
+        "paper_replays",
+        "paper_variety",
+        "modern_replays",
+        "pokeagent_modern_replays",
+    }:
+        raise ValueError(
+            f"Invalid set name: {set_name}. Must be one of: competitive, paper_replays, paper_variety, modern_replays"
+        )
+    path = download_teams(battle_format, set_name=set_name)
+    if not os.path.exists(path):
+        raise ValueError(
+            f"Cannot locate valid team directory for format {battle_format} at path {path}"
+        )
+    return TeamSet(path, battle_format)
 
 def load_random_team(id=None):
     if id == None:
