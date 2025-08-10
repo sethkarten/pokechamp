@@ -4,10 +4,10 @@ from tqdm import tqdm
 import argparse
 
 from common import *
-from poke_env.player.team_util import get_llm_player, load_random_team
+from poke_env.player.team_util import get_llm_player, get_metamon_teams, load_random_team
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--temperature", type=float, default=0.3)
+parser.add_argument("--temperature", type=float, default=0.5)
 parser.add_argument("--prompt_algo", default="minimax", choices=prompt_algos)
 parser.add_argument("--battle_format", default="gen9ou", choices=["gen8randombattle", "gen8ou", "gen9ou", "gen9randombattle"])
 parser.add_argument("--backend", type=str, default="gpt-4o", choices=[
@@ -34,9 +34,10 @@ parser.add_argument("--backend", type=str, default="gpt-4o", choices=[
 ])
 parser.add_argument("--log_dir", type=str, default="./battle_log/ladder")
 parser.add_argument("--device", type=int, default=0)
-parser.add_argument("--name", type=str, default='pokechamp', choices=['pokechamp', 'pokellmon', 'one_step', 'abyssal', 'max_power', 'random'])
+parser.add_argument("--name", type=str, default='pokechamp', choices=bot_choices)
 parser.add_argument("--USERNAME", type=str, default='')
 parser.add_argument("--PASSWORD", type=str, default='')
+parser.add_argument("--N", type=int, default=1)
 args = parser.parse_args()
     
 async def main():
@@ -44,15 +45,19 @@ async def main():
                             args.backend, 
                             args.prompt_algo, 
                             args.name, 
+                            device=args.device,
                             battle_format=args.battle_format, 
                             online=True, 
                             USERNAME=args.USERNAME, 
                             PASSWORD=args.PASSWORD)
+    
+    teamloader = get_metamon_teams(args.battle_format, "modern_replays")
+    
     if not 'random' in args.battle_format:
-        player.update_team(load_random_team(1))
+        player.update_team(teamloader.yield_team())
 
     # Playing n_challenges games on the ladder
-    n_challenges = 5
+    n_challenges = args.N
     pbar = tqdm(total=n_challenges)
     wins = 0
     for i in range(n_challenges):
@@ -63,7 +68,7 @@ async def main():
             winner = args.name
             wins += 1
         if not 'random' in args.battle_format:
-            player.update_team(load_random_team())
+            player.update_team(teamloader.yield_team())
         sleep(30)
         pbar.set_description(f"{wins/(i+1)*100:.2f}%")
         pbar.update(1)
