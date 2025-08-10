@@ -6,3 +6,8 @@ data
 *.jsonl
 *.log
 __pycache__
+test_bots.py
+test_openrouter.py
+example_openrouter_usage.py
+CLAUDE.md
+battle_log/*
