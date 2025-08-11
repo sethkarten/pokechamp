@@ -16,6 +16,7 @@ import math
 
 
 class Pokemon:
+    
     __slots__ = (
         "_ability",
         "_active",
@@ -114,6 +115,7 @@ class Pokemon:
         with open('poke_env/data/static/gen9/ou/sets_1500.json', 'r') as f:
             sets = json.load(f)
         self._sets = sets
+        
         
         if request_pokemon:
             self.update_from_request(request_pokemon)
@@ -887,7 +889,22 @@ class Pokemon:
             
         return tera
         
-    def guess_stats(self, guess_type='most_likely'):
+    def guess_stats(self, guess_type='bayesian', observed_moves=None, battle=None):
+        """
+        Guess Pokemon stats using Bayesian predictions when possible.
+        
+        Args:
+            guess_type: 'most_likely', 'bayesian', or original statistical methods
+            observed_moves: List of observed moves to improve Bayesian predictions
+            battle: Battle context for team information
+        """
+        # Try Bayesian predictions first if requested or if we have context
+        if guess_type == 'bayesian' or (observed_moves and battle):
+            bayesian_result = self._get_bayesian_stats(observed_moves, battle)
+            if bayesian_result:
+                return bayesian_result
+        
+        # Original implementation
         stat_types = ['hp', 'atk', 'def', 'spa', 'spd', 'spe']
         sets = self._sets
         if guess_type == 'most_likely':
@@ -916,6 +933,127 @@ class Pokemon:
             spread, nature = get_weighted_choice('spreads', 'stats')
         
         return spread, nature
+    
+    def _get_bayesian_stats(self, observed_moves=None, battle=None):
+        """Get Bayesian stat predictions for this Pokemon."""
+        try:
+            # Use singleton predictor to avoid loading multiple models
+            from predictor_singleton import get_pokemon_predictor
+            predictor = get_pokemon_predictor()
+            
+            # Normalize Pokemon names
+            def normalize_pokemon_name(name):
+                name_mapping = {
+                    'slowkinggalar': 'Slowking-Galar', 'slowbrogalar': 'Slowbro-Galar',
+                    'tinglu': 'Ting-Lu', 'chiyu': 'Chi-Yu', 'wochien': 'Wo-Chien',
+                    'chienpao': 'Chien-Pao', 'ironmoth': 'Iron Moth', 'ironvaliant': 'Iron Valiant',
+                    'irontreads': 'Iron Treads', 'ironbundle': 'Iron Bundle', 'ironhands': 'Iron Hands',
+                    'ironjugulis': 'Iron Jugulis', 'ironthorns': 'Iron Thorns', 'ironboulder': 'Iron Boulder',
+                    'ironcrown': 'Iron Crown', 'greattusk': 'Great Tusk', 'screamtail': 'Scream Tail',
+                    'brutebonnet': 'Brute Bonnet', 'fluttermane': 'Flutter Mane', 'slitherwing': 'Slither Wing',
+                    'sandyshocks': 'Sandy Shocks', 'roaringmoon': 'Roaring Moon', 'walkingwake': 'Walking Wake',
+                    'ragingbolt': 'Raging Bolt', 'gougingfire': 'Gouging Fire', 'ogerponwellspring': 'Ogerpon-Wellspring',
+                    'ogerponhearthflame': 'Ogerpon-Hearthflame', 'ogerponcornerstone': 'Ogerpon-Cornerstone',
+                    'ogerpontealtera': 'Ogerpon-Teal', 'ursalunabloodmoon': 'Ursaluna-Bloodmoon',
+                    'ninetalesalola': 'Ninetales-Alola', 'sandslashalola': 'Sandslash-Alola',
+                    'tapukoko': 'Tapu Koko', 'tapulele': 'Tapu Lele', 'tapubulu': 'Tapu Bulu',
+                    'tapufini': 'Tapu Fini', 'hydrapple': 'Hydrapple', 'zapdos': 'Zapdos',
+                    'zamazenta': 'Zamazenta', 'tinkaton': 'Tinkaton'
+                }
+                lower_name = name.lower()
+                return name_mapping.get(lower_name, name.capitalize())
+            
+            # Normalize move names
+            def normalize_move_name(move_id):
+                move_mapping = {
+                    'chillyreception': 'Chilly Reception', 'thunderwave': 'Thunder Wave', 
+                    'stealthrock': 'Stealth Rock', 'earthquake': 'Earthquake', 'ruination': 'Ruination',
+                    'whirlwind': 'Whirlwind', 'spikes': 'Spikes', 'rest': 'Rest',
+                    'closecombat': 'Close Combat', 'crunch': 'Crunch', 'gigadrain': 'Giga Drain',
+                    'earthpower': 'Earth Power', 'nastyplot': 'Nasty Plot', 'ficklebeam': 'Fickle Beam',
+                    'leafstorm': 'Leaf Storm', 'dracometeor': 'Draco Meteor', 'futuresight': 'Future Sight',
+                    'sludgebomb': 'Sludge Bomb', 'psychicnoise': 'Psychic Noise', 'flamethrower': 'Flamethrower',
+                    'gigatonhammer': 'Gigaton Hammer', 'encore': 'Encore', 'knockoff': 'Knock Off',
+                    'playrough': 'Play Rough', 'hurricane': 'Hurricane', 'roost': 'Roost',
+                    'voltswitch': 'Volt Switch', 'discharge': 'Discharge', 'uturn': 'U-turn'
+                }
+                lower_move = move_id.lower()
+                if lower_move in move_mapping:
+                    return move_mapping[lower_move]
+                # Default: add spaces before capitals and title case
+                import re
+                spaced = re.sub(r'([a-z])([A-Z])', r'\1 \2', move_id)
+                return spaced.title()
+            
+            # Get opponent team for context
+            opponent_pokemon = []
+            if battle and hasattr(battle, 'opponent_team'):
+                for pokemon in battle.opponent_team.values():
+                    if pokemon and pokemon.species:
+                        normalized_name = normalize_pokemon_name(pokemon.species)
+                        opponent_pokemon.append(normalized_name)
+            
+            # Normalize observed moves
+            normalized_moves = []
+            if observed_moves:
+                for move in observed_moves:
+                    if hasattr(move, 'id'):
+                        normalized_moves.append(normalize_move_name(move.id))
+                    else:
+                        normalized_moves.append(normalize_move_name(str(move)))
+            
+            # Get Bayesian predictions
+            species_norm = normalize_pokemon_name(self.species)
+            probabilities = predictor.predict_component_probabilities(
+                species_norm, 
+                teammates=opponent_pokemon,
+                observed_moves=normalized_moves
+            )
+            
+            # Extract most likely nature and EV spread
+            predicted_nature = None
+            predicted_evs = None
+            
+            if 'natures' in probabilities and probabilities['natures']:
+                predicted_nature = probabilities['natures'][0][0]  # Top nature
+            
+            if 'ev_spreads' in probabilities and probabilities['ev_spreads']:
+                ev_spread_str = probabilities['ev_spreads'][0][0]  # Top EV spread
+                predicted_evs = self._parse_ev_spread_string(ev_spread_str)
+            
+            if predicted_nature and predicted_evs:
+                return predicted_evs, predicted_nature
+                
+        except Exception as e:
+            # Silently fall back to original method
+            pass
+        
+        return None
+    
+    def _parse_ev_spread_string(self, ev_spread_str):
+        """Parse EV spread string like '252 HP / 252 SpA' into EV list format."""
+        # Default EV array [HP, Atk, Def, SpA, SpD, Spe]
+        ev_array = [0, 0, 0, 0, 0, 0]
+        
+        # Map spread names to array indices
+        stat_mapping = {
+            'HP': 0, 'Atk': 1, 'Def': 2, 'SpA': 3, 'SpD': 4, 'Spe': 5
+        }
+        
+        if not ev_spread_str or ev_spread_str == "No major investments":
+            return ev_array
+        
+        # Parse "252 HP / 252 SpA / 4 SpD" format
+        parts = ev_spread_str.split(' / ')
+        for part in parts:
+            try:
+                value, stat = part.strip().split(' ', 1)
+                if stat in stat_mapping:
+                    ev_array[stat_mapping[stat]] = int(value)
+            except:
+                continue
+                
+        return ev_array
         # # more common natures ordered first
         # nature_common = [
         #     'Adamant',

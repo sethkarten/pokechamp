@@ -4,7 +4,7 @@ import os
 import argparse
 
 from common import *
-from poke_env.player.team_util import get_llm_player, load_random_team
+from poke_env.player.team_util import get_llm_player, get_metamon_teams, load_random_team
 
 parser = argparse.ArgumentParser()
 
@@ -16,7 +16,7 @@ parser.add_argument("--player_backend", type=str, default="gpt-4o", choices=[
     # Anthropic models
     "anthropic/claude-3.5-sonnet", "anthropic/claude-3-opus", "anthropic/claude-3-haiku",
     # Google models
-    "google/gemini-pro", "google/gemini-flash-1.5",
+    "google/gemini-pro", "gemini-2.0-flash", "gemini-2.0-pro", "gemini-2.0-flash-lite",
     # Meta models
     "meta-llama/llama-3.1-70b-instruct", "meta-llama/llama-3.1-8b-instruct",
     # Mistral models
@@ -43,7 +43,7 @@ parser.add_argument("--opponent_backend", type=str, default="gpt-4o", choices=[
     # Anthropic models
     "anthropic/claude-3.5-sonnet", "anthropic/claude-3-opus", "anthropic/claude-3-haiku",
     # Google models
-    "google/gemini-pro", "google/gemini-flash-1.5",
+    "google/gemini-pro", "gemini-2.0-flash", "gemini-2.0-pro", "gemini-2.0-flash-lite",
     # Meta models
     "meta-llama/llama-3.1-70b-instruct", "meta-llama/llama-3.1-8b-instruct",
     # Mistral models
@@ -86,12 +86,14 @@ async def main():
                             PNUMBER1=PNUMBER1,  # for name uniqueness locally
                             battle_format=args.battle_format)
 
+    teamloader = get_metamon_teams(args.battle_format, "modern_replays")
+    
     if not 'random' in args.battle_format:
-        player.update_team(load_random_team())
-        opponent.update_team(load_random_team())
+        player.update_team(teamloader.yield_team())
+        opponent.update_team(teamloader.yield_team())
 
     # play against bot for five battles
-    N = 5
+    N = 25
     pbar = tqdm(total=N)
     for i in range(N):
         x = np.random.randint(0, 100)
@@ -100,8 +102,8 @@ async def main():
         else:
             await opponent.battle_against(player, n_battles=1)
         if not 'random' in args.battle_format:
-            player.update_team(load_random_team())
-            opponent.update_team(load_random_team())
+            player.update_team(teamloader.yield_team())
+            opponent.update_team(teamloader.yield_team())
         pbar.set_description(f"{player.win_rate*100:.2f}%")
         pbar.update(1)
     print(f'player winrate: {player.win_rate*100}')
