@@ -18,10 +18,20 @@ from poke_env.player.battle_order import BattleOrder
 from pokechamp.gpt_player import GPTPlayer
 from pokechamp.llama_player import LLAMAPlayer
 
+# Avoid circular import by importing here
+try:
+    from pokechamp.data_cache import get_cached_moves_set
+    from pokechamp.sim_constants import get_simulation_optimizer, TYPE_LIST
+except ImportError:
+    # Fallback if optimization modules are not available
+    get_cached_moves_set = None
+    get_simulation_optimizer = None
+    TYPE_LIST = 'BUG,DARK,DRAGON,ELECTRIC,FAIRY,FIGHTING,FIRE,FLYING,GHOST,GRASS,GROUND,ICE,NORMAL,POISON,PSYCHIC,ROCK,STEEL,WATER'.split(",")
+
 DEBUG = False
 
 def calculate_move_type_damage_multipier(type_1, type_2, type_chart, constraint_type_list):
-    TYPE_list = 'BUG,DARK,DRAGON,ELECTRIC,FAIRY,FIGHTING,FIRE,FLYING,GHOST,GRASS,GROUND,ICE,NORMAL,POISON,PSYCHIC,ROCK,STEEL,WATER'.split(",")
+    TYPE_list = TYPE_LIST  # Use cached constant instead of recreating
 
     move_type_damage_multiplier_list = []
 
@@ -141,10 +151,17 @@ class LocalSim():
         self.SPEED_TIER_COEFICIENT = 0.1
         self.HP_FRACTION_COEFICIENT = 0.4
         
-        if self.format == 'gen9ou':
-            file = f'poke_env/data/static/gen9/ou/sets_1000.json'
-            with open(file, 'r') as f:
-                self.moves_set = orjson.loads(f.read())
+        # Use cached moves set data instead of loading file
+        if get_cached_moves_set is not None:
+            self.moves_set = get_cached_moves_set(self.format)
+        else:
+            # Fallback to file loading if cache is not available
+            if self.format == 'gen9ou':
+                file = f'poke_env/data/static/gen9/ou/sets_1000.json'
+                with open(file, 'r') as f:
+                    self.moves_set = orjson.loads(f.read())
+            else:
+                self.moves_set = {}
 
 
     def get_llm_system_prompt(self, _format: str, llm: GPTPlayer | LLAMAPlayer = None, team_str: str=None, model: str='gpt-4o'):
