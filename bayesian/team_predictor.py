@@ -459,6 +459,7 @@ class BayesianTeamPredictor:
         """Parse config key back to readable format."""
         parts = config_key.split('|')
         if len(parts) < 6:
+            print(f"Warning: Config key has insufficient parts ({len(parts)}): {config_key[:100]}")
             return {}
         
         try:
@@ -473,8 +474,25 @@ class BayesianTeamPredictor:
                 'moves': moves,
                 'tera_type': parts[5]
             }
-        except:
-            return {'raw_config': config_key}
+        except Exception as e:
+            print(f"Warning: Failed to parse config key: {str(e)}")
+            print(f"  Config key: {config_key[:200]}")
+            print(f"  Parts[3]: {parts[3] if len(parts) > 3 else 'N/A'}")
+            print(f"  Parts[4]: {parts[4] if len(parts) > 4 else 'N/A'}")
+            
+            # Try to return a partial parse with at least the basic components
+            try:
+                return {
+                    'item': parts[0] if parts[0] else None,
+                    'ability': parts[1] if parts[1] else None,
+                    'nature': parts[2] if parts[2] else None,
+                    'ev_spread': {},  # Empty EV spread as fallback
+                    'moves': [],     # Empty moves as fallback
+                    'tera_type': parts[5] if len(parts) > 5 and parts[5] else None,
+                    'parse_error': True
+                }
+            except:
+                return {'raw_config': config_key, 'parse_error': True}
     
     def _save_cache(self):
         """Save trained model to cache."""

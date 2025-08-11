@@ -16,7 +16,7 @@ from common import PNUMBER1
 from poke_env.player.team_util import get_llm_player, load_random_team
 from poke_env.environment.battle import Battle
 from poke_env.player.baselines import AbyssalPlayer
-from predictor_singleton import get_pokemon_predictor
+from bayesian.predictor_singleton import get_pokemon_predictor
 
 
 class LiveBattlePredictor(AbyssalPlayer):

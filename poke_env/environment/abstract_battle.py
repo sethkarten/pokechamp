@@ -185,7 +185,7 @@ class AbstractBattle(ABC):
         shares it across all battle instances.
         """
         if cls._pokemon_predictor is None:
-            from predictor_singleton import get_pokemon_predictor
+            from bayesian.predictor_singleton import get_pokemon_predictor
             cls._pokemon_predictor = get_pokemon_predictor()
         return cls._pokemon_predictor
 
@@ -543,6 +543,9 @@ class AbstractBattle(ABC):
                         self.battle_tag,
                         self.turn,
                     )
+            elif len(split_message) == 6 and split_message[5].startswith("[from]"):
+                # Handle moves with [from] tags like lockedmove, Magic Bounce, etc.
+                pokemon, move, presumed_target = split_message[2:5]
             else:
                 pokemon, move, presumed_target = split_message[2:5]
                 if self.logger is not None:

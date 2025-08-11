@@ -6,7 +6,7 @@ This will download ~1M teams if not already cached and train the model.
 
 import os
 import time
-from team_predictor import BayesianTeamPredictor
+from bayesian.team_predictor import BayesianTeamPredictor
 
 
 def main():

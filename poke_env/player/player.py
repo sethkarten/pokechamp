@@ -161,6 +161,8 @@ class Player(ABC):
         self.pokemon_ability_dict = {}
         self._team_rejection_count = 0
         self._max_team_rejections = 10
+        self._last_challenge_info = None  # Track last challenge/accept for retry
+        self._teamloader = None  # Store teamloader for rejection recovery
         self.logger.debug("Player initialisation finished")
     
     async def _handle_team_rejection(self, message: str):
@@ -176,21 +178,40 @@ class Player(ABC):
             self.logger.error(f"Too many team rejections ({self._max_team_rejections}), giving up")
             return
         
-        # Try to load a different random team
+        # Try to load a different team
         try:
-            from poke_env.player.team_util import load_random_team
+            new_team = None
             
-            # Load a new random team
-            new_team_id = (self._team_rejection_count % 14) + 1  # Cycle through teams 1-14
-            new_team = load_random_team(new_team_id)
+            # First try to use teamloader if available
+            if self._teamloader:
+                new_team = self._teamloader.yield_team()
+                self.logger.info(f"Loaded new team from teamloader after rejection")
+            else:
+                # Fallback to static teams if no teamloader
+                from poke_env.player.team_util import load_random_team
+                new_team_id = ((self._team_rejection_count - 1) % 13) + 1
+                new_team = load_random_team(new_team_id)
+                self.logger.info(f"Loaded static team #{new_team_id} after rejection")
             
             # Update the team
             if new_team:
                 self._team = ConstantTeambuilder(new_team)
-                self.logger.info(f"Loaded alternative team #{new_team_id} after rejection")
                 
-                # If we're in a battle that's waiting for a team, resend it
-                # This is handled automatically by the battle system
+                # Retry the challenge/accept with the new team
+                if hasattr(self.ps_client, '_last_challenge_info') and self.ps_client._last_challenge_info:
+                    action, username, format_, _ = self.ps_client._last_challenge_info
+                    new_packed_team = self._team.yield_team()
+                    
+                    if action == 'challenge':
+                        self.logger.info(f"Retrying challenge to {username} with new team")
+                        await self.ps_client.challenge(username, format_, new_packed_team)
+                    elif action == 'accept':
+                        self.logger.info(f"Retrying accept from {username} with new team")
+                        await self.ps_client.accept_challenge(username, new_packed_team)
+                else:
+                    # Fallback: just set the team
+                    await self.ps_client.set_team(self._team.yield_team())
+                    self.logger.info(f"Set new team on server")
             else:
                 self.logger.error("Failed to load alternative team")
         except Exception as e:
@@ -284,6 +305,13 @@ class Player(ABC):
             self._team = team
         else:
             self._team = ConstantTeambuilder(team)
+    
+    def set_teamloader(self, teamloader):
+        """Set the teamloader for rejection recovery.
+        
+        :param teamloader: The teamloader to use for getting new teams on rejection.
+        """
+        self._teamloader = teamloader
         
 
         # TODO: set tera types for pokemon

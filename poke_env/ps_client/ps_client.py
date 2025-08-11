@@ -88,6 +88,9 @@ class PSClient:
         assert (
             self.logged_in.is_set()
         ), f"Expected player {self.username} to be logged in."
+        # Store challenge info for potential retry after team rejection
+        if hasattr(self, '_handle_team_rejection'):
+            self._last_challenge_info = ('accept', username, None, packed_team)
         await self.set_team(packed_team)
         await self.send_message("/accept %s" % username)
 
@@ -95,6 +98,9 @@ class PSClient:
         assert (
             self.logged_in.is_set()
         ), f"Expected player {self.username} to be logged in."
+        # Store challenge info for potential retry after team rejection
+        if hasattr(self, '_handle_team_rejection'):
+            self._last_challenge_info = ('challenge', username, format_, packed_team)
         await self.set_team(packed_team)
         await self.send_message(f"/challenge {username}, {format_}")
 
