@@ -2,6 +2,11 @@ import asyncio
 from time import sleep
 from tqdm import tqdm
 import argparse
+import os, sys
+
+# Add the current directory to Python path (since we're in project root)
+current_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, current_dir)
 
 from common import *
 from poke_env.player.team_util import get_llm_player, get_metamon_teams, load_random_team
@@ -16,7 +21,7 @@ parser.add_argument("--backend", type=str, default="gpt-4o", choices=[
     # Anthropic models
     "anthropic/claude-3.5-sonnet", "anthropic/claude-3-opus", "anthropic/claude-3-haiku",
     # Google models
-    "google/gemini-pro", "google/gemini-flash-1.5",
+    "google/gemini-pro", "gemini-2.0-flash", "gemini-2.0-pro", "gemini-2.0-flash-lite",
     # Meta models
     "meta-llama/llama-3.1-70b-instruct", "meta-llama/llama-3.1-8b-instruct",
     # Mistral models

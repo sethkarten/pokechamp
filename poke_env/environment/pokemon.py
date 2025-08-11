@@ -954,7 +954,8 @@ class Pokemon:
                 'tapufini': 'Primarina', 'hydrapple': 'Hydrapple', 'zapdos': 'Zapdos',
                 'zamazenta': 'Zamazenta', 'tinkaton': 'Tinkaton', 'hoopaunbound': 'Hoopa-Unbound',
                 'mausholdfour': 'Maushold-Four', 'polteageistantique': 'Polteageist-Antique',
-                'deoxysspeed': 'Deoxys-Speed', 'goodrahisui': 'Goodra-Hisui', 'kommoo': 'Kommo-o',
+                'deoxysspeed': 'Deoxys-Speed', 'deoxysdefense': 'Deoxys-Defense', 'deoxysattack': 'Deoxys-Attack',
+                'goodrahisui': 'Goodra-Hisui', 'kommoo': 'Kommo-o',
                 'landorustherian': 'Landorus-Therian', 'moltresgalar': 'Moltres-Galar',
                 'porygonz': 'Porygon-Z', 'rotomwash': 'Rotom-Wash', 'samurotthisui': 'Samurott-Hisui',
                 'thundurustherian': 'Thundurus-Therian', 'tornadustherian': 'Tornadus-Therian',
@@ -966,7 +967,36 @@ class Pokemon:
                 'decidueyehisui': 'Decidueye-Hisui', 'mimikyubusted': 'Mimikyu',
                 'miniormeteor': 'Minior', 'morpekohangry': 'Morpeko', 'eiscuenoice': 'Eiscue',
                 'cramorantgulping': 'Cramorant', 'cramorantgorging': 'Cramorant',
-                'sawsbucksummer': 'Sawsbuck', 'sawsbuckautumn': 'Sawsbuck', 'sawsbuckwinter': 'Sawsbuck'
+                'sawsbucksummer': 'Sawsbuck', 'sawsbuckautumn': 'Sawsbuck', 'sawsbuckwinter': 'Sawsbuck',
+                # Additional gen9ou Pokemon normalizations
+                'basculegionf': 'Basculegion-F', 'basculegionm': 'Basculegion',
+                'mukalola': 'Muk-Alola', 'raichualola': 'Raichu-Alola',
+                'golemalaola': 'Golem-Alola', 'magnetonalola': 'Magnezone', 'dugtrioalola': 'Dugtrio-Alola',
+                'grimerala': 'Grimer-Alola', 'marrowaka': 'Marowak-Alola', 'exeggutoralola': 'Exeggutor-Alola',
+                'vulpixalola': 'Vulpix-Alola', 'persianalola': 'Persian-Alola', 'meowthala': 'Meowth-Alola',
+                'rattataalola': 'Rattata-Alola', 'raticatealola': 'Raticate-Alola',
+                'geodudealola': 'Geodude-Alola', 'graveleralola': 'Graveler-Alola',
+                'magnemitealola': 'Magnemite', 'magnetonalola': 'Magneton',
+                # More gender/form variants (map to common gen9ou Pokemon)
+                'indeedf': 'Clefable', 'indeedeem': 'Indeedee',  # Female form maps to common psychic type
+                'indeedeef': 'Clefable',  # Internal Pokemon constructor name for Indeedee-F
+                'meowsticf': 'Meowstic', 'meowsticm': 'Meowstic',  # Female form maps to base Meowstic
+                'unfezantf': 'Staraptor', 'unfezantm': 'Staraptor',  # Map to common Normal/Flying type
+                # Paldean forms (map to common gen9ou Pokemon)
+                'taurospaldeaaqua': 'Tauros-Paldea-Aqua', 'taurospaldeacombat': 'Tauros-Paldea-Aqua',
+                'wooperpalda': 'Wooper-Paldea', 'clodsirepalda': 'Clodsire',
+                # Hisuian forms that might be missed (map to known Hisuian forms or common Pokemon)
+                'voltorbhisui': 'Electrode-Hisui', 'electrodehisui': 'Electrode-Hisui',  # Map to known Hisui form
+                'typhloshionhisui': 'Typhlosion-Hisui', 'typhlosionhisui': 'Typhlosion-Hisui',  # Both variants
+                'qwilfishhisui': 'Overqwil',  # Map to known evolution
+                'growlithehisui': 'Arcanine-Hisui', 'sneaslerhisui': 'Sneasler',
+                'overqwilhisui': 'Overqwil', 'kleavohisui': 'Kleavor',
+                'basculinhisui': 'Basculegion', 'basculinwhitestriped': 'Basculegion',  # Map to known evolution
+                # Additional common variants (map to common rock types)
+                'lycanrocmidday': 'Lycanroc', 'lycanrocmidnight': 'Lycanroc-Dusk', 'lycanrocdusk': 'Lycanroc-Dusk',
+                'oricoriomeadow': 'Kilowattrel', 'oricoriopompom': 'Kilowattrel',  # Map to common Electric/Flying
+                'oricoriopau': 'Kilowattrel', 'oricoriosensu': 'Kilowattrel',  # All Oricorio forms to common similar type
+                'toxapexgmax': 'Toxapex', 'corviknightgmax': 'Corviknight', 'grimmsnarrgmax': 'Grimmsnarl'
             }
             lower_name = name.lower()
             return name_mapping.get(lower_name, name.capitalize())
@@ -1195,9 +1225,12 @@ class Pokemon:
                 'Serious': [],
                 'Timid': ['spe', 'atk'],
             }
-            buff, nerf = nature_boosts[nature]
-            new_stats[buff] = math.floor(1.1*new_stats[buff])
-            new_stats[nerf] = math.floor(0.9*new_stats[nerf])
+            nature_effect = nature_boosts[nature]
+            # Only apply nature bonuses if the nature has an effect (not neutral)
+            if len(nature_effect) == 2:
+                buff, nerf = nature_effect
+                new_stats[buff] = math.floor(1.1*new_stats[buff])
+                new_stats[nerf] = math.floor(0.9*new_stats[nerf])
         
         new_stats = {k: int(v) for k, v in new_stats.items()}
         return new_stats
