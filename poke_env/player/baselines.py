@@ -16,7 +16,7 @@ from poke_env.environment.side_condition import SideCondition
 from poke_env.player.local_simulation import LocalSim, SimNode
 from poke_env.player.player import Player
 from poke_env.data.gen_data import GenData
-from poke_env.player.prompts import get_micro_strat, get_move_prompt, get_number_turns_faint, get_status_num_turns_fnt, prompt_translate
+from pokechamp.prompts import get_micro_strat, get_move_prompt, get_number_turns_faint, get_status_num_turns_fnt, prompt_translate
 
 with open("./poke_env/data/static/moves/moves_effect.json", "r") as f:
     move_effect = json.load(f)

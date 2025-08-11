@@ -7,6 +7,6 @@ def get_pokemon_predictor():
     """Get the shared PokemonPredictor instance, creating it if necessary."""
     global _predictor_instance
     if _predictor_instance is None:
-        from pokemon_predictor import PokemonPredictor
+        from bayesian.pokemon_predictor import PokemonPredictor
         _predictor_instance = PokemonPredictor()
     return _predictor_instance

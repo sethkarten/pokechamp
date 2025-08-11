@@ -19,13 +19,13 @@ from poke_env.environment.move import Move
 import time
 import json
 from poke_env.data.gen_data import GenData
-from poke_env.player.gpt_player import GPTPlayer
-from poke_env.player.llama_player import LLAMAPlayer
-from poke_env.player.openrouter_player import OpenRouterPlayer
-from poke_env.player.gemini_player import GeminiPlayer
+from pokechamp.gpt_player import GPTPlayer
+from pokechamp.llama_player import LLAMAPlayer
+from pokechamp.openrouter_player import OpenRouterPlayer
+from pokechamp.gemini_player import GeminiPlayer
 from poke_env.player.local_simulation import LocalSim, SimNode
 from difflib import get_close_matches
-from poke_env.player.prompts import get_number_turns_faint, get_status_num_turns_fnt, state_translate, get_gimmick_motivation
+from pokechamp.prompts import get_number_turns_faint, get_status_num_turns_fnt, state_translate, get_gimmick_motivation
 
 DEBUG=False
 
@@ -159,6 +159,7 @@ class LLMPlayer(Player):
         moves = [move.id for move in battle.available_moves]
         switches = [pokemon.species for pokemon in battle.available_switches]
         actions = [moves, switches]
+        
 
         gimmick_output_format = ''
         if 'pokellmon' not in self.ps_client.account_configuration.username: # make sure we dont mess with pokellmon original strat
@@ -269,7 +270,11 @@ class LLMPlayer(Player):
                                             actions=actions)
 
                 # load when llm does heavylifting for parsing
+                if DEBUG:
+                    print(f"Raw LLM output: {llm_output}")
                 llm_action_json = json.loads(llm_output)
+                if DEBUG:
+                    print(f"Parsed JSON: {llm_action_json}")
                 next_action = None
 
                 dynamax = "dynamax" in llm_action_json.keys()
@@ -283,17 +288,30 @@ class LLMPlayer(Player):
                         llm_move_id = llm_action_json["terastallize"].strip()
                     else:
                         llm_move_id = llm_action_json["move"].strip()
-                    move_list = battle.active_pokemon.moves.values()
+                    move_list = battle.available_moves
                     if dont_verify: # opponent
                         move_list = battle.opponent_active_pokemon.moves.values()
+                    
+                    # Debug: print available moves
+                    if DEBUG:
+                        print(f"LLM requested move: '{llm_move_id}'")
+                        print(f"Available moves: {[move.id for move in move_list]}")
+                    
                     for i, move in enumerate(move_list):
                         if move.id.lower().replace(' ', '') == llm_move_id.lower().replace(' ', ''):
                             #next_action = self.create_order(move, dynamax=sim._should_dynamax(battle), terastallize=sim._should_terastallize(battle))
                             next_action = self.create_order(move, dynamax=dynamax, terastallize=tera)
+                            if DEBUG:
+                                print(f"Move match found: {move.id}")
+                            break
+                    
                     if next_action is None and dont_verify:
                         # unseen move so just check if it is in the action prompt
                         if llm_move_id.lower().replace(' ', '') in state_action_prompt:
                             next_action = self.create_order(Move(llm_move_id.lower().replace(' ', ''), self.gen.gen), dynamax=dynamax, terastallize=tera)
+                    
+                    if next_action is None and DEBUG:
+                        print(f"No move match found for '{llm_move_id}'")
                 elif "switch" in llm_action_json.keys():
                     llm_switch_species = llm_action_json["switch"].strip()
                     switch_list = battle.available_switches
@@ -303,9 +321,19 @@ class LLMPlayer(Player):
                             if not opponent_pokemon.active:
                                 observable_switches.append(opponent_pokemon)
                         switch_list = observable_switches
+                    
+                    # Debug: print available switches
+                    if DEBUG:
+                        print(f"LLM requested switch: '{llm_switch_species}'")
+                        print(f"Available switches: {[pokemon.species for pokemon in switch_list]}")
+                    
                     for i, pokemon in enumerate(switch_list):
                         if pokemon.species.lower().replace(' ', '') == llm_switch_species.lower().replace(' ', ''):
                             next_action = self.create_order(pokemon)
+                            if DEBUG:
+                                print(f"Switch match found: {pokemon.species}")
+                            break
+                    
                 else:
                     raise ValueError('No valid action')
                 

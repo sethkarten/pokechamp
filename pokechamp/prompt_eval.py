@@ -6,11 +6,11 @@ import numpy as np
 from tqdm import tqdm
 
 from poke_env.player.baselines import MaxBasePowerPlayer, Human, OneStepPlayer, AbyssalPlayer
-from poke_env.player.depth_translate import data_battle
-from poke_env.player.llm_player import LLMPlayer
+from pokechamp.depth_translate import data_battle
+from pokechamp.llm_player import LLMPlayer
 from poke_env.player.player import Player
-from poke_env.player.prompts import prompt_translate, state_translate
-# from poke_env.player.translate import add_battle
+from pokechamp.prompts import prompt_translate, state_translate
+# from pokechamp.translate import add_battle
 from poke_env.ps_client.account_configuration import AccountConfiguration
 
 system_prompt = (

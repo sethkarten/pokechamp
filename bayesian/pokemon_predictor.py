@@ -8,7 +8,7 @@ during battles or team analysis.
 
 import os
 from typing import List, Dict, Tuple, Optional
-from team_predictor import BayesianTeamPredictor
+from bayesian.team_predictor import BayesianTeamPredictor
 
 
 class PokemonPredictor:

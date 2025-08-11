@@ -149,6 +149,7 @@ def get_macro_strat(sim: LocalSim,
     # with open('poke_env/data/static/teams/gen9ou1_strat.txt', 'r') as f:
     #     text = f.read()
     return sim.strategy
+    return ''
 
 def get_number_turns_faint(mon: Pokemon,
                            move: Move,
