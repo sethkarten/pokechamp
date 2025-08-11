@@ -23,6 +23,22 @@ from pokechamp.gpt_player import GPTPlayer
 from pokechamp.llama_player import LLAMAPlayer
 from pokechamp.openrouter_player import OpenRouterPlayer
 from pokechamp.gemini_player import GeminiPlayer
+from pokechamp.data_cache import (
+    get_cached_move_effect,
+    get_cached_pokemon_move_dict,
+    get_cached_ability_effect,
+    get_cached_pokemon_ability_dict,
+    get_cached_item_effect,
+    get_cached_pokemon_item_dict,
+    get_cached_pokedex
+)
+from pokechamp.minimax_optimizer import (
+    get_minimax_optimizer,
+    initialize_minimax_optimization,
+    fast_battle_evaluation,
+    create_battle_state_hash,
+    OptimizedSimNode
+)
 from poke_env.player.local_simulation import LocalSim, SimNode
 from difflib import get_close_matches
 from pokechamp.prompts import get_number_turns_faint, get_status_num_turns_fnt, state_translate, get_gimmick_motivation
@@ -71,24 +87,19 @@ class LLMPlayer(Player):
         self.team_str = team
         self.use_strat_prompt = _use_strat_prompt
         
-        with open("./poke_env/data/static/moves/moves_effect.json", "r") as f:
-            self.move_effect = json.load(f)
+        # Use cached data instead of loading files repeatedly
+        self.move_effect = get_cached_move_effect()
         # only used in old prompting method, replaced by statistcal sets data
-        with open(f"./poke_env/data/static/moves/gen8pokemon_move_dict.json", "r") as f:
-            self.pokemon_move_dict = json.load(f)
-        with open("./poke_env/data/static/abilities/ability_effect.json", "r") as f:
-            self.ability_effect = json.load(f)
+        self.pokemon_move_dict = get_cached_pokemon_move_dict()
+        self.ability_effect = get_cached_ability_effect()
         # only used is old prompting method
-        with open("./poke_env/data/static/abilities/gen8pokemon_ability_dict.json", "r") as f:
-            self.pokemon_ability_dict = json.load(f)
-        with open("./poke_env/data/static/items/item_effect.json", "r") as f:
-            self.item_effect = json.load(f)
+        self.pokemon_ability_dict = get_cached_pokemon_ability_dict()
+        self.item_effect = get_cached_item_effect()
         # unused
         # with open(f"./poke_env/data/static/items/gen8pokemon_item_dict.json", "r") as f:
         #     self.pokemon_item_dict = json.load(f)
-        self.pokemon_item_dict = {}
-        with open(f"./poke_env/data/static/pokedex/gen{self.gen.gen}pokedex.json", "r") as f:
-            self._pokemon_dict = json.load(f)
+        self.pokemon_item_dict = get_cached_pokemon_item_dict()
+        self._pokemon_dict = get_cached_pokedex(self.gen.gen)
 
         self.last_plan = ""
 
@@ -108,6 +119,8 @@ class LLMPlayer(Player):
             self.llm = llm_backend
         self.llm_value = self.llm
         self.K = K      # for minimax, SC, ToT
+        self.use_optimized_minimax = True  # Enable optimized minimax by default
+        self._minimax_initialized = False
 
     def get_LLM_action(self, system_prompt, user_prompt, model, temperature=0.7, json_format=False, seed=None, stop=[], max_tokens=200, actions=None, llm=None) -> str:
         if llm is None:
@@ -246,9 +259,16 @@ class LLMPlayer(Player):
 
         elif self.prompt_algo == "minimax":
             try:
-                return self.tree_search(retries, battle)
+                # Initialize minimax optimizer if not already done
+                if self.use_optimized_minimax and not self._minimax_initialized:
+                    self._initialize_minimax_optimizer(battle)
+                    
+                if self.use_optimized_minimax:
+                    return self.tree_search_optimized(retries, battle)
+                else:
+                    return self.tree_search(retries, battle)
             except Exception as e:
-                print('minimax step failed. Using dmg calc')
+                print(f'minimax step failed ({e}). Using dmg calc')
                 print(f'Exception: {e}', 'passed')
                 return self.choose_max_damage_move(battle)
 
@@ -463,6 +483,28 @@ class LLMPlayer(Player):
 
         return score
     
+    def _initialize_minimax_optimizer(self, battle):
+        """Initialize the minimax optimizer with current battle state."""
+        try:
+            initialize_minimax_optimization(
+                battle=battle,
+                move_effect=self.move_effect,
+                pokemon_move_dict=self.pokemon_move_dict,
+                ability_effect=self.ability_effect,
+                pokemon_ability_dict=self.pokemon_ability_dict,
+                item_effect=self.item_effect,
+                pokemon_item_dict=self.pokemon_item_dict,
+                gen=self.gen,
+                _dynamax_disable=self._dynamax_disable,
+                format=self.format,
+                prompt_translate=self.prompt_translate
+            )
+            self._minimax_initialized = True
+            print("🚀 Minimax optimizer initialized")
+        except Exception as e:
+            print(f"⚠️  Failed to initialize minimax optimizer: {e}")
+            self.use_optimized_minimax = False  # Fallback to original
+
     def check_timeout(self, start_time, battle):
         if time.time() - start_time > 30:
             print('default due to time')
@@ -702,6 +744,156 @@ class LLMPlayer(Player):
         if return_opp:
             return action, action_opp
         return action
+
+    def tree_search_optimized(self, retries, battle, sim=None, return_opp=False) -> BattleOrder:
+        """
+        Optimized version of tree_search using object pooling and caching.
+        
+        This version provides significant performance improvements for minimax:
+        - Object pooling for LocalSim instances
+        - Fast heuristic evaluation instead of LLM calls
+        - Battle state caching to avoid repeated computations
+        """
+        optimizer = get_minimax_optimizer()
+        start_time = time.time()
+        
+        try:
+            # Create optimized root node
+            root = optimizer.create_optimized_root(battle)
+            
+            q = [root]
+            leaf_nodes = []
+            
+            while len(q) != 0:
+                node = q.pop(0)
+                
+                # Get available actions efficiently 
+                player_actions = []
+                system_prompt, state_prompt, constraint_prompt_cot, constraint_prompt_io, state_action_prompt, action_prompt_switch, action_prompt_move = node.simulation.get_player_prompt(return_actions=True)
+                
+                # Check if terminal node or reached depth limit
+                if node.simulation.is_terminal() or node.depth == self.K:
+                    # Use fast heuristic evaluation instead of LLM call
+                    try:
+                        battle_state = node.simulation.battle
+                        player_hp = int(battle_state.active_pokemon.current_hp_fraction * 100) if battle_state.active_pokemon else 0
+                        opp_hp = int(battle_state.opponent_active_pokemon.current_hp_fraction * 100) if battle_state.opponent_active_pokemon else 0
+                        player_remaining = len([p for p in battle_state.team.values() if not p.fainted])
+                        opp_remaining = len([p for p in battle_state.opponent_team.values() if not p.fainted])
+                        
+                        # Use cached fast evaluation
+                        node.hp_diff = fast_battle_evaluation(
+                            player_hp, opp_hp, 
+                            player_remaining, opp_remaining,
+                            battle_state.turn
+                        )
+                    except Exception as e:
+                        # Fallback to simulation's hp_diff
+                        node.hp_diff = node.simulation.get_hp_diff()
+                    
+                    leaf_nodes.append(node)
+                    continue
+                
+                # Estimate opponent action (reuse existing logic)
+                try:
+                    action_opp, opp_turns = self.estimate_matchup(
+                        node.simulation, node.simulation.battle, 
+                        node.simulation.battle.opponent_active_pokemon, 
+                        node.simulation.battle.active_pokemon, 
+                        is_opp=True
+                    )
+                except:
+                    action_opp = None
+                    opp_turns = float('inf')
+                
+                # Generate player actions (reuse existing logic)
+                opponent_actions = []
+                if action_opp is not None:
+                    opponent_actions.append(self.create_order(action_opp))
+                
+                # Get more opponent actions via LLM (simplified)
+                try:
+                    system_prompt_o, state_prompt_o, constraint_prompt_cot_o, constraint_prompt_io_o, state_action_prompt_o = node.simulation.get_opponent_prompt(system_prompt)
+                    action_o = self.io(2, system_prompt_o, state_prompt_o, constraint_prompt_cot_o, constraint_prompt_io_o, state_action_prompt_o, node.simulation.battle, node.simulation, dont_verify=True)
+                    if action_o not in opponent_actions:
+                        opponent_actions.append(action_o)
+                except:
+                    pass  # Use what we have
+                
+                # Get player actions (simplified version)
+                if not node.simulation.battle.active_pokemon.fainted and len(battle.available_moves) > 0:
+                    dmg_calc_out, dmg_calc_turns = self.dmg_calc_move(node.simulation.battle)
+                    if dmg_calc_out is not None:
+                        player_actions.append(dmg_calc_out)
+                
+                # Generate a few additional actions
+                try:
+                    action_io = self.io(2, system_prompt, state_prompt, constraint_prompt_cot, constraint_prompt_io, state_action_prompt, node.simulation.battle, node.simulation, actions=player_actions)
+                    if action_io not in player_actions:
+                        player_actions.append(action_io)
+                except:
+                    pass
+                
+                # Create child nodes efficiently (if not at depth limit)
+                if node.depth < self.K and player_actions and opponent_actions:
+                    for action_p in player_actions[:2]:  # Limit to 2 player actions for performance
+                        for action_o in opponent_actions[:2]:  # Limit to 2 opponent actions for performance
+                            try:
+                                child_node = node.create_child_node(action_p, action_o)
+                                q.append(child_node)
+                            except Exception as e:
+                                print(f"Failed to create child node: {e}")
+                                continue
+            
+            # Choose best action using original logic
+            def get_tree_action(root_node):
+                if len(root_node.children) == 0:
+                    return root_node.action, root_node.hp_diff, root_node.action_opp
+                    
+                score_dict = {}
+                action_dict = {}
+                opp_dict = {}
+                
+                for child in root_node.children:
+                    action = str(child.action.order)
+                    if action not in score_dict:
+                        score_dict[action] = []
+                        action_dict[action] = child.action
+                        opp_dict[action] = child.action_opp
+                    score_dict[action].append(child.hp_diff)
+                
+                # Use max score for each action
+                for action in score_dict:
+                    score_dict[action] = max(score_dict[action])
+                
+                best_action_str = max(score_dict, key=score_dict.get)
+                return action_dict[best_action_str], score_dict[best_action_str], opp_dict[best_action_str]
+            
+            action, _, action_opp = get_tree_action(root)
+            
+            # Cleanup resources
+            optimizer.cleanup_tree(root)
+            
+            # Log performance stats
+            end_time = time.time()
+            stats = optimizer.get_performance_stats()
+            print(f"⚡ Optimized minimax: {end_time - start_time:.2f}s, "
+                  f"Pool reuse: {stats['pool_stats']['reuse_rate']:.2f}, "
+                  f"Cache hit rate: {stats['cache_stats']['hit_rate']:.2f}")
+            
+            if return_opp:
+                return action, action_opp
+            return action
+            
+        except Exception as e:
+            print(f"Optimized minimax failed: {e}, falling back to original")
+            # Cleanup any resources
+            try:
+                optimizer.cleanup_tree(root)
+            except:
+                pass
+            # Fallback to original tree search
+            return self.tree_search(retries, battle, sim, return_opp)
  
     def battle_summary(self):
 
