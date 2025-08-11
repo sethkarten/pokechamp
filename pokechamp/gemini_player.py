@@ -18,13 +18,13 @@ class GeminiPlayer():
         
         # Map common model names to official API names
         self.model_mapping = {
-            # Default to latest Gemini 2.0 Flash
-            'gemini-flash': 'gemini-2.0-flash',
-            'gemini-flash-2.5': 'gemini-2.0-flash',
-            'gemini-pro': 'gemini-2.0-pro-experimental',
-            'gemini-pro-2.5': 'gemini-2.0-pro-experimental',
+            # Default to latest Gemini 2.05
+            'gemini-flash': 'gemini-2.5-flash',
+            'gemini-flash-2.5': 'gemini-2.5-flash',
+            'gemini-pro': 'gemini-2.5-pro',
+            'gemini-pro-2.5': 'gemini-2.5-pro',
             
-            # Gemini 2.0 models (latest)
+            # Gemini 2.0 models
             'gemini-2.0-flash': 'gemini-2.0-flash',
             'gemini-2.0-flash-lite': 'gemini-2.0-flash-lite',
             'gemini-2.0-pro': 'gemini-2.0-pro-experimental',
