@@ -1,7 +1,12 @@
 import asyncio
 from tqdm import tqdm
 import os
+import sys
 import argparse
+
+# Add the project root to Python path
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+sys.path.insert(0, project_root)
 
 from common import *
 from poke_env.player.team_util import get_llm_player, get_metamon_teams, load_random_team
