@@ -224,7 +224,7 @@ class MinimaxOptimizer:
     """Main optimizer for minimax tree search."""
     
     def __init__(self):
-        self.sim_pool = LocalSimPool(initial_size=100)  # Larger pool for minimax
+        self.sim_pool = LocalSimPool(initial_size=4)  # Larger pool for minimax
         self.cache = MinimaxCache(max_size=2000)
         self.stats = {
             'nodes_created': 0,
