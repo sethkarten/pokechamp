@@ -134,14 +134,20 @@ class Battle(AbstractBattle):
                 if pokemon:
                     # print("battle", pokemon)
                     # print('[team]', self._team)
-                    pokemon = self._team[pokemon["ident"]]
+                    try:
+                        pokemon = self._team[pokemon["ident"]]
+                    except KeyError:
+                        pokemon = self.get_pokemon(pokemon["ident"], force_self_team=True)
                     if not pokemon.active and not pokemon.fainted:
                         self._available_switches.append(pokemon)
 
         if not self.trapped and self.reviving:
             for pokemon in side["pokemon"]:
                 if pokemon and pokemon.get("reviving", False):
-                    pokemon = self._team[pokemon["ident"]]
+                    try:
+                        pokemon = self._team[pokemon["ident"]]
+                    except KeyError:
+                        pokemon = self.get_pokemon(pokemon["ident"], force_self_team=True)
                     if not pokemon.active:
                         self._available_switches.append(pokemon)
 

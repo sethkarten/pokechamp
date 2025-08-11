@@ -15,8 +15,8 @@ from poke_env.environment.pokemon import Pokemon
 from poke_env.environment.side_condition import SideCondition
 from poke_env.environment.status import Status
 from poke_env.player.battle_order import BattleOrder
-from poke_env.player.gpt_player import GPTPlayer
-from poke_env.player.llama_player import LLAMAPlayer
+from pokechamp.gpt_player import GPTPlayer
+from pokechamp.llama_player import LLAMAPlayer
 
 DEBUG = False
 
