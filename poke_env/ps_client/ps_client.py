@@ -164,6 +164,11 @@ class PSClient:
                 pass
             elif split_messages[0][1] == "popup":
                 self.logger.warning("Popup message received: %s", message)
+                # Check if this is a team rejection message
+                if "team was rejected" in message.lower():
+                    # Notify the player about team rejection if handler exists
+                    if hasattr(self, '_handle_team_rejection'):
+                        await self._handle_team_rejection(message)  # type: ignore
             elif split_messages[0][1] in ["nametaken"]:
                 self.logger.critical("SKIPPED Error message received: %s", message)
                 # raise ShowdownException("Error message received: %s", message)

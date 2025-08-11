@@ -124,6 +124,7 @@ class Player(ABC):
         self.ps_client._handle_battle_message = self._handle_battle_message  # type: ignore
         self.ps_client._update_challenges = self._update_challenges  # type: ignore
         self.ps_client._handle_challenge_request = self._handle_challenge_request  # type: ignore
+        self.ps_client._handle_team_rejection = self._handle_team_rejection  # type: ignore
 
         self._format: str = battle_format
         self._max_concurrent_battles: int = max_concurrent_battles
@@ -158,7 +159,42 @@ class Player(ABC):
         self.pokemon_move_dict = {}
         self.pokemon_item_dict = {}
         self.pokemon_ability_dict = {}
+        self._team_rejection_count = 0
+        self._max_team_rejections = 10
         self.logger.debug("Player initialisation finished")
+    
+    async def _handle_team_rejection(self, message: str):
+        """Handle team rejection by loading a different team.
+        
+        Args:
+            message: The rejection message from the server
+        """
+        self._team_rejection_count += 1
+        self.logger.warning(f"Team rejected (attempt {self._team_rejection_count}): {message}")
+        
+        if self._team_rejection_count >= self._max_team_rejections:
+            self.logger.error(f"Too many team rejections ({self._max_team_rejections}), giving up")
+            return
+        
+        # Try to load a different random team
+        try:
+            from poke_env.player.team_util import load_random_team
+            
+            # Load a new random team
+            new_team_id = (self._team_rejection_count % 14) + 1  # Cycle through teams 1-14
+            new_team = load_random_team(new_team_id)
+            
+            # Update the team
+            if new_team:
+                self._team = ConstantTeambuilder(new_team)
+                self.logger.info(f"Loaded alternative team #{new_team_id} after rejection")
+                
+                # If we're in a battle that's waiting for a team, resend it
+                # This is handled automatically by the battle system
+            else:
+                self.logger.error("Failed to load alternative team")
+        except Exception as e:
+            self.logger.error(f"Error loading alternative team: {e}")
     
     def check_all_moves(self, move_str: str, species: str) -> Move:
         if self.gen.gen == 8:
@@ -673,7 +709,6 @@ class Player(ABC):
                 message = await message
             if isinstance(message, str):
                 print(message)
-            print("Choose Move Message:", message)
             
             if message is None:            # dealing with the occasional return of None by choose_move
                 message = self.choose_default_move().message
