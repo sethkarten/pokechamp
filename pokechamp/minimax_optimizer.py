@@ -69,7 +69,7 @@ def create_battle_state_hash(battle: Battle) -> BattleStateHash:
 class LocalSimPool:
     """Object pool for LocalSim instances to avoid repeated creation."""
     
-    def __init__(self, initial_size: int = 50):
+    def __init__(self, initial_size: int = 16):
         self._available_sims: List[LocalSim] = []
         self._in_use_sims: List[LocalSim] = []
         self._initial_size = initial_size
