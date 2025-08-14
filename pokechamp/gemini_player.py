@@ -1,24 +1,25 @@
-import google.generativeai as genai
+from google import genai
 from time import sleep
-import os
+import os, sys
 import json
 
 class GeminiPlayer():
     def __init__(self, api_key=""):
+        print("api_key", api_key)
         if api_key == "":
             self.api_key = os.getenv('GEMINI_API_KEY')
         else:
             self.api_key = api_key
         
         # Configure the Gemini API
-        genai.configure(api_key=self.api_key)
+        self.client = genai.Client(api_key=self.api_key)
         
         self.completion_tokens = 0
         self.prompt_tokens = 0
         
         # Map common model names to official API names
         self.model_mapping = {
-            # Default to latest Gemini 2.05
+            # Default to latest Gemini 2.5
             'gemini-flash': 'gemini-2.5-flash',
             'gemini-flash-2.5': 'gemini-2.5-flash',
             'gemini-pro': 'gemini-2.5-pro',
@@ -36,30 +37,27 @@ class GeminiPlayer():
             'gemini-1.5-pro': 'gemini-1.5-pro',
         }
 
-    def get_LLM_action(self, system_prompt, user_prompt, model='gemini-2.0-flash', temperature=0.7, json_format=False, seed=None, stop=[], max_tokens=200, actions=None) -> str:
+    def get_LLM_action(self, system_prompt, user_prompt, model='gemini-2.0-flash', temperature=0.7, json_format=False, seed=None, stop=[], max_tokens=1000, actions=None) -> str:
         try:
             # Map model name to official API name
             api_model_name = self.model_mapping.get(model, model)
             
-            # Initialize the model
-            genai_model = genai.GenerativeModel(
-                model_name=api_model_name,
-                generation_config=genai.types.GenerationConfig(
-                    temperature=temperature,
-                    max_output_tokens=max_tokens,
-                    stop_sequences=stop if stop else None
-                )
-            )
-            
             # Combine system and user prompts for Gemini
             combined_prompt = f"{system_prompt}\n\n{user_prompt}"
             
-            # Add JSON format instruction if requested
-            if json_format:
-                combined_prompt += "\n\nPlease respond in valid JSON format."
+            # print("=" * 80)
+            # print("GEMINI PROMPT:")
+            # print("-" * 80)
+            # print(combined_prompt)
+            # print("-" * 80)
             
             # Generate response
-            response = genai_model.generate_content(combined_prompt)
+            response = self.client.models.generate_content(model=api_model_name, contents=combined_prompt)
+            
+            # print("GEMINI RESPONSE:")
+            # print("-" * 80)
+            # print(response)
+            # print("-" * 80)
             
             # Extract text from response
             outputs = response.text
@@ -91,38 +89,28 @@ class GeminiPlayer():
             
         except Exception as e:
             print(f'Gemini API error: {e}')
+            sys.exit(1)
             # sleep 2 seconds and try again
             sleep(2)
             return self.get_LLM_action(system_prompt, user_prompt, model, temperature, json_format, seed, stop, max_tokens, actions)
     
-    def get_LLM_query(self, system_prompt, user_prompt, temperature=0.7, model='gemini-2.0-flash', json_format=False, seed=None, stop=[], max_tokens=200):
+    def get_LLM_query(self, system_prompt, user_prompt, temperature=0.7, model='gemini-2.0-flash', json_format=False, seed=None, stop=[], max_tokens=1000):
         try:
             # Map model name to official API name
             api_model_name = self.model_mapping.get(model, model)
             
-            # Initialize the model
-            genai_model = genai.GenerativeModel(
-                model_name=api_model_name,
-                generation_config=genai.types.GenerationConfig(
-                    temperature=temperature,
-                    max_output_tokens=max_tokens,
-                    stop_sequences=stop if stop else None
-                )
-            )
-            
             # Combine system and user prompts for Gemini
-            output_padding = ''
-            if json_format:
-                output_padding = '\n{"'
-                
-            combined_prompt = f"{system_prompt}\n\n{user_prompt}{output_padding}"
+            combined_prompt = f"{system_prompt}\n\n{user_prompt}"
             
             # Generate response
-            response = genai_model.generate_content(combined_prompt)
+            response = self.client.models.generate_content(model=api_model_name, contents=combined_prompt)
+            
+            # Extract text from response
             message = response.text
             
         except Exception as e:
-            print(f'Gemini API error: {e}')
+            print(f'Gemini API error2: {e}')
+            sys.exit(1)
             # sleep 2 seconds and try again
             sleep(2)
             return self.get_LLM_query(system_prompt, user_prompt, temperature, model, json_format, seed, stop, max_tokens)

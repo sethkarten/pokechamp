@@ -15,13 +15,13 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--temperature", type=float, default=0.5)
 parser.add_argument("--prompt_algo", default="minimax", choices=prompt_algos)
 parser.add_argument("--battle_format", default="gen9ou", choices=["gen8randombattle", "gen8ou", "gen9ou", "gen9randombattle"])
-parser.add_argument("--backend", type=str, default="gpt-4o", choices=[
+parser.add_argument("--backend", type=str, default="gemini-2.5-flash", choices=[
     # OpenAI models
     "gpt-4o-mini", "gpt-4o", "gpt-4o-2024-05-13", "gpt-4-turbo", "gpt-4", "gpt-3.5-turbo",
     # Anthropic models
     "anthropic/claude-3.5-sonnet", "anthropic/claude-3-opus", "anthropic/claude-3-haiku",
     # Google models
-    "google/gemini-pro", "gemini-2.0-flash", "gemini-2.0-pro", "gemini-2.0-flash-lite",
+    "google/gemini-pro", "gemini-2.0-flash", "gemini-2.0-pro", "gemini-2.0-flash-lite", "gemini-2.5-flash", "gemini-2.5-pro",
     # Meta models
     "meta-llama/llama-3.1-70b-instruct", "meta-llama/llama-3.1-8b-instruct",
     # Mistral models
@@ -56,7 +56,7 @@ async def main():
                             USERNAME=args.USERNAME, 
                             PASSWORD=args.PASSWORD)
     
-    teamloader = get_metamon_teams(args.battle_format, "modern_replays")
+    teamloader = get_metamon_teams(args.battle_format, "competitive")
     
     if not 'random' in args.battle_format:
         # Set teamloader on player for rejection recovery
