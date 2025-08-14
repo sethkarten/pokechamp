@@ -14,8 +14,8 @@ from poke_env.player.team_util import get_llm_player, get_metamon_teams, load_ra
 parser = argparse.ArgumentParser()
 
 # Player arguments
-parser.add_argument("--player_prompt_algo", default="minimax", choices=prompt_algos)
-parser.add_argument("--player_backend", type=str, default="gpt-4o", choices=[
+parser.add_argument("--player_prompt_algo", default="io", choices=prompt_algos)
+parser.add_argument("--player_backend", type=str, default="gemini-2.5-flash", choices=[
     # OpenAI models
     "gpt-4o-mini", "gpt-4o", "gpt-4o-2024-05-13", "gpt-4-turbo", "gpt-4", "gpt-3.5-turbo",
     # Anthropic models
@@ -42,7 +42,7 @@ parser.add_argument("--player_device", type=int, default=0)
 
 # Opponent arguments
 parser.add_argument("--opponent_prompt_algo", default="io", choices=prompt_algos)
-parser.add_argument("--opponent_backend", type=str, default="gpt-4o", choices=[
+parser.add_argument("--opponent_backend", type=str, default="gemini-2.5-pro", choices=[
     # OpenAI models
     "gpt-4o-mini", "gpt-4o", "gpt-4o-2024-05-13", "gpt-4-turbo", "gpt-4", "gpt-3.5-turbo",
     # Anthropic models
@@ -69,7 +69,7 @@ parser.add_argument("--opponent_device", type=int, default=0)
 
 # Shared arguments
 parser.add_argument("--temperature", type=float, default=0.3)
-parser.add_argument("--battle_format", default="gen9ou", choices=["gen8randombattle", "gen8ou", "gen9ou", "gen9randombattle"])
+parser.add_argument("--battle_format", default="gen9ou", choices=["gen8randombattle", "gen8ou", "gen9ou", "gen9randombattle", "gen9vgc2024regg"])
 parser.add_argument("--log_dir", type=str, default="./battle_log/one_vs_one")
 parser.add_argument("--N", type=int, default=25)
 
@@ -92,15 +92,17 @@ async def main():
                             PNUMBER1=PNUMBER1 + '2',  # for name uniqueness locally
                             battle_format=args.battle_format)
 
-    teamloader = get_metamon_teams(args.battle_format, "modern_replays")
+    # Use old teamloader for player, modern for opponent
+    player_teamloader = get_metamon_teams(args.battle_format, "competitive")
+    opponent_teamloader = get_metamon_teams(args.battle_format, "modern_replays")
     
     if not 'random' in args.battle_format:
         # Set teamloader on players for rejection recovery
-        player.set_teamloader(teamloader)
-        opponent.set_teamloader(teamloader)
+        player.set_teamloader(player_teamloader)
+        opponent.set_teamloader(opponent_teamloader)
         
-        player.update_team(teamloader.yield_team())
-        opponent.update_team(teamloader.yield_team())
+        player.update_team(player_teamloader.yield_team())
+        opponent.update_team(opponent_teamloader.yield_team())
 
     # play against bot for five battles
     N = args.N
@@ -112,8 +114,8 @@ async def main():
         else:
             await opponent.battle_against(player, n_battles=1)
         if not 'random' in args.battle_format:
-            player.update_team(teamloader.yield_team())
-            opponent.update_team(teamloader.yield_team())
+            player.update_team(player_teamloader.yield_team())
+            opponent.update_team(opponent_teamloader.yield_team())
         pbar.set_description(f"{player.win_rate*100:.2f}%")
         pbar.update(1)
     print(f'player winrate: {player.win_rate*100}')
