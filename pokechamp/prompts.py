@@ -149,6 +149,7 @@ def get_macro_strat(sim: LocalSim,
     # with open('poke_env/data/static/teams/gen9ou1_strat.txt', 'r') as f:
     #     text = f.read()
     return sim.strategy
+    return ''
 
 def get_number_turns_faint(mon: Pokemon,
                            move: Move,
@@ -695,7 +696,7 @@ def prompt_translate(sim: LocalSim,
     if battle.active_pokemon.fainted: # passive switching
         
         system_prompt = (
-            f"You are a pokemon battler that targets to win the pokemon battle. Your {battle.active_pokemon.species} just fainted. Choose a suitable pokemon to continue the battle. Here are some tips:"
+            f"You are a pokemon battler in generation {sim.gen.gen} OU format Pokemon Showdown that targets to win the pokemon battle. Your {battle.active_pokemon.species} just fainted. Choose a suitable pokemon to continue the battle. Here are some tips:"
             " Compare the speeds of your pokemon to the opposing pokemon, which determines who take the move first."
             " Consider the defense state and type-resistance of your pokemon when its speed is lower than the opposing pokemon."
             " Consider the move-type advantage of your pokemon pokemon when its speed is higher than the opposing pokemon.")
@@ -707,7 +708,7 @@ def prompt_translate(sim: LocalSim,
     else: # take a move or active switch
         
         system_prompt = (
-            "You are a pokemon battler that targets to win the pokemon battle. You can choose to take a move or switch in another pokemon. Here are some battle tips:"
+            f"You are a pokemon battler in generation {sim.gen.gen} OU format Pokemon Showdown that targets to win the pokemon battle. You can choose to take a move or switch in another pokemon. Here are some battle tips:"
             " Use status-boosting moves like swordsdance, calmmind, dragondance, nastyplot strategically. The boosting will be reset when pokemon switch out."
             " Set traps like stickyweb, spikes, toxicspikes, stealthrock strategically."
             " When face to a opponent is boosting or has already boosted its attack/special attack/speed, knock it out as soon as possible, even sacrificing your pokemon."
@@ -1075,7 +1076,7 @@ def state_translate(sim: LocalSim,
     if battle.active_pokemon.fainted: # passive switching
 
         system_prompt = (
-            f"You are a pokemon battler that targets to win the pokemon battle. Your {battle.active_pokemon.species} just fainted. Choose a suitable pokemon to continue the battle. Here are some tips:"
+            f"You are a pokemon battler in generation {sim.gen.gen} OU format Pokemon Showdown that targets to win the pokemon battle. Your {battle.active_pokemon.species} just fainted. Choose a suitable pokemon to continue the battle. Here are some tips:"
             " Compare the speeds of your pokemon to the opposing pokemon, which determines who take the move first."
             " Consider the defense state and type-resistance of your pokemon when its speed is lower than the opposing pokemon."
             " Consider the move-type advantage of your pokemon pokemon when its speed is higher than the opposing pokemon.")
@@ -1088,7 +1089,7 @@ def state_translate(sim: LocalSim,
     else: # take a move or active switch
 
         system_prompt = (
-            "You are a pokemon battler that targets to win the pokemon battle. You can choose to take a move or switch in another pokemon. Here are some battle tips:"
+            f"You are a pokemon battler in generation {sim.gen.gen} OU format Pokemon Showdown that targets to win the pokemon battle. You can choose to take a move or switch in another pokemon. Here are some battle tips:"
             " Use status-boosting moves like swordsdance, calmmind, dragondance, nastyplot strategically. The boosting will be reset when pokemon switch out."
             " Set traps like stickyweb, spikes, toxicspikes, stealthrock strategically."
             " When face to a opponent is boosting or has already boosted its attack/special attack/speed, knock it out as soon as possible, even sacrificing your pokemon."
@@ -1575,7 +1576,7 @@ def state_translate2(sim: LocalSim,
     if battle.active_pokemon.fainted: # passive switching
 
         system_prompt = (
-            f"You are a pokemon battler that targets to win the pokemon battle. Your {battle.active_pokemon.species} just fainted. Choose a suitable pokemon to continue the battle. Here are some tips:"
+            f"You are a pokemon battler in generation {sim.gen.gen} OU format Pokemon Showdown that targets to win the pokemon battle. Your {battle.active_pokemon.species} just fainted. Choose a suitable pokemon to continue the battle. Here are some tips:"
             " Compare the speeds of your pokemon to the opposing pokemon, which determines who take the move first."
             " Consider the defense state and type-resistance of your pokemon when its speed is lower than the opposing pokemon."
             " Consider the move-type advantage of your pokemon pokemon when its speed is higher than the opposing pokemon."
@@ -1588,7 +1589,7 @@ def state_translate2(sim: LocalSim,
     else: # take a move or active switch
 
         system_prompt = (
-            "You are a pokemon battler that targets to win the pokemon battle. You can choose to take a move or switch in another pokemon. Here are some battle tips:"
+            f"You are a pokemon battler in generation {sim.gen.gen} OU format Pokemon Showdown that targets to win the pokemon battle. You can choose to take a move or switch in another pokemon. Here are some battle tips:"
             " Use status-boosting moves like swordsdance, calmmind, dragondance, nastyplot strategically. The boosting will be reset when pokemon switch out."
             " Set traps like stickyweb, spikes, toxicspikes, stealthrock strategically."
             " When face to a opponent is boosting or has already boosted its attack/special attack/speed, knock it out as soon as possible, even sacrificing your pokemon."

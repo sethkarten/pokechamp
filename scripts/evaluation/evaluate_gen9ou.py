@@ -3,7 +3,7 @@ import pandas as pd
 from argparse import ArgumentParser
 from poke_env.player.utils import cross_evaluate
 from common import PNUMBER1
-from poke_env.player.llama_player import LLAMAPlayer
+from pokechamp.llama_player import LLAMAPlayer
 from whr import whr as whole_history_rating
 from poke_env.player.team_util import get_llm_player, load_random_team
 

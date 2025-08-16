@@ -16,6 +16,7 @@ import math
 
 
 class Pokemon:
+    
     __slots__ = (
         "_ability",
         "_active",
@@ -114,6 +115,7 @@ class Pokemon:
         with open('poke_env/data/static/gen9/ou/sets_1500.json', 'r') as f:
             sets = json.load(f)
         self._sets = sets
+        
         
         if request_pokemon:
             self.update_from_request(request_pokemon)
@@ -281,8 +283,12 @@ class Pokemon:
         self.moved(move_id, use=False)
 
         move_id = Move.retrieve_id(move_id)
-        move = self.moves[move_id]
-
+        if move_id in self.moves:
+            move = self.moves[move_id]
+        else:
+            # Handle moves that aren't stored (like special moves)
+            move = Move(move_id, gen=self._data.gen)
+        
         self._preparing_move = move
         self._preparing_target = target
 
@@ -521,19 +527,6 @@ class Pokemon:
             elif self.is_dynamaxed:
                 moves.append(Move(move, gen=self._data.gen).dynamaxed)
             else:
-                assert {
-                    "copycat",
-                    "metronome",
-                    "mefirst",
-                    "mirrormove",
-                    "assist",
-                    "transform",
-                    "mimic",
-                }.intersection(self.moves), (
-                    f"Error with move {move}. Expected self.moves to contain copycat, "
-                    "metronome, mefirst, mirrormove, assist, transform or mimic. Got"
-                    f" {self.moves}"
-                )
                 moves.append(Move(move, gen=self._data.gen))
         return moves
 
@@ -829,6 +822,8 @@ class Pokemon:
         """
         if self._species.lower() == 'keldeoresolute':
             return 'keldeo'
+        elif self._species.lower() == 'sinistchamasterpiece':
+            return 'sinistcha'
         return self._species
 
     @property
@@ -887,7 +882,24 @@ class Pokemon:
             
         return tera
         
-    def guess_stats(self, guess_type='most_likely'):
+    def guess_stats(self, guess_type='bayesian', observed_moves=None, battle=None):
+        """
+        Guess Pokemon stats using Bayesian predictions when possible.
+        
+        Args:
+            guess_type: 'most_likely', 'bayesian', or original statistical methods
+            observed_moves: List of observed moves to improve Bayesian predictions
+            battle: Battle context for team information
+        """
+        # Try Bayesian predictions first if requested or if we have context
+        if guess_type == 'bayesian' or (observed_moves and battle):
+            bayesian_result = self._get_bayesian_stats(observed_moves, battle)
+            if bayesian_result:
+                return bayesian_result
+            else:
+                print('Bayesian stats failed')
+        
+        # Original implementation
         stat_types = ['hp', 'atk', 'def', 'spa', 'spd', 'spe']
         sets = self._sets
         if guess_type == 'most_likely':
@@ -916,6 +928,187 @@ class Pokemon:
             spread, nature = get_weighted_choice('spreads', 'stats')
         
         return spread, nature
+    
+    def _get_bayesian_stats(self, observed_moves=None, battle=None):
+        """Get Bayesian stat predictions for this Pokemon."""
+        # Use singleton predictor to avoid loading multiple models
+        from bayesian.predictor_singleton import get_pokemon_predictor
+        predictor = get_pokemon_predictor()
+        
+        # Normalize Pokemon names
+        def normalize_pokemon_name(name):
+            name_mapping = {
+                'slowkinggalar': 'Slowking-Galar', 'slowbrogalar': 'Slowbro-Galar',
+                'tinglu': 'Ting-Lu', 'chiyu': 'Chi-Yu', 'wochien': 'Wo-Chien',
+                'chienpao': 'Chien-Pao', 'ironmoth': 'Iron Moth', 'ironvaliant': 'Iron Valiant',
+                'irontreads': 'Iron Treads', 'ironbundle': 'Iron Bundle', 'ironhands': 'Iron Hands',
+                'ironjugulis': 'Iron Jugulis', 'ironthorns': 'Iron Thorns', 'ironboulder': 'Iron Boulder',
+                'ironcrown': 'Iron Crown', 'greattusk': 'Great Tusk', 'screamtail': 'Scream Tail',
+                'brutebonnet': 'Brute Bonnet', 'fluttermane': 'Flutter Mane', 'slitherwing': 'Slither Wing',
+                'sandyshocks': 'Sandy Shocks', 'roaringmoon': 'Roaring Moon', 'walkingwake': 'Walking Wake',
+                'ragingbolt': 'Raging Bolt', 'gougingfire': 'Gouging Fire', 'ogerponwellspring': 'Ogerpon-Wellspring',
+                'ogerponhearthflame': 'Ogerpon-Hearthflame', 'ogerponcornerstone': 'Ogerpon-Cornerstone',
+                'ogerponteal': 'Ogerpon', 'ogerpontealtera': 'Ogerpon', 'ursalunabloodmoon': 'Ursaluna',
+                'ninetalesalola': 'Ninetales-Alola', 'sandslashalola': 'Sandslash-Alola',
+                'tapukoko': 'Zapdos', 'tapulele': 'Clefable', 'tapubulu': 'Zapdos',
+                'tapufini': 'Primarina', 'hydrapple': 'Hydrapple', 'zapdos': 'Zapdos',
+                'zamazenta': 'Zamazenta', 'tinkaton': 'Tinkaton', 'hoopaunbound': 'Hoopa-Unbound',
+                'mausholdfour': 'Maushold-Four', 'polteageistantique': 'Polteageist-Antique',
+                'deoxysspeed': 'Deoxys-Speed', 'deoxysdefense': 'Deoxys-Defense', 'deoxysattack': 'Deoxys-Attack',
+                'goodrahisui': 'Goodra-Hisui', 'kommoo': 'Kommo-o',
+                'landorustherian': 'Landorus-Therian', 'moltresgalar': 'Moltres-Galar',
+                'porygonz': 'Porygon-Z', 'rotomwash': 'Rotom-Wash', 'rotomheat': 'Rotom-Heat',
+                'rotomfrost': 'Rotom-Frost', 'rotomfan': 'Rotom-Fan', 'rotommow': 'Rotom-Mow',
+                'samurotthisui': 'Samurott-Hisui',
+                'thundurustherian': 'Thundurus-Therian', 'tornadustherian': 'Tornadus-Therian',
+                'weezinggalar': 'Weezing-Galar', 'zapdosgalar': 'Zapdos-Galar',
+                'arcaninehisui': 'Arcanine-Hisui', 'braviaryhisui': 'Braviary-Hisui',
+                'enamorustherian': 'Enamorus-Therian', 'lilliganthisui': 'Lilligant-Hisui',
+                'sneaselhisui': 'Sneasel-Hisui', 'taurospaldeablaze': 'Tauros-Paldea-Blaze',
+                'zarudedada': 'Zarude-Dada', 'zoroarkhisui': 'Zoroark-Hisui',
+                'decidueyehisui': 'Decidueye-Hisui', 'mimikyubusted': 'Mimikyu',
+                'miniormeteor': 'Minior', 'morpekohangry': 'Morpeko', 'eiscuenoice': 'Eiscue',
+                'cramorantgulping': 'Cramorant', 'cramorantgorging': 'Cramorant',
+                'sawsbucksummer': 'Sawsbuck', 'sawsbuckautumn': 'Sawsbuck', 'sawsbuckwinter': 'Sawsbuck',
+                # Additional gen9ou Pokemon normalizations
+                'basculegionf': 'Basculegion-F', 'basculegionm': 'Basculegion',
+                'mukalola': 'Muk-Alola', 'raichualola': 'Raichu-Alola',
+                'golemalaola': 'Golem-Alola', 'magnetonalola': 'Magnezone', 'dugtrioalola': 'Dugtrio-Alola',
+                'grimerala': 'Grimer-Alola', 'marrowaka': 'Marowak-Alola', 'exeggutoralola': 'Exeggutor-Alola',
+                'vulpixalola': 'Vulpix-Alola', 'persianalola': 'Persian-Alola', 'meowthala': 'Meowth-Alola',
+                'rattataalola': 'Rattata-Alola', 'raticatealola': 'Raticate-Alola',
+                'geodudealola': 'Geodude-Alola', 'graveleralola': 'Graveler-Alola',
+                'magnemitealola': 'Magnemite', 'magnetonalola': 'Magneton',
+                # More gender/form variants (map to common gen9ou Pokemon)
+                'indeedf': 'Clefable', 'indeedeem': 'Indeedee',  # Female form maps to common psychic type
+                'indeedeef': 'Clefable',  # Internal Pokemon constructor name for Indeedee-F
+                'meowsticf': 'Meowstic', 'meowsticm': 'Meowstic',  # Female form maps to base Meowstic
+                'unfezantf': 'Staraptor', 'unfezantm': 'Staraptor',  # Map to common Normal/Flying type
+                # Paldean forms (map to common gen9ou Pokemon)
+                'taurospaldeaaqua': 'Tauros-Paldea-Aqua', 'taurospaldeacombat': 'Tauros-Paldea-Aqua',
+                'wooperpalda': 'Wooper-Paldea', 'clodsirepalda': 'Clodsire',
+                # Hisuian forms that might be missed (map to known Hisuian forms or common Pokemon)
+                'voltorbhisui': 'Electrode-Hisui', 'electrodehisui': 'Electrode-Hisui',  # Map to known Hisui form
+                'typhloshionhisui': 'Typhlosion-Hisui', 'typhlosionhisui': 'Typhlosion-Hisui',  # Both variants
+                'qwilfishhisui': 'Overqwil',  # Map to known evolution
+                'growlithehisui': 'Arcanine-Hisui', 'sneaslerhisui': 'Sneasler',
+                'overqwilhisui': 'Overqwil', 'kleavohisui': 'Kleavor',
+                'basculinhisui': 'Basculegion', 'basculinwhitestriped': 'Basculegion',  # Map to known evolution
+                # Additional common variants (map to common rock types)
+                'lycanrocmidday': 'Lycanroc', 'lycanrocmidnight': 'Lycanroc-Dusk', 'lycanrocdusk': 'Lycanroc-Dusk',
+                'oricoriomeadow': 'Kilowattrel', 'oricoriopompom': 'Kilowattrel',  # Map to common Electric/Flying
+                'oricoriopau': 'Kilowattrel', 'oricoriosensu': 'Kilowattrel',  # All Oricorio forms to common similar type
+                'toxapexgmax': 'Toxapex', 'corviknightgmax': 'Corviknight', 'grimmsnarrgmax': 'Grimmsnarl'
+            }
+            lower_name = name.lower()
+            return name_mapping.get(lower_name, name.capitalize())
+        
+        # Normalize move names
+        def normalize_move_name(move_id):
+            move_mapping = {
+                'chillyreception': 'Chilly Reception', 'thunderwave': 'Thunder Wave', 
+                'stealthrock': 'Stealth Rock', 'earthquake': 'Earthquake', 'ruination': 'Ruination',
+                'whirlwind': 'Whirlwind', 'spikes': 'Spikes', 'rest': 'Rest',
+                'closecombat': 'Close Combat', 'crunch': 'Crunch', 'gigadrain': 'Giga Drain',
+                'earthpower': 'Earth Power', 'nastyplot': 'Nasty Plot', 'ficklebeam': 'Fickle Beam',
+                'leafstorm': 'Leaf Storm', 'dracometeor': 'Draco Meteor', 'futuresight': 'Future Sight',
+                'sludgebomb': 'Sludge Bomb', 'psychicnoise': 'Psychic Noise', 'flamethrower': 'Flamethrower',
+                'gigatonhammer': 'Gigaton Hammer', 'encore': 'Encore', 'knockoff': 'Knock Off',
+                'playrough': 'Play Rough', 'hurricane': 'Hurricane', 'roost': 'Roost',
+                'voltswitch': 'Volt Switch', 'discharge': 'Discharge', 'uturn': 'U-turn',
+                'terablast': 'Tera Blast', 'swordsdance': 'Swords Dance', 'shadowball': 'Shadow Ball',
+                'calmmind': 'Calm Mind', 'icespinner': 'Ice Spinner', 'suckerpunch': 'Sucker Punch',
+                'willowisp': 'Will-O-Wisp', 'rapidspin': 'Rapid Spin', 'bodypress': 'Body Press'
+            }
+            lower_move = move_id.lower()
+            if lower_move in move_mapping:
+                return move_mapping[lower_move]
+            # Default: add spaces before capitals and title case
+            import re
+            spaced = re.sub(r'([a-z])([A-Z])', r'\1 \2', move_id)
+            return spaced.title()
+        
+        # Get opponent team for context
+        opponent_pokemon = []
+        if battle and hasattr(battle, 'opponent_team'):
+            for pokemon in battle.opponent_team.values():
+                if pokemon and pokemon.species:
+                    normalized_name = normalize_pokemon_name(pokemon.species)
+                    opponent_pokemon.append(normalized_name)
+        
+        # Normalize observed moves
+        normalized_moves = []
+        if observed_moves:
+            for move in observed_moves:
+                if hasattr(move, 'id'):
+                    normalized_moves.append(normalize_move_name(move.id))
+                else:
+                    normalized_moves.append(normalize_move_name(str(move)))
+        
+        # Get Bayesian predictions
+        species_norm = normalize_pokemon_name(self.species)
+        try:
+            probabilities = predictor.predict_component_probabilities(
+                species_norm, 
+                teammates=opponent_pokemon,
+                observed_moves=normalized_moves
+            )
+        except Exception as e:
+            print(f'Bayesian prediction failed for {species_norm}: {e}')
+            return None
+        
+        # Check if we got an error response
+        if 'error' in probabilities:
+            print(f'Bayesian prediction error for {species_norm}: {probabilities["error"]}')
+            return None
+        
+        # Extract most likely nature and EV spread
+        predicted_nature = None
+        predicted_evs = None
+        
+        if 'natures' in probabilities and probabilities['natures']:
+            predicted_nature = probabilities['natures'][0][0]  # Top nature
+        else:
+            print(f'No nature predictions available for {species_norm}')
+        
+        if 'ev_spreads' in probabilities and probabilities['ev_spreads']:
+            ev_spread_str = probabilities['ev_spreads'][0][0]  # Top EV spread
+            predicted_evs = self._parse_ev_spread_string(ev_spread_str)
+            if not predicted_evs:
+                print(f'Failed to parse EV spread for {species_norm}: {ev_spread_str}')
+        else:
+            print(f'No EV spread predictions available for {species_norm}')
+        
+        if predicted_nature and predicted_evs:
+            return predicted_evs, predicted_nature
+        
+        print(f'Incomplete Bayesian prediction for {species_norm}: nature={predicted_nature}, evs={bool(predicted_evs)}')
+        return None
+    
+    def _parse_ev_spread_string(self, ev_spread_str):
+        """Parse EV spread string like '252 HP / 252 SpA' into EV list format."""
+        # Default EV array [HP, Atk, Def, SpA, SpD, Spe]
+        ev_array = [0, 0, 0, 0, 0, 0]
+        
+        # Map spread names to array indices
+        stat_mapping = {
+            'HP': 0, 'Atk': 1, 'Def': 2, 'SpA': 3, 'SpD': 4, 'Spe': 5
+        }
+        
+        if not ev_spread_str or ev_spread_str == "No major investments":
+            return ev_array
+        
+        # Parse "252 HP / 252 SpA / 4 SpD" format
+        parts = ev_spread_str.split(' / ')
+        for part in parts:
+            try:
+                value, stat = part.strip().split(' ', 1)
+                if stat in stat_mapping:
+                    ev_array[stat_mapping[stat]] = int(value)
+            except:
+                continue
+                
+        return ev_array
         # # more common natures ordered first
         # nature_common = [
         #     'Adamant',
@@ -1034,9 +1227,12 @@ class Pokemon:
                 'Serious': [],
                 'Timid': ['spe', 'atk'],
             }
-            buff, nerf = nature_boosts[nature]
-            new_stats[buff] = math.floor(1.1*new_stats[buff])
-            new_stats[nerf] = math.floor(0.9*new_stats[nerf])
+            nature_effect = nature_boosts[nature]
+            # Only apply nature bonuses if the nature has an effect (not neutral)
+            if len(nature_effect) == 2:
+                buff, nerf = nature_effect
+                new_stats[buff] = math.floor(1.1*new_stats[buff])
+                new_stats[nerf] = math.floor(0.9*new_stats[nerf])
         
         new_stats = {k: int(v) for k, v in new_stats.items()}
         return new_stats

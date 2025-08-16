@@ -4,9 +4,9 @@ import string
 import numpy as np
 
 from poke_env.environment.move import Move
-from poke_env.player.llm_player import LLMPlayer
+from pokechamp.llm_player import LLMPlayer
 from poke_env.player.local_simulation import LocalSim
-from poke_env.player.prompts import get_avail_actions, prompt_translate as pt
+from pokechamp.prompts import get_avail_actions, prompt_translate as pt
 from poke_env.ps_client.account_configuration import AccountConfiguration
 import ast
 

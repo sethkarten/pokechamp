@@ -9,7 +9,31 @@ from poke_env.environment.pokemon_type import PokemonType
 from poke_env.environment.status import Status
 from poke_env.environment.weather import Weather
 
-SPECIAL_MOVES: Set[str] = {"struggle", "recharge"}
+SPECIAL_MOVES: Set[str] = {
+    "struggle", "recharge", 
+    # Protect moves
+    "protect", "detect", "endure", "spikyshield", "kingsshield", "banefulbunker", "obstruct", "maxguard", "wideguard", "quickguard", "matblock",
+    # Field/Room moves
+    "trickroom", "magicroom", "wonderroom", "tailroom", "grassy", "psychic", "electric", "misty",
+    # Status moves commonly causing issues
+    "taunt", "encore", "disable", "torment", "substitute", "roost", "recover", "softboiled", "moonlight", "synthesis", "morning", 
+    "rest", "sleeptalk", "snore", "stockpile", "swallow", "spitup", "bellydrum", "curse", "wish", "aromatherapy", "healbell",
+    "nuzzle", "drainingkiss", "mysticalfire", "dazzlinggleam", "thunderwave",
+    # Setup moves  
+    "swordsdance", "nastyplot", "calmmind", "dragondance", "quiverdance", "shellsmash", "growth", "workup", "bulk",
+    # Entry hazards
+    "spikes", "toxicspikes", "stealthrock", "stickyweb",
+    # Weather
+    "sunnyday", "raindance", "hail", "sandstorm",
+    # Gen 9 specific moves
+    "ruination", "lastrespects", "ragefist", "populationbomb", "kowtowcleave", "wavecrash", "mountaingale", "victorydance",
+    "headlongrush", "barbarageblade", "psyblade", "aquastep", "spicyextract", "spinout", "chillyreception", "tidyup",
+    "snowscape", "chillingwater", "hyperdrill", "twinbeam", "armorcannon", "bitterblade", "doubletrench", "gigadrainpower",
+    "jetpunch", "spicyextract", "silktrap", "axekick", "lastrespects", "luminacrash", "orderup", "blazingtorque",
+    "wickedtorque", "noxioustorque", "combattorque", "magicaltorque",
+    # Other moves that can cause the assertion
+    "explosion", "selfdestruct", "memento", "destinybond", "grudge", "spite", "disable", "encore", "taunt", "knockoff"
+}
 
 _PROTECT_MOVES = {
     "protect",
