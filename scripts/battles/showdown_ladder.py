@@ -34,6 +34,8 @@ parser.add_argument("--backend", type=str, default="gemini-2.5-flash", choices=[
     "deepseek-ai/deepseek-coder-33b-instruct", "deepseek-ai/deepseek-llm-67b-chat",
     # Microsoft models
     "microsoft/wizardlm-2-8x22b", "microsoft/phi-3-medium-128k-instruct",
+    # Ollama models
+    "ollama/gpt-oss:20b", "ollama/llama3.1:8b", "ollama/qwen2.5:32b", "ollama/gemma3:4b", "ollama/gemma3:27b",
     # Local models (via OpenRouter)
     "llama", 'None'
 ])
