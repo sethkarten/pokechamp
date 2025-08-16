@@ -15,13 +15,23 @@ from poke_env.environment.pokemon import Pokemon
 from poke_env.environment.side_condition import SideCondition
 from poke_env.environment.status import Status
 from poke_env.player.battle_order import BattleOrder
-from poke_env.player.gpt_player import GPTPlayer
-from poke_env.player.llama_player import LLAMAPlayer
+from pokechamp.gpt_player import GPTPlayer
+from pokechamp.llama_player import LLAMAPlayer
+
+# Avoid circular import by importing here
+try:
+    from pokechamp.data_cache import get_cached_moves_set
+    from pokechamp.sim_constants import get_simulation_optimizer, TYPE_LIST
+except ImportError:
+    # Fallback if optimization modules are not available
+    get_cached_moves_set = None
+    get_simulation_optimizer = None
+    TYPE_LIST = 'BUG,DARK,DRAGON,ELECTRIC,FAIRY,FIGHTING,FIRE,FLYING,GHOST,GRASS,GROUND,ICE,NORMAL,POISON,PSYCHIC,ROCK,STEEL,WATER'.split(",")
 
 DEBUG = False
 
 def calculate_move_type_damage_multipier(type_1, type_2, type_chart, constraint_type_list):
-    TYPE_list = 'BUG,DARK,DRAGON,ELECTRIC,FAIRY,FIGHTING,FIRE,FLYING,GHOST,GRASS,GROUND,ICE,NORMAL,POISON,PSYCHIC,ROCK,STEEL,WATER'.split(",")
+    TYPE_list = TYPE_LIST  # Use cached constant instead of recreating
 
     move_type_damage_multiplier_list = []
 
@@ -141,10 +151,17 @@ class LocalSim():
         self.SPEED_TIER_COEFICIENT = 0.1
         self.HP_FRACTION_COEFICIENT = 0.4
         
-        if self.format == 'gen9ou':
-            file = f'poke_env/data/static/gen9/ou/sets_1000.json'
-            with open(file, 'r') as f:
-                self.moves_set = orjson.loads(f.read())
+        # Use cached moves set data instead of loading file
+        if get_cached_moves_set is not None:
+            self.moves_set = get_cached_moves_set(self.format)
+        else:
+            # Fallback to file loading if cache is not available
+            if self.format == 'gen9ou':
+                file = f'poke_env/data/static/gen9/ou/sets_1000.json'
+                with open(file, 'r') as f:
+                    self.moves_set = orjson.loads(f.read())
+            else:
+                self.moves_set = {}
 
 
     def get_llm_system_prompt(self, _format: str, llm: GPTPlayer | LLAMAPlayer = None, team_str: str=None, model: str='gpt-4o'):
@@ -587,7 +604,20 @@ class LocalSim():
             for move_id, opponent_move in mon.moves.items():
                 opponent_moves.append(f'{opponent_move.id}')
 
-        # get possible moves for current pokemon
+        # Try Bayesian predictions first for gen9ou - includes both confirmed and predicted moves
+        bayesian_result = []
+        if self.format == 'gen9ou':
+            try:
+                bayesian_result = self._get_bayesian_move_predictions(mon)
+                # If we got good Bayesian predictions, use them directly
+                if bayesian_result and len(bayesian_result) >= len(opponent_moves):
+                    if return_separate:
+                        return opponent_moves, bayesian_result[len(opponent_moves):]  # Separate confirmed vs predicted
+                    return bayesian_result[:4]  # Return top 4 Bayesian moves (includes 100% confirmed moves)
+            except:
+                pass  # Fall back to original method
+
+        # Fallback: get possible moves for current pokemon (original method)
         species = mon.species
         possible_moves = []
         if self.format == 'gen9ou':
@@ -600,16 +630,109 @@ class LocalSim():
             if species in self.pokemon_move_dict:
                 possible_moves = [move[0] for move in self.pokemon_move_dict[species].values()]
                 # possible_moves = self.pokemon_move_dict[species].keys()
+        
         if return_separate:
             return opponent_moves, possible_moves
         
-        while len(opponent_moves) != 4 and len(possible_moves) > 0:
+        # Combine confirmed + fallback moves (original logic)
+        all_moves = opponent_moves[:]
+        while len(all_moves) != 4 and len(possible_moves) > 0:
             move_unseen = possible_moves.pop(0)
-            if move_unseen not in opponent_moves:
-                opponent_moves.append(move_unseen)
+            if move_unseen not in all_moves:
+                all_moves.append(move_unseen)
 
         # need to create order after return
-        return opponent_moves
+        return all_moves
+
+    def _get_bayesian_move_predictions(self, mon):
+        """Get Bayesian move predictions for opponent Pokemon."""
+        try:
+            # Get the singleton predictor from the battle class
+            predictor = self.get_pokemon_predictor()
+            
+            # Normalize Pokemon names
+            def normalize_pokemon_name(name):
+                name_mapping = {
+                    'slowkinggalar': 'Slowking-Galar', 'slowbrogalar': 'Slowbro-Galar',
+                    'tinglu': 'Ting-Lu', 'chiyu': 'Chi-Yu', 'wochien': 'Wo-Chien',
+                    'chienpao': 'Chien-Pao', 'ironmoth': 'Iron Moth', 'ironvaliant': 'Iron Valiant',
+                    'irontreads': 'Iron Treads', 'ironbundle': 'Iron Bundle', 'ironhands': 'Iron Hands',
+                    'ironjugulis': 'Iron Jugulis', 'ironthorns': 'Iron Thorns', 'ironboulder': 'Iron Boulder',
+                    'ironcrown': 'Iron Crown', 'greattusk': 'Great Tusk', 'screamtail': 'Scream Tail',
+                    'brutebonnet': 'Brute Bonnet', 'fluttermane': 'Flutter Mane', 'slitherwing': 'Slither Wing',
+                    'sandyshocks': 'Sandy Shocks', 'roaringmoon': 'Roaring Moon', 'walkingwake': 'Walking Wake',
+                    'ragingbolt': 'Raging Bolt', 'gougingfire': 'Gouging Fire', 'ogerponwellspring': 'Ogerpon-Wellspring',
+                    'ogerponhearthflame': 'Ogerpon-Hearthflame', 'ogerponcornerstone': 'Ogerpon-Cornerstone',
+                    'ogerpontealtera': 'Ogerpon-Teal', 'ursalunabloodmoon': 'Ursaluna-Bloodmoon',
+                    'ninetalesalola': 'Ninetales-Alola', 'sandslashalola': 'Sandslash-Alola',
+                    'tapukoko': 'Tapu Koko', 'tapulele': 'Tapu Lele', 'tapubulu': 'Tapu Bulu',
+                    'tapufini': 'Tapu Fini', 'hydrapple': 'Hydrapple', 'zapdos': 'Zapdos',
+                    'zamazenta': 'Zamazenta', 'tinkaton': 'Tinkaton'
+                }
+                lower_name = name.lower()
+                return name_mapping.get(lower_name, name.capitalize())
+            
+            # Normalize move names
+            def normalize_move_name(move_id):
+                move_mapping = {
+                    'chillyreception': 'Chilly Reception', 'thunderwave': 'Thunder Wave', 
+                    'stealthrock': 'Stealth Rock', 'earthquake': 'Earthquake', 'ruination': 'Ruination',
+                    'whirlwind': 'Whirlwind', 'spikes': 'Spikes', 'rest': 'Rest',
+                    'closecombat': 'Close Combat', 'crunch': 'Crunch', 'gigadrain': 'Giga Drain',
+                    'earthpower': 'Earth Power', 'nastyplot': 'Nasty Plot', 'ficklebeam': 'Fickle Beam',
+                    'leafstorm': 'Leaf Storm', 'dracometeor': 'Draco Meteor', 'futuresight': 'Future Sight',
+                    'sludgebomb': 'Sludge Bomb', 'psychicnoise': 'Psychic Noise', 'flamethrower': 'Flamethrower',
+                    'gigatonhammer': 'Gigaton Hammer', 'encore': 'Encore', 'knockoff': 'Knock Off',
+                    'playrough': 'Play Rough', 'hurricane': 'Hurricane', 'roost': 'Roost',
+                    'voltswitch': 'Volt Switch', 'discharge': 'Discharge', 'uturn': 'U-turn'
+                }
+                lower_move = move_id.lower()
+                if lower_move in move_mapping:
+                    return move_mapping[lower_move]
+                # Default: add spaces before capitals and title case
+                import re
+                spaced = re.sub(r'([a-z])([A-Z])', r'\1 \2', move_id)
+                return spaced.title()
+            
+            # Get opponent team for context
+            opponent_pokemon = []
+            for pokemon in self.battle.opponent_team.values():
+                if pokemon and pokemon.species:
+                    normalized_name = normalize_pokemon_name(pokemon.species)
+                    opponent_pokemon.append(normalized_name)
+            
+            # Get observed moves for this Pokemon
+            observed_moves = []
+            for move in mon.moves.values():
+                if move:
+                    normalized_move = normalize_move_name(move.id)
+                    observed_moves.append(normalized_move)
+            
+            # Get Bayesian predictions
+            species_norm = normalize_pokemon_name(mon.species)
+            probabilities = predictor.predict_component_probabilities(
+                species_norm, 
+                teammates=opponent_pokemon,
+                observed_moves=observed_moves
+            )
+            
+            # Extract ALL moves with their probabilities (confirmed + predicted)
+            all_moves_with_probs = []
+            if 'moves' in probabilities:
+                for move_name, prob in probabilities['moves']:
+                    # Convert back to battle format (lowercase, no spaces)
+                    battle_format_move = move_name.lower().replace(' ', '').replace('-', '')
+                    all_moves_with_probs.append((battle_format_move, prob))
+            
+            # Sort by probability (confirmed 100% moves first, then by descending probability)
+            all_moves_with_probs.sort(key=lambda x: x[1], reverse=True)
+            
+            # Return just the move names (top 4)
+            return [move for move, prob in all_moves_with_probs[:4]]
+            
+        except Exception as e:
+            # Silently fall back to original method
+            return []
     
     def get_turn_summary(self,
                         battle: Battle,

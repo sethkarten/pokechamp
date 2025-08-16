@@ -2,11 +2,9 @@ from poke_env.data.download import download_teams
 from poke_env.player.player import Player
 from poke_env.player.baselines import AbyssalPlayer, MaxBasePowerPlayer, OneStepPlayer
 from poke_env.player.random_player import RandomPlayer
-from poke_env.player.llm_player import LLMPlayer
 from poke_env.ps_client.account_configuration import AccountConfiguration
 from poke_env.ps_client.server_configuration import ShowdownServerConfiguration
 from poke_env.teambuilder import Teambuilder
-from poke_env.player.prompts import prompt_translate, state_translate2
 from numpy.random import randint
 import importlib
 import inspect
@@ -46,7 +44,12 @@ class TeamSet(Teambuilder):
         file = random.choice(self.team_files)
         with open(file, "r") as f:
             team_data = f.read()
-        return self.join_team(self.parse_showdown_team(team_data))
+        team = self.parse_showdown_team(team_data)
+        print(team)
+        for mon in team:
+            if mon.species is not None:
+                mon.nickname = mon.species
+        return self.join_team(team)
 
 def get_metamon_teams(battle_format: str, set_name: str) -> TeamSet:
     """
@@ -92,6 +95,7 @@ def get_custom_bot_class(bot_name: str):
     Returns:
         The bot class if found, None otherwise
     """
+    from pokechamp.llm_player import LLMPlayer
     try:
         # Import the bot module
         module_name = f"bots.{bot_name}_bot"
@@ -120,6 +124,9 @@ def get_llm_player(args,
                    USERNAME: str='', 
                    PASSWORD: str='', 
                    online: bool=False) -> Player:
+    from pokechamp.llm_player import LLMPlayer
+    from pokechamp.prompts import prompt_translate, state_translate2
+    
     server_config = None
     if online:
         server_config = ShowdownServerConfiguration
@@ -162,13 +169,15 @@ def get_llm_player(args,
                        api_key=KEY,
                        backend=backend,
                        temperature=args.temperature,
-                       prompt_algo="minimax",
+                       prompt_algo=prompt_algo,
+                    #    prompt_algo="minimax",
+                    #    prompt_algo="io",
                        log_dir=args.log_dir,
                        account_configuration=AccountConfiguration(f'{USERNAME}{PNUMBER1}', PASSWORD),
                        server_configuration=server_config,
                        save_replays=args.log_dir,
-                       prompt_translate=prompt_translate,
-                    #    prompt_translate=state_translate2,
+                    #    prompt_translate=prompt_translate,
+                       prompt_translate=state_translate2,
                        device=device,
                        llm_backend=llm_backend)
     else:

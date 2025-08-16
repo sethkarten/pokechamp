@@ -88,6 +88,9 @@ class PSClient:
         assert (
             self.logged_in.is_set()
         ), f"Expected player {self.username} to be logged in."
+        # Store challenge info for potential retry after team rejection
+        if hasattr(self, '_handle_team_rejection'):
+            self._last_challenge_info = ('accept', username, None, packed_team)
         await self.set_team(packed_team)
         await self.send_message("/accept %s" % username)
 
@@ -95,6 +98,9 @@ class PSClient:
         assert (
             self.logged_in.is_set()
         ), f"Expected player {self.username} to be logged in."
+        # Store challenge info for potential retry after team rejection
+        if hasattr(self, '_handle_team_rejection'):
+            self._last_challenge_info = ('challenge', username, format_, packed_team)
         await self.set_team(packed_team)
         await self.send_message(f"/challenge {username}, {format_}")
 
@@ -164,6 +170,11 @@ class PSClient:
                 pass
             elif split_messages[0][1] == "popup":
                 self.logger.warning("Popup message received: %s", message)
+                # Check if this is a team rejection message
+                if "team was rejected" in message.lower():
+                    # Notify the player about team rejection if handler exists
+                    if hasattr(self, '_handle_team_rejection'):
+                        await self._handle_team_rejection(message)  # type: ignore
             elif split_messages[0][1] in ["nametaken"]:
                 self.logger.critical("SKIPPED Error message received: %s", message)
                 # raise ShowdownException("Error message received: %s", message)
