@@ -44,7 +44,12 @@ class TeamSet(Teambuilder):
         file = random.choice(self.team_files)
         with open(file, "r") as f:
             team_data = f.read()
-        return self.join_team(self.parse_showdown_team(team_data))
+        team = self.parse_showdown_team(team_data)
+        print(team)
+        for mon in team:
+            if mon.species is not None:
+                mon.nickname = mon.species
+        return self.join_team(team)
 
 def get_metamon_teams(battle_format: str, set_name: str) -> TeamSet:
     """
@@ -164,8 +169,8 @@ def get_llm_player(args,
                        api_key=KEY,
                        backend=backend,
                        temperature=args.temperature,
-                       prompt_algo="minimax",
-                    #    prompt_algo="io",
+                    #    prompt_algo="minimax",
+                       prompt_algo="io",
                        log_dir=args.log_dir,
                        account_configuration=AccountConfiguration(f'{USERNAME}{PNUMBER1}', PASSWORD),
                        server_configuration=server_config,
