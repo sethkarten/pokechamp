@@ -16,6 +16,7 @@ class Weather(Enum):
     RAINDANCE = auto()
     SANDSTORM = auto()
     SNOW = auto()
+    SNOWSCAPE = auto()
     SUNNYDAY = auto()
 
     def __str__(self) -> str:

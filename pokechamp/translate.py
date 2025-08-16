@@ -3,9 +3,9 @@ import numpy as np
 import ast
 
 from poke_env.environment.move import Move
-from poke_env.player.llm_player import LLMPlayer
+from pokechamp.llm_player import LLMPlayer
 from poke_env.player.local_simulation import LocalSim
-from poke_env.player.prompts import prompt_translate as pt
+from pokechamp.prompts import prompt_translate as pt
 from poke_env.ps_client.account_configuration import AccountConfiguration
 
 def recursive_nick_removal(text, start=0):

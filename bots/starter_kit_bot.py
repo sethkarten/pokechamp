@@ -19,8 +19,8 @@ import asyncio
 import json
 import os
 from typing import Dict, List, Optional, Tuple
-from poke_env.player.llm_player import LLMPlayer
-from poke_env.player.gpt_player import GPTPlayer
+from pokechamp.llm_player import LLMPlayer
+from pokechamp.gpt_player import GPTPlayer
 from poke_env.environment.battle import Battle
 from poke_env.environment.move import Move
 from poke_env.environment.pokemon import Pokemon
