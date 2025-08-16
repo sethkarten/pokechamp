@@ -23,6 +23,7 @@ from pokechamp.gpt_player import GPTPlayer
 from pokechamp.llama_player import LLAMAPlayer
 from pokechamp.openrouter_player import OpenRouterPlayer
 from pokechamp.gemini_player import GeminiPlayer
+from pokechamp.ollama_player import OllamaPlayer
 from pokechamp.data_cache import (
     get_cached_move_effect,
     get_cached_pokemon_move_dict,
@@ -104,13 +105,19 @@ class LLMPlayer(Player):
         self.last_plan = ""
 
         if llm_backend is None:
-            if 'gpt' in backend and not backend.startswith('openai/'):
+            print(f"Initializing backend: {backend}")  # Debug logging
+            if backend.startswith('ollama/'):
+                # Ollama models - extract model name after 'ollama/'
+                model_name = backend.replace('ollama/', '')
+                print(f"Using Ollama with model: {model_name}")
+                self.llm = OllamaPlayer(model=model_name, device=device)
+            elif 'gpt' in backend and not backend.startswith('openai/'):
                 self.llm = GPTPlayer(self.api_key)
             elif 'llama' == backend:
                 self.llm = LLAMAPlayer(device=device)
             elif 'gemini' in backend:
                 self.llm = GeminiPlayer(self.api_key)
-            elif backend.startswith(('openai/', 'anthropic/', 'google/', 'meta/', 'mistral/', 'cohere/', 'perplexity/', 'deepseek/', 'microsoft/', 'nvidia/', 'huggingface/', 'together/', 'replicate/', 'fireworks/', 'ollama/', 'localai/', 'vllm/', 'sagemaker/', 'vertex/', 'bedrock/', 'azure/', 'custom/')):
+            elif backend.startswith(('openai/', 'anthropic/', 'google/', 'meta/', 'mistral/', 'cohere/', 'perplexity/', 'deepseek/', 'microsoft/', 'nvidia/', 'huggingface/', 'together/', 'replicate/', 'fireworks/', 'localai/', 'vllm/', 'sagemaker/', 'vertex/', 'bedrock/', 'azure/', 'custom/')):
                 # OpenRouter supports hundreds of models from various providers
                 self.llm = OpenRouterPlayer(self.api_key)
             else:
@@ -204,7 +211,7 @@ class LLMPlayer(Player):
         state_prompt_tot_1 = state_prompt + state_action_prompt + constraint_prompt_tot_1
         state_prompt_tot_2 = state_prompt + state_action_prompt + constraint_prompt_tot_2
 
-        retries = 2
+        retries = 10
         # Chain-of-thought
         if self.prompt_algo == "io":
             return self.io(retries, system_prompt, state_prompt, constraint_prompt_cot, constraint_prompt_io, state_action_prompt, battle, sim, actions=actions)
@@ -375,7 +382,7 @@ class LLMPlayer(Player):
                 print(f'Exception: {e}', 'passed')
                 continue
         if next_action is None:
-            print('No action found')
+            print('No action found. Choosing max damage move')
             try:
                 print('No action found', llm_action_json, actions, dont_verify)
             except:
