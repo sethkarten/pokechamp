@@ -123,7 +123,9 @@ def get_llm_player(args,
                    PNUMBER1: str='', 
                    USERNAME: str='', 
                    PASSWORD: str='', 
-                   online: bool=False) -> Player:
+                   online: bool=False,
+                   use_timeout: bool=True,
+                   timeout_seconds: int=90) -> Player:
     from pokechamp.llm_player import LLMPlayer
     from pokechamp.prompts import prompt_translate, state_translate2
     
@@ -153,33 +155,61 @@ def get_llm_player(args,
                             server_configuration=server_config
                             )
     elif 'pokellmon' in name:
-        return LLMPlayer(battle_format=battle_format,
-                       api_key=KEY,
-                       backend=backend,
-                       temperature=args.temperature,
-                       prompt_algo=prompt_algo,
-                       log_dir=args.log_dir,
-                       account_configuration=AccountConfiguration(f'{USERNAME}{PNUMBER1}', PASSWORD),
-                       server_configuration=server_config,
-                       save_replays=args.log_dir,
-                       device=device,
-                       llm_backend=llm_backend)
+        if use_timeout and online:
+            from pokechamp.timeout_llm_player import PokellmonTimeoutLLMPlayer
+            return PokellmonTimeoutLLMPlayer(battle_format=battle_format,
+                           api_key=KEY,
+                           backend=backend,
+                           temperature=args.temperature,
+                           prompt_algo=prompt_algo,
+                           log_dir=args.log_dir,
+                           account_configuration=AccountConfiguration(f'{USERNAME}{PNUMBER1}', PASSWORD),
+                           server_configuration=server_config,
+                           save_replays=args.log_dir,
+                           device=device,
+                           llm_backend=llm_backend,
+                           timeout_seconds=timeout_seconds)
+        else:
+            return LLMPlayer(battle_format=battle_format,
+                           api_key=KEY,
+                           backend=backend,
+                           temperature=args.temperature,
+                           prompt_algo=prompt_algo,
+                           log_dir=args.log_dir,
+                           account_configuration=AccountConfiguration(f'{USERNAME}{PNUMBER1}', PASSWORD),
+                           server_configuration=server_config,
+                           save_replays=args.log_dir,
+                           device=device,
+                           llm_backend=llm_backend)
     elif 'pokechamp' in name:
-        return LLMPlayer(battle_format=battle_format,
-                       api_key=KEY,
-                       backend=backend,
-                       temperature=args.temperature,
-                       prompt_algo=prompt_algo,
-                    #    prompt_algo="minimax",
-                    #    prompt_algo="io",
-                       log_dir=args.log_dir,
-                       account_configuration=AccountConfiguration(f'{USERNAME}{PNUMBER1}', PASSWORD),
-                       server_configuration=server_config,
-                       save_replays=args.log_dir,
-                    #    prompt_translate=prompt_translate,
-                       prompt_translate=state_translate2,
-                       device=device,
-                       llm_backend=llm_backend)
+        if use_timeout and online:
+            from pokechamp.timeout_llm_player import TimeoutLLMPlayer
+            return TimeoutLLMPlayer(battle_format=battle_format,
+                           api_key=KEY,
+                           backend=backend,
+                           temperature=args.temperature,
+                           prompt_algo=prompt_algo,
+                           log_dir=args.log_dir,
+                           account_configuration=AccountConfiguration(f'{USERNAME}{PNUMBER1}', PASSWORD),
+                           server_configuration=server_config,
+                           save_replays=args.log_dir,
+                           prompt_translate=state_translate2,
+                           device=device,
+                           llm_backend=llm_backend,
+                           timeout_seconds=timeout_seconds)
+        else:
+            return LLMPlayer(battle_format=battle_format,
+                           api_key=KEY,
+                           backend=backend,
+                           temperature=args.temperature,
+                           prompt_algo=prompt_algo,
+                           log_dir=args.log_dir,
+                           account_configuration=AccountConfiguration(f'{USERNAME}{PNUMBER1}', PASSWORD),
+                           server_configuration=server_config,
+                           save_replays=args.log_dir,
+                           prompt_translate=state_translate2,
+                           device=device,
+                           llm_backend=llm_backend)
     else:
         # Try to find a custom bot in the bots folder
         custom_bot_class = get_custom_bot_class(name)

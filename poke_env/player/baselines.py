@@ -553,20 +553,20 @@ class AbyssalPlayer(Player):
         # with open("./poke_env/data/static/moves/gen7pokemon_move_dict.json", "w") as f:
         #     json.dump(self.pokemon_move_dict, f, indent=4)
 
-        with open("./poke_env/data/static/moves/moves_effect.json", "r") as f:
-            self.move_effect = json.load(f)
-        with open("./poke_env/data/static/abilities/ability_effect.json", "r") as f:
-            self.ability_effect = json.load(f)
-        with open("./poke_env/data/static/items/item_effect.json", "r") as f:
-            self.item_effect = json.load(f)
+        # with open("./poke_env/data/static/moves/moves_effect.json", "r") as f:
+        #     self.move_effect = json.load(f)
+        # with open("./poke_env/data/static/abilities/ability_effect.json", "r") as f:
+        #     self.ability_effect = json.load(f)
+        # with open("./poke_env/data/static/items/item_effect.json", "r") as f:
+        #     self.item_effect = json.load(f)
 
-        set(self.move_effect.keys())
+        # set(self.move_effect.keys())
 
-        set(self.ability_effect.keys())
+        # set(self.ability_effect.keys())
 
-        self.item_set - set(self.item_effect.keys())
-        self.ability_set - set(self.ability_effect.keys())
-        self.move_set - set(self.move_effect.keys())
+        # self.item_set - set(self.item_effect.keys())
+        # self.ability_set - set(self.ability_effect.keys())
+        # self.move_set - set(self.move_effect.keys())
 
         # Main mons shortcuts
         active = battle.active_pokemon

@@ -773,20 +773,26 @@ class AbstractBattle(ABC):
             mon = self.get_pokemon(pokemon, force_self_team=True)
             mon._add_move(details)
         elif split_message[1] == "raw":
-            username, rating_info = split_message[2].split("'s rating: ")
-            rating = int(rating_info[:4])
-            if username == self.player_username:
-                self._rating = rating
-            elif username == self.opponent_username:
-                self._opponent_rating = rating
-            elif self.logger is not None:
-                self.logger.warning(
-                    "Rating information regarding an unrecognized username received. "
+            # Check if this is a rating message (contains "'s rating: ")
+            if "'s rating: " in split_message[2]:
+                username, rating_info = split_message[2].split("'s rating: ")
+                rating = int(rating_info[:4])
+                if username == self.player_username:
+                    self._rating = rating
+                elif username == self.opponent_username:
+                    self._opponent_rating = rating
+                elif self.logger is not None:
+                    self.logger.warning(
+                        "Rating information regarding an unrecognized username received. "
                     "Received '%s', while only known players are '%s' and '%s'",
                     username,
                     self.player_username,
                     self.opponent_username,
-                )
+                    )
+            else:
+                # Handle non-rating raw messages (like throttle notices)
+                if self.logger is not None:
+                    self.logger.debug("Raw message received: %s", split_message[2])
         elif split_message[1] == "replace":
             pokemon = split_message[2]
             details = split_message[3]
@@ -825,6 +831,11 @@ class AbstractBattle(ABC):
             if pokemon.terastallized:
                 if pokemon in set(self.opponent_team.values()):
                     self._opponent_can_terrastallize = False
+        elif split_message[1] == "sentchoice":
+            # Handle sentchoice messages (player action confirmations)
+            if self.logger is not None:
+                self.logger.debug("Player sent choice: %s", " ".join(split_message[2:]))
+            # This is just a confirmation message, no action needed
         else:
             raise NotImplementedError(split_message)
 

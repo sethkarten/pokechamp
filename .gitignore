@@ -25,12 +25,17 @@ build/
 # Battle logs and replays
 battle_log/*
 *.html
+log_*.txt
 
 # Test files and debugging
 test_bots.py
 test_openrouter.py
 example_openrouter_usage.py
 debug_*.py
+
+*.code-workspace
+
+local/
 
 # Testing artifacts
 .pytest_cache/
