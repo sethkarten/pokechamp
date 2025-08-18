@@ -35,7 +35,11 @@ parser.add_argument("--backend", type=str, default="gemini-2.5-flash", choices=[
     # Microsoft models
     "microsoft/wizardlm-2-8x22b", "microsoft/phi-3-medium-128k-instruct",
     # Ollama models
-    "ollama/gpt-oss:20b", "ollama/llama3.1:8b", "ollama/qwen2.5:32b", "ollama/gemma3:4b", "ollama/gemma3:27b",
+    "ollama/gpt-oss:20b", "ollama/llama3.1:8b", "ollama/llama3.1:8b-instruct-q4_K_M", 
+    "ollama/mistral", "ollama/qwen2.5:32b", "ollama/qwen3:30b", "ollama/qwen3:14b", 
+    "ollama/qwen3:8b", "ollama/qwen3:4b", "ollama/gemma3:4b", "ollama/gemma3:4b-it-qat", 
+    "ollama/gemma3:1b-it-qat", "ollama/gemma3:27b", "ollama/gemma3:27b-it-qat", 
+    "ollama/gemma3:12b-it-qat", 
     # Local models (via OpenRouter)
     "llama", 'None'
 ])
@@ -45,6 +49,7 @@ parser.add_argument("--name", type=str, default='pokechamp', choices=bot_choices
 parser.add_argument("--USERNAME", type=str, default='')
 parser.add_argument("--PASSWORD", type=str, default='')
 parser.add_argument("--N", type=int, default=1)
+parser.add_argument("--timeout", type=int, default=90, help="LLM timeout in seconds (0 to disable)")
 args = parser.parse_args()
     
 async def main():
@@ -56,7 +61,9 @@ async def main():
                             battle_format=args.battle_format, 
                             online=True, 
                             USERNAME=args.USERNAME, 
-                            PASSWORD=args.PASSWORD)
+                            PASSWORD=args.PASSWORD,
+                            use_timeout=(args.timeout > 0),
+                            timeout_seconds=args.timeout)
     
     teamloader = get_metamon_teams(args.battle_format, "competitive")
     
@@ -64,6 +71,12 @@ async def main():
         # Set teamloader on player for rejection recovery
         player.set_teamloader(teamloader)
         player.update_team(teamloader.yield_team())
+
+    # Warm up player components before battles to avoid turn-time delays
+    print("🔥 Warming up player before battles...")
+    if hasattr(player, 'warm_up'):
+        player.warm_up()
+    print("🔥 Player warm-up complete!")
 
     # Playing n_challenges games on the ladder
     n_challenges = args.N
@@ -84,6 +97,14 @@ async def main():
         print(winner)
         player.reset_battles()
     print(f'player 2 winrate: {wins/n_challenges*100}')
+    
+    # Print timeout statistics if using timeout player
+    if hasattr(player, 'get_timeout_stats'):
+        stats = player.get_timeout_stats()
+        print(f"\nTimeout Statistics:")
+        print(f"  Total moves: {stats['total_moves']}")
+        print(f"  Timeouts: {stats['timeouts']}")
+        print(f"  Timeout rate: {stats['timeout_rate']:.1f}%")
 
 if __name__ == "__main__":
     asyncio.run(main())
