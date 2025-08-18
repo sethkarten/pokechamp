@@ -132,6 +132,51 @@ class LLMPlayer(Player):
         self.use_damage_calc_early_exit = True  # Use damage calculator to exit early when advantageous
         self.use_llm_value_function = True  # Use LLM for leaf node evaluation (vs fast heuristic)
         self.max_depth_for_llm_eval = 2  # Only use LLM evaluation for shallow depths to save time
+        
+        # Warm-up flag to track if pre-initialization is complete
+        self._warmed_up = False
+
+    def warm_up(self, dummy_battle=None):
+        """
+        Pre-initialize all expensive components to avoid delays during first battle turn.
+        This should be called after player creation but before battles start.
+        """
+        if self._warmed_up:
+            return
+            
+        print("🔥 Warming up player components...")
+        
+        # 1. Data cache is already loaded during __init__
+        
+        # 2. Pre-initialize minimax optimizer if using minimax
+        if self.prompt_algo == "minimax" and self.use_optimized_minimax:
+            # Skip minimax warm-up for now - it requires a real battle state
+            # The optimizer will initialize on first actual battle turn
+            print("   ⚪ Minimax optimizer will initialize on first battle turn")
+        
+        # 3. Pre-load team predictor (triggers Bayesian model loading)
+        try:
+            from bayesian.predictor_singleton import get_pokemon_predictor
+            predictor = get_pokemon_predictor()
+            # Trigger model loading if it has training methods
+            if hasattr(predictor, 'load_and_train'):
+                predictor.load_and_train()
+            elif hasattr(predictor, 'team_predictor') and hasattr(predictor.team_predictor, 'load_and_train'):
+                predictor.team_predictor.load_and_train()
+            print("   ✅ Pokemon predictor pre-loaded")
+        except Exception as e:
+            print(f"   ⚠️  Pokemon predictor warm-up failed: {e}")
+        
+        # 4. Pre-load move set data
+        try:
+            from pokechamp.data_cache import get_cached_moves_set
+            get_cached_moves_set('gen9ou')
+            print("   ✅ Move set data pre-loaded")
+        except Exception as e:
+            print(f"   ⚠️  Move set data warm-up failed: {e}")
+        
+        self._warmed_up = True
+        print("🔥 Player warm-up complete!")
 
     def get_LLM_action(self, system_prompt, user_prompt, model, temperature=0.7, json_format=False, seed=None, stop=[], max_tokens=200, actions=None, llm=None) -> str:
         if llm is None:
@@ -187,7 +232,9 @@ class LLMPlayer(Player):
 
         gimmick_output_format = ''
         if 'pokellmon' not in self.ps_client.account_configuration.username: # make sure we dont mess with pokellmon original strat
-            gimmick_output_format = f'{f' or {{"dynamax":"<move_name>"}}' if battle.can_dynamax else ''}{f' or {{"terastallize":"<move_name>"}}' if battle.can_tera else ''}'
+            dynamax_option = ' or {"dynamax":"<move_name>"}' if battle.can_dynamax else ''
+            tera_option = ' or {"terastallize":"<move_name>"}' if battle.can_tera else ''
+            gimmick_output_format = f'{dynamax_option}{tera_option}'
 
         if battle.active_pokemon.fainted or len(battle.available_moves) == 0:
 
