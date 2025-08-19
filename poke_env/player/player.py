@@ -1169,7 +1169,7 @@ class Player(ABC):
         :type move_target: int
         :return: Formatted move order
         :rtype: str
-        """
+        """ 
         
         # input(order)
         
@@ -1181,6 +1181,19 @@ class Player(ABC):
             dynamax=dynamax,
             terastallize=terastallize,
         )
+    
+    @staticmethod
+    def create_double_order(
+        order_list: List[Optional[BattleOrder]]
+    ) -> DoubleBattleOrder:
+        """Formats a DoubleBattleOrder object based on the input list of BattleOrder objects
+        """
+
+        return DoubleBattleOrder(
+            first_order=order_list[0],
+            second_order=order_list[1]
+        )
+
 
     @property
     def battles(self) -> Dict[str, AbstractBattle]:
