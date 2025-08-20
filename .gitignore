@@ -66,3 +66,14 @@ yarn-debug.log*
 yarn-error.log*
 
 CLAUDE.md
+
+*.code-workspace
+
+local/
+
+.venv/
+
+*.json
+
+showdown_ladder_vs.py
+timeout_llm_player.py
