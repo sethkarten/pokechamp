@@ -147,6 +147,7 @@ class AbstractBattle(ABC):
         self._anybody_inactive: bool = False
         self._reconnected: bool = True
         self.logger: Optional[Logger] = logger
+        self._time_left: Optional[int] = None  # Time left in seconds from battle timer
 
         # Turn choice attributes
         self._available_switches: List[Pokemon] = []
@@ -745,6 +746,12 @@ class AbstractBattle(ABC):
             elif "reconnected" in split_message[2]:
                 self._anybody_inactive = False
                 self._reconnected = True
+            elif "Time left:" in split_message[2]:
+                # Parse time from message like: "Time left: 150 sec this turn | 300 sec total"
+                import re
+                match = re.search(r'(\d+) sec total', split_message[2])
+                if match:
+                    self._time_left = int(match.group(1))
         elif split_message[1] == "player":
             if len(split_message) == 6:
                 player, username, avatar, rating = split_message[2:6]
@@ -1235,6 +1242,14 @@ class AbstractBattle(ABC):
         :type turn: int
         """
         self._turn = turn
+
+    @property
+    def time_left(self) -> Optional[int]:
+        """
+        :return: Time left in seconds from the battle timer, or None if not available.
+        :rtype: Optional[int]
+        """
+        return self._time_left
 
     @property
     def weather(self) -> Dict[Weather, int]:

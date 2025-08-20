@@ -141,8 +141,7 @@ class TimeoutLLMPlayer(LLMPlayer):
         Choose a move with timeout protection.
         
         This method wraps the original choose_move with a timeout mechanism.
-        If the LLM doesn't respond within timeout_seconds, it falls back to
-        AbyssalPlayer's decision making.
+        The timeout is only applied when the battle timer has less than 2x the timeout remaining.
         """
         self.total_moves += 1
         
@@ -154,6 +153,14 @@ class TimeoutLLMPlayer(LLMPlayer):
                 print(f"   💬 Sent startup chat message for battle {battle.battle_tag}")
             except Exception as e:
                 print(f"   ⚠️  Could not send startup chat message: {e}")
+        
+        # Check if we should apply timeout based on battle timer
+        # Only apply timeout if battle timer has less than 2x the timeout remaining
+        should_apply_timeout = True
+        if battle.time_left is not None:
+            if battle.time_left > 2 * self.timeout_seconds:
+                should_apply_timeout = False
+                print(f"   NO PRESSURE: Battle timer has {battle.time_left}s left (> {2 * self.timeout_seconds}s threshold)")
         
         # Log LLM attempt and send chat message when returning to normal mode after timeout
         had_previous_timeout = self.timeout_count > 0
@@ -176,8 +183,12 @@ class TimeoutLLMPlayer(LLMPlayer):
         fallback_future = self.executor.submit(self._fast_fallback_move, battle)
         
         try:
-            # Wait for LLM result with timeout - this is more accurate than thread.join()
-            action = llm_future.result(timeout=self.timeout_seconds)
+            # Wait for LLM result with timeout if applicable
+            if should_apply_timeout:
+                action = llm_future.result(timeout=self.timeout_seconds)
+            else:
+                # No timeout - wait indefinitely for LLM
+                action = llm_future.result()
             elapsed_time = time.time() - start_time
             
             # LLM succeeded - cancel the fallback future to free resources
