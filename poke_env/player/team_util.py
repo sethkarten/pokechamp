@@ -81,8 +81,12 @@ def load_random_team(id=None):
         team_id = randint(1, 14)
     else:
         team_id = id
-    with open(f'poke_env/data/static/teams/gen9ou{team_id}.txt', 'r') as f:
-        team = f.read()
+    if vgc is True:
+        with open(f'poke_env/data/static/teams/gen9vgc2025regg{team_id}.txt', 'r') as f:
+            team = f.read()
+    else:
+        with open(f'poke_env/data/static/teams/gen9ou{team_id}.txt', 'r') as f:
+            team = f.read()
     return team
 
 def get_custom_bot_class(bot_name: str):

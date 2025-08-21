@@ -608,8 +608,9 @@ class Player(ABC):
                     description = " It caused " + msg[idx][2] + " " + status_dict[msg[idx][3]] + "."
 
                 if description:
+                    #print(description)
                     battle.battle_msg_history = battle.battle_msg_history + description
-                    # print(description)
+                    
 
                 idx += 1
 
@@ -618,6 +619,7 @@ class Player(ABC):
                 continue
             elif split_message[1] in self.MESSAGES_TO_IGNORE:
                 pass
+            
             elif split_message[1] == "request":
                 if split_message[2]:
                     request = orjson.loads(split_message[2])
@@ -635,6 +637,8 @@ class Player(ABC):
                 self._battle_finished_callback(battle)
                 async with self._battle_end_condition:
                     self._battle_end_condition.notify_all()
+            elif split_message[1] == "uhtml" and "otsrequest" in split_message[2]:
+                await self.ps_client.send_message("/acceptopenteamsheets", battle.battle_tag)
             elif split_message[1] == "error":
                 self.logger.log(
                     25, "Error message received: %s", "|".join(split_message)
@@ -656,6 +660,10 @@ class Player(ABC):
                     "[Invalid choice] Can't switch: You can't switch to an active "
                     "Pokémon"
                 ):
+                    await self._handle_battle_request(battle, maybe_default_order=True)
+                elif split_message[2].startswith(
+                    "[Invalid choice] Can't switch: You do not have a Pokémon named " 
+                ) and split_message[2].endswith("to switch to"):
                     await self._handle_battle_request(battle, maybe_default_order=True)
                 elif split_message[2].startswith(
                     "[Invalid choice] Can't switch: You can't switch to a fainted "
@@ -719,11 +727,7 @@ class Player(ABC):
         from_teampreview_request: bool = False,
         maybe_default_order: bool = False,
     ):
-        
-        #print("BATTLE REQUEST BRANCH")
-        #print("from_teampreview_request", from_teampreview_request)
-        #print("battle.teampreview", battle.teampreview)
-        #print("battle.in_team_preview", battle.in_team_preview)
+    
 
         if maybe_default_order and random.random() < self.DEFAULT_CHOICE_CHANCE:
             message = self.choose_default_move().message
@@ -1228,7 +1232,7 @@ class Player(ABC):
         :type move_target: int
         :return: Formatted move order
         :rtype: str
-        """
+        """ 
         
         # input(order)
         
@@ -1240,6 +1244,19 @@ class Player(ABC):
             dynamax=dynamax,
             terastallize=terastallize,
         )
+    
+    @staticmethod
+    def create_double_order(
+        order_list: List[Optional[BattleOrder]]
+    ) -> DoubleBattleOrder:
+        """Formats a DoubleBattleOrder object based on the input list of BattleOrder objects
+        """
+
+        return DoubleBattleOrder(
+            first_order=order_list[0],
+            second_order=order_list[1]
+        )
+
 
     @property
     def battles(self) -> Dict[str, AbstractBattle]:

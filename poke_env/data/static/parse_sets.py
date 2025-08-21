@@ -108,11 +108,11 @@ def parse_sets(file, elo):
             'tera': tera_types,
             'teammates': teammates
         }
-    with open(f'poke_env/data/static/gen9/ou/sets_{elo}.json', 'w') as f:
+    with open(f'poke_env/data/static/gen9/vgc/sets_{elo}.json', 'w') as f:
         f.write(json.dumps(json_out, indent=4))
                     
         
 if __name__ == '__main__':
-    elo = 1825
-    file = f'poke_env/data/static/gen9/ou/gen9ou-{elo}.txt'
+    elo = 0
+    file = f'poke_env/data/static/gen9/vgc/gen9vgc2025regi-{elo}.txt'
     parse_sets(file, elo)

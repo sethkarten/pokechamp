@@ -1,4 +1,6 @@
 import os
+import asyncio
+
 from abc import ABC, abstractmethod
 from logging import Logger
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
@@ -766,8 +768,9 @@ class AbstractBattle(ABC):
                 }
             )
         elif split_message[1] == "poke":
-            player, details = split_message[2:4]
-            self._register_teampreview_pokemon(player, details)
+            pass    #TODO make this not register teampreview pokemon while playing VGC b/c it messes with showteam
+            #player, details = split_message[2:4]
+            #self._register_teampreview_pokemon(player, details)
         elif split_message[1] == "premove":
             pokemon, details = split_message[2:4]
             mon = self.get_pokemon(pokemon, force_self_team=True)
@@ -825,8 +828,56 @@ class AbstractBattle(ABC):
             if pokemon.terastallized:
                 if pokemon in set(self.opponent_team.values()):
                     self._opponent_can_terrastallize = False
+        elif split_message[1] == "showteam":
+            player = split_message[2]
+            details = split_message[3:]
+            
+            joined = "|".join(details)
+            mons = joined.split(']')
+
+            for raw in mons:
+                raw = raw.strip()
+                if not raw:
+                    continue
+                details = raw + ']'
+                try:
+                    mon = self._register_showteam_pokemon(details)
+                    if player != self._player_role:
+                        self._teampreview_opponent_team.add(mon)        # should I set up the opponent_team rn?
+                except Exception as e:
+                    print(f"Failed to parse mon details for {player}: {details} due to {e}")
         else:
+            print("split_message[1]:", split_message[1])
             raise NotImplementedError(split_message)
+
+    def _register_showteam_pokemon(self, details: str):
+        parts = details.strip().split("|")
+
+        # Basic fields
+        species = parts[0].strip()
+        item = parts[2].strip().lower() if parts[2] else None
+        ability = parts[3].strip().lower() if parts[3] else None
+        moves = [m.strip().lower() for m in parts[4].split(",") if m.strip()] if parts[4] else []
+        level = int(parts[10]) if len(parts) > 10 and parts[10].isdigit() else 100
+
+        # Extract Tera type if available
+        tera_type = None
+        if len(parts) > 11 and parts[11]:
+            # Example: ,,,,,Grass]
+            fields = parts[11].split(",")
+            if fields and fields[-1].strip().endswith("]"):
+                tera_type = fields[-1].strip().rstrip("]").lower()
+
+        # Instantiate and populate the Pokemon object
+        pokemon = Pokemon(gen=self._data.gen, species=species)
+        pokemon._level = level
+        pokemon._item = item
+        pokemon._ability = ability
+        pokemon._moves = {move: None for move in moves}
+        if tera_type:
+            pokemon._terastallized_type = tera_type
+
+        return pokemon
 
     @abstractmethod
     def parse_request(self, request: Dict[str, Any]):

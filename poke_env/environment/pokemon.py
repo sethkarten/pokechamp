@@ -137,7 +137,7 @@ class Pokemon:
 
         return (
             f"{self._species} (pokemon object) "
-            f"[Active: {self._active}, Status: {status_repr}]"
+            f"[Active: {self._active}, Status: {status_repr}, Item: {self._item}, Moves: {self._moves}]"
         )
 
     def _add_move(self, move_id: str, use: bool = False) -> Optional[Move]:
