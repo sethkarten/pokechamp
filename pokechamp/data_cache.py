@@ -124,6 +124,8 @@ class GameDataCache:
             try:
                 if format == 'gen9ou':
                     file_path = 'poke_env/data/static/gen9/ou/sets_1000.json'
+                elif format == 'gen9vgc2025regi':
+                    file_path = 'poke_env/data/static/gen9/vgc/sets_1760.json'
                 else:
                     # Add more formats as needed
                     file_path = f'poke_env/data/static/{format}/sets_1000.json'
