@@ -50,6 +50,7 @@ def extract_pokepaste_links(sheet_id: str, gid: str) -> list:
                 links.append(cell.strip())
     return links
 
+# deprecated 
 def create_teambuilder(url: str):
     raw = fetch_pokepaste(url).replace('\r\n', '\n')
     mons = Teambuilder.parse_showdown_team(raw)
@@ -57,21 +58,57 @@ def create_teambuilder(url: str):
 
     return mons, team
 
-def encode_team_to_base64(url: str) -> str:
-    raw = fetch_pokepaste(url).replace('\r\n', '\n')
-    return base64.b64encode(raw.encode("utf-8")).decode("utf-8")
+def export_team_to_file(team_data: str, output_dir: str, team_number: int, battle_format: str = "gen9ou"):
+    """Export a team to a file in the correct format for the Bayesian predictor."""
+    os.makedirs(output_dir, exist_ok=True)
+    
+    filename = f"team_{team_number:06d}.{battle_format}_team"
+    filepath = os.path.join(output_dir, filename)
+    
+    with open(filepath, 'w', encoding='utf-8') as f:
+        f.write(team_data)
+    
+    return filepath
+
 
 if __name__ == "__main__":
-    SHEET_ID = "1axlwmzPA49rYkqXh7zHvAtSP-TKbM0ijGYBPRflLSWw"
-    GID = "418553327"  # specific tab
-    
-    paste_links = extract_pokepaste_links(SHEET_ID, GID)
-    print("Found PokéPaste links:", paste_links[:5], "...")
-    
-    # Example: fetch the first team's data
-    if paste_links:
-        team_objs, packed = create_teambuilder(paste_links[0])
-        print(packed)
-
-    # test encoded version like data in metamon-teams
-    print(encode_team_to_base64(paste_links[0]))
+    if __name__ == "__main__":
+        SHEET_ID = "1axlwmzPA49rYkqXh7zHvAtSP-TKbM0ijGYBPRflLSWw"
+        GID = "418553327"  # specific tab
+        
+        # Configuration
+        OUTPUT_DIR = "bayesian_dataset"  # or wherever you want to save teams
+        BATTLE_FORMAT = "gen9vgc2025regi"  # or your target format
+        
+        paste_links = extract_pokepaste_links(SHEET_ID, GID)
+        print(f"Found {len(paste_links)} PokéPaste links")
+        
+        paste_links = paste_links[:10]
+        
+        successful_exports = 0
+        failed_exports = 0
+        
+        for i, url in enumerate(paste_links):
+            try:
+                # Fetch and validate team
+                raw_team = fetch_pokepaste(url)
+                
+                # Basic validation - check if it looks like a valid team
+                if "Ability:" in raw_team and "- " in raw_team:
+                    # Export to file
+                    filepath = export_team_to_file(raw_team, OUTPUT_DIR, i, BATTLE_FORMAT)
+                    print(f"Exported team {i+1}/{len(paste_links)}: {filepath}")
+                    successful_exports += 1
+                else:
+                    print(f"Skipping invalid team {i+1}: {url}")
+                    failed_exports += 1
+                    
+            except Exception as e:
+                print(f"Error processing team {i+1} ({url}): {e}")
+                failed_exports += 1
+                continue
+        
+        print(f"\nExport complete!")
+        print(f"Successful: {successful_exports}")
+        print(f"Failed: {failed_exports}")
+        print(f"Teams saved to: {os.path.abspath(OUTPUT_DIR)}")
