@@ -16,3 +16,9 @@ asyncio
 websockets
 openai
 bitsandbytes
+google-genai
+ollama
+requests
+pytest
+huggingface-hub
+termcolor
