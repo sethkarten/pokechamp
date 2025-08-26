@@ -112,7 +112,7 @@ class Pokemon:
         self._status: Optional[Status] = None
         self._status_counter: int = 0
 
-        with open('poke_env/data/static/gen9/ou/sets_1500.json', 'r') as f:
+        with open('poke_env/data/static/gen9/vgc/sets_1760.json', 'r') as f:
             sets = json.load(f)
         self._sets = sets
         
@@ -882,7 +882,7 @@ class Pokemon:
             
         return tera
         
-    def guess_stats(self, guess_type='bayesian', observed_moves=None, battle=None):
+    def guess_stats(self, guess_type='most_likely', observed_moves=None, battle=None):
         """
         Guess Pokemon stats using Bayesian predictions when possible.
         

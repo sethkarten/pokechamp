@@ -94,6 +94,8 @@ class DoubleBattle(AbstractBattle):
         :param request: Parsed JSON request object.
         :type request: dict
         """
+        #print('[battle request]', request)
+
         if self.logger is not None:
             self.logger.debug(
                 "Parsing the following request update in battle %s:\n%s",

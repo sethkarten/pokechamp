@@ -884,8 +884,20 @@ class LocalSim():
     
     
 
-    def state_translate(self, battle: Battle):
-        return self.prompt_translate(self, battle)
+    def state_translate(self, battle: Battle, idx: int, return_actions: bool = False, return_choices: bool = False):
+        try:
+            if return_actions:
+                return self.prompt_translate(self, battle, return_actions=return_actions, idx=idx)
+            if return_choices:
+                return self.prompt_translate(self, battle, return_choices=return_choices, idx=idx)
+            return self.prompt_translate(self, battle, idx=idx)
+        except TypeError:
+            # Prompt function may not accept idx; fall back gracefully
+            if return_actions:
+                return self.prompt_translate(self, battle, return_actions=return_actions)
+            if return_choices:
+                return self.prompt_translate(self, battle, return_choices=return_choices)
+            return self.prompt_translate(self, battle)
 
     def check_status(self, status):
         if status:
