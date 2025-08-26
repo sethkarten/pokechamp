@@ -882,7 +882,7 @@ class Pokemon:
             
         return tera
         
-    def guess_stats(self, guess_type='most_likely', observed_moves=None, battle=None):
+    def guess_stats(self, guess_type='bayesian', observed_moves=None, battle=None):
         """
         Guess Pokemon stats using Bayesian predictions when possible.
         
