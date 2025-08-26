@@ -130,7 +130,7 @@ def get_llm_player(args,
                    PASSWORD: str='', 
                    online: bool=False) -> Player:
     from pokechamp.llm_player import LLMPlayer
-    from pokechamp.prompts import prompt_translate, state_translate2
+    from pokechamp.prompts import prompt_translate, state_translate2, state_translate3
     
     server_config = None
     if online:
@@ -195,7 +195,7 @@ def get_llm_player(args,
                        account_configuration=AccountConfiguration(f'{USERNAME}{PNUMBER1}', PASSWORD),
                        server_configuration=server_config,
                        save_replays=args.log_dir,
-                       prompt_translate=state_translate2,
+                       prompt_translate=state_translate3,
                        device=device,
                        llm_backend=llm_backend)
     else:
