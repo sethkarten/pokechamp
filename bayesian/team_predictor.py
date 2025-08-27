@@ -181,7 +181,7 @@ class BayesianTeamPredictor:
         self.total_teams = 0
         self.is_trained = False
     
-    def load_and_train(self, force_retrain: bool = False):
+    def load_and_train(self, force_retrain: bool = True):
         """Load cached model or train from scratch."""
         if not force_retrain and os.path.exists(self.cache_path):
             print(f"Loading cached model from {self.cache_path}...")
