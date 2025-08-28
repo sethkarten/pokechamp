@@ -50,7 +50,16 @@ parser.add_argument("--USERNAME", type=str, default='')
 parser.add_argument("--PASSWORD", type=str, default='')
 parser.add_argument("--N", type=int, default=1)
 parser.add_argument("--timeout", type=int, default=90, help="LLM timeout in seconds (0 to disable)")
+parser.add_argument("--seed", type=int, default=None, help="Random seed for reproducibility")
 args = parser.parse_args()
+
+# Set random seed if provided
+if args.seed is not None:
+    import random
+    import numpy as np
+    random.seed(args.seed)
+    np.random.seed(args.seed)
+    print(f"Using random seed: {args.seed}")
     
 async def main():
     player = get_llm_player(args, 
@@ -64,8 +73,11 @@ async def main():
                             PASSWORD=args.PASSWORD,
                             use_timeout=(args.timeout > 0),
                             timeout_seconds=args.timeout)
-    
-    teamloader = get_metamon_teams(args.battle_format, "competitive")
+    team_list = "modern_replays"
+    if args.name == 'pokechamp':
+        team_list = "competitive"
+    print(f"Using {team_list} team list")
+    teamloader = get_metamon_teams(args.battle_format, team_list)
     
     if not 'random' in args.battle_format:
         # Set teamloader on player for rejection recovery
