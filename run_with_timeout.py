@@ -25,7 +25,7 @@ LLM_TIMEOUT_SECONDS = 90  # LLM timeout per move (configurable)
 # Track which agents are currently in battle
 agents_in_battle = set()
 battle_lock = Lock()
-results_lock = Lock()
+# results_lock = Lock()
 
 # Queue to trigger immediate restart when all agents are freed
 restart_queue = Queue()
@@ -34,146 +34,146 @@ restart_lock = Lock()
 # Define the agents and their configurations
 AGENTS = [
     # PokeChamp Harness LLM-based agents
-    # {
-    #     "name": "pokechamp",
-    #     "backend": "ollama/llama3.1:8b-instruct-q4_K_M",
-    #     "prompt_algo": "minimax",
-    #     "device": 6,
-    #     "username": "PAC-PC-llama31-8b",
-    #     "password": "REMOVED_PASSWORD",
-    # },
-    # # {
-    # #     "name": "pokechamp",
-    # #     "backend": "ollama/gemma3:12b-it-qat",
-    # #     "prompt_algo": "minimax",
-    # #     "device": 6,
-    # #     "username": "PAC-PC-gemma3-12b",
-    # #     "password": "REMOVED_PASSWORD",
-    # # },
-    # {
-    #     "name": "pokechamp",
-    #     "backend": "ollama/gemma3:4b-it-qat",
-    #     "prompt_algo": "minimax",
-    #     "device": 6,
-    #     "username": "PAC-PC-gemma3-4b",
-    #     "password": "REMOVED_PASSWORD",
-    # },
-    # {
-    #     "name": "pokechamp",
-    #     "backend": "ollama/gemma3:1b-it-qat",
-    #     "prompt_algo": "minimax",
-    #     "device": 6,
-    #     "username": "PAC-PC-gemma3-1b",
-    #     "password": "REMOVED_PASSWORD",
-    # },
-    # # {
-    # #     "name": "pokechamp",
-    # #     "backend": "ollama/qwen3:14b",
-    # #     "prompt_algo": "minimax",
-    # #     "device": 6,
-    # #     "username": "PAC-PC-qwen3-14b",
-    # #     "password": "REMOVED_PASSWORD",
-    # # },
-    # {
-    #     "name": "pokechamp",
-    #     "backend": "ollama/qwen3:8b",
-    #     "prompt_algo": "minimax",
-    #     "device": 6,
-    #     "username": "PAC-PC-qwen3-8b",
-    #     "password": "REMOVED_PASSWORD",
-    # },
-    # {
-    #     "name": "pokechamp",
-    #     "backend": "ollama/qwen3:4b",
-    #     "prompt_algo": "minimax",
-    #     "device": 6,
-    #     "username": "PAC-PC-qwen3-4b",
-    #     "password": "REMOVED_PASSWORD",
-    # },
-    # # {
-    # #     "name": "pokechamp",
-    # #     "backend": "ollama/gpt-oss:20b",
-    # #     "prompt_algo": "minimax",
-    # #     "device": 6,
-    # #     "username": "PAC-PC-gpt-oss",
-    # #     "password": "REMOVED_PASSWORD",
-    # # },
-    
-    # # LLM-based agents
-    # {
-    #     "name": "pokechamp",
-    #     "backend": "ollama/llama3.1:8b-instruct-q4_K_M",
-    #     "prompt_algo": "io",
-    #     "device": 6,
-    #     "username": "PAC-LLM-llama31-8b",
-    #     "password": "REMOVED_PASSWORD",
-    # },
+    {
+        "name": "pokechamp",
+        "backend": "ollama/llama3.1:8b-instruct-q4_K_M",
+        "prompt_algo": "minimax",
+        "device": 6,
+        "username": "PAC-PC-llama31-8b",
+        "password": "REMOVED_PASSWORD",
+    },
     # {
     #     "name": "pokechamp",
     #     "backend": "ollama/gemma3:12b-it-qat",
-    #     "prompt_algo": "io",
+    #     "prompt_algo": "minimax",
     #     "device": 6,
-    #     "username": "PAC-LLM-gemma3-12b",
+    #     "username": "PAC-PC-gemma3-12b",
     #     "password": "REMOVED_PASSWORD",
     # },
-    # {
-    #     "name": "pokechamp",
-    #     "backend": "ollama/gemma3:4b-it-qat",
-    #     "prompt_algo": "io",
-    #     "device": 6,
-    #     "username": "PAC-LLM-gemma3-4b",
-    #     "password": "REMOVED_PASSWORD",
-    # },
-    # {
-    #     "name": "pokechamp",
-    #     "backend": "ollama/gemma3:1b-it-qat",
-    #     "prompt_algo": "io",
-    #     "device": 6,
-    #     "username": "PAC-LLM-gemma3-1b",
-    #     "password": "REMOVED_PASSWORD",
-    # },
+    {
+        "name": "pokechamp",
+        "backend": "ollama/gemma3:4b-it-qat",
+        "prompt_algo": "minimax",
+        "device": 6,
+        "username": "PAC-PC-gemma3-4b",
+        "password": "REMOVED_PASSWORD",
+    },
+    {
+        "name": "pokechamp",
+        "backend": "ollama/gemma3:1b-it-qat",
+        "prompt_algo": "minimax",
+        "device": 6,
+        "username": "PAC-PC-gemma3-1b",
+        "password": "REMOVED_PASSWORD",
+    },
     # {
     #     "name": "pokechamp",
     #     "backend": "ollama/qwen3:14b",
-    #     "prompt_algo": "io",
+    #     "prompt_algo": "minimax",
     #     "device": 6,
-    #     "username": "PAC-LLM-qwen3-14b",
+    #     "username": "PAC-PC-qwen3-14b",
     #     "password": "REMOVED_PASSWORD",
     # },
-    # {
-    #     "name": "pokechamp",
-    #     "backend": "ollama/qwen3:8b",
-    #     "prompt_algo": "io",
-    #     "device": 6,
-    #     "username": "PAC-LLM-qwen3-8b",
-    #     "password": "REMOVED_PASSWORD",
-    # },
-    # {
-    #     "name": "pokechamp",
-    #     "backend": "ollama/qwen3:4b",
-    #     "prompt_algo": "io",
-    #     "device": 6,
-    #     "username": "PAC-LLM-qwen3-4b",
-    #     "password": "REMOVED_PASSWORD",
-    # },
+    {
+        "name": "pokechamp",
+        "backend": "ollama/qwen3:8b",
+        "prompt_algo": "minimax",
+        "device": 6,
+        "username": "PAC-PC-qwen3-8b",
+        "password": "REMOVED_PASSWORD",
+    },
+    {
+        "name": "pokechamp",
+        "backend": "ollama/qwen3:4b",
+        "prompt_algo": "minimax",
+        "device": 6,
+        "username": "PAC-PC-qwen3-4b",
+        "password": "REMOVED_PASSWORD",
+    },
     # {
     #     "name": "pokechamp",
     #     "backend": "ollama/gpt-oss:20b",
-    #     "prompt_algo": "io",
+    #     "prompt_algo": "minimax",
     #     "device": 6,
-    #     "username": "PAC-LLM-gpt-oss",
+    #     "username": "PAC-PC-gpt-oss",
     #     "password": "REMOVED_PASSWORD",
-    # },    
-    
-    # # PokeLLMon baseline agents
-    # {
-    #     "name": "pokellmon",
-    #     "backend": "ollama/llama3.1:8b-instruct-q4_K_M",
-    #     "prompt_algo": "io",
-    #     "device": 5,
-    #     "username": "PAC-PC-pokellmon",
-    #     "password": "hudson56",
     # },
+    
+    # LLM-based agents
+    {
+        "name": "pokechamp",
+        "backend": "ollama/llama3.1:8b-instruct-q4_K_M",
+        "prompt_algo": "io",
+        "device": 6,
+        "username": "PAC-LLM-llama31-8b",
+        "password": "REMOVED_PASSWORD",
+    },
+    {
+        "name": "pokechamp",
+        "backend": "ollama/gemma3:12b-it-qat",
+        "prompt_algo": "io",
+        "device": 6,
+        "username": "PAC-LLM-gemma3-12b",
+        "password": "REMOVED_PASSWORD",
+    },
+    {
+        "name": "pokechamp",
+        "backend": "ollama/gemma3:4b-it-qat",
+        "prompt_algo": "io",
+        "device": 6,
+        "username": "PAC-LLM-gemma3-4b",
+        "password": "REMOVED_PASSWORD",
+    },
+    {
+        "name": "pokechamp",
+        "backend": "ollama/gemma3:1b-it-qat",
+        "prompt_algo": "io",
+        "device": 6,
+        "username": "PAC-LLM-gemma3-1b",
+        "password": "REMOVED_PASSWORD",
+    },
+    {
+        "name": "pokechamp",
+        "backend": "ollama/qwen3:14b",
+        "prompt_algo": "io",
+        "device": 6,
+        "username": "PAC-LLM-qwen3-14b",
+        "password": "REMOVED_PASSWORD",
+    },
+    {
+        "name": "pokechamp",
+        "backend": "ollama/qwen3:8b",
+        "prompt_algo": "io",
+        "device": 6,
+        "username": "PAC-LLM-qwen3-8b",
+        "password": "REMOVED_PASSWORD",
+    },
+    {
+        "name": "pokechamp",
+        "backend": "ollama/qwen3:4b",
+        "prompt_algo": "io",
+        "device": 6,
+        "username": "PAC-LLM-qwen3-4b",
+        "password": "REMOVED_PASSWORD",
+    },
+    {
+        "name": "pokechamp",
+        "backend": "ollama/gpt-oss:20b",
+        "prompt_algo": "io",
+        "device": 6,
+        "username": "PAC-LLM-gpt-oss",
+        "password": "REMOVED_PASSWORD",
+    },    
+    
+    # PokeLLMon baseline agents
+    {
+        "name": "pokellmon",
+        "backend": "ollama/llama3.1:8b-instruct-q4_K_M",
+        "prompt_algo": "io",
+        "device": 5,
+        "username": "PAC-PC-pokellmon",
+        "password": "hudson56",
+    },
     
     # Non-LLM baseline agents (active by default)
     {
@@ -192,14 +192,14 @@ AGENTS = [
         "username": "PAC-PC-ABYSSAL",
         "password": "sandy77",
     },
-    # {
-    #     "name": "max_power",
-    #     "backend": "None",
-    #     "prompt_algo": "max_power",
-    #     "device": 0,
-    #     "username": "PAC-PC-MAX-POWER",
-    #     "password": "jones12",
-    # },
+    {
+        "name": "max_power",
+        "backend": "None",
+        "prompt_algo": "max_power",
+        "device": 0,
+        "username": "PAC-PC-MAX-POWER",
+        "password": "jones12",
+    },
 ]
 
 def parse_ladder_results(log_file, agent):
@@ -271,9 +271,9 @@ def load_results():
 
 def save_results(results):
     """Save results to file."""
-    with results_lock:
-        with open(get_results_filename(), 'w') as f:
-            json.dump(results, f, indent=2)
+    # with results_lock:
+    with open(get_results_filename(), 'w') as f:
+        json.dump(results, f, indent=2)
 
 def are_agents_available(agent1, agent2):
     """Check if both agents are available for battle."""
@@ -799,21 +799,21 @@ def run_concurrent_ladder(skip_forfeit=False, games_per_agent_target=1000, conti
             
             # Check if all agents have completed their target
             # In continuous mode, never exit - keep restarting agents
-            with results_lock:
-                all_complete = all(
-                    agent_games_completed[agent["username"]] >= games_per_agent_target 
-                    for agent in AGENTS
-                )
-                if all_complete and not continuous_mode:
-                    all_agents_complete = True
-                    print(f"[{datetime.now().strftime('%H:%M:%S')}] All agents have reached target games!")
-                elif all_complete and continuous_mode:
-                    print(f"[{datetime.now().strftime('%H:%M:%S')}] All agents reached target - resetting for continuous mode")
-                    # Reset counters to continue indefinitely
-                    for agent in AGENTS:
-                        username = agent["username"]
-                        agent_games_completed[username] = 0
-                        agent_games_queued[username] = 0
+            # with results_lock:
+            #     all_complete = all(
+            #         agent_games_completed[agent["username"]] >= games_per_agent_target 
+            #         for agent in AGENTS
+            #     )
+            #     if all_complete and not continuous_mode:
+            #         all_agents_complete = True
+            #         print(f"[{datetime.now().strftime('%H:%M:%S')}] All agents have reached target games!")
+            #     elif all_complete and continuous_mode:
+            #         print(f"[{datetime.now().strftime('%H:%M:%S')}] All agents reached target - resetting for continuous mode")
+            #         # Reset counters to continue indefinitely
+            #         for agent in AGENTS:
+            #             username = agent["username"]
+            #             agent_games_completed[username] = 0
+            #             agent_games_queued[username] = 0
                         
         except KeyboardInterrupt:
             print(f"\n[{datetime.now().strftime('%H:%M:%S')}] Stopping ladder tournament due to keyboard interrupt...")
