@@ -1215,6 +1215,11 @@ def get_opp_move_summary(pokemon: Pokemon, seen_moves: list[Move], potential_mov
 def get_opp_move_summary2(pokemon: Pokemon, seen_moves: list[Move], potential_moves: list[Move], battle: Battle, sim: LocalSim, is_active: bool=False, idx=0):
     # idx is the index of the pokemon on our team we are currently interested in
     # pokemon is the opponents pokemon we are currently analyzing
+    
+    # Check if active pokemon exists at the given index
+    if battle.active_pokemon[idx] is None:
+        return "No active Pokemon available at this position."
+    
     switch_move_prompt = f' Seen Moves:'
     for move in seen_moves:
         if move.base_power == 0:
@@ -1725,11 +1730,14 @@ def state_translate3(sim: LocalSim,
                     battle: Battle,
                     return_actions=False,
                     return_choices=False,
+                    next_action=None,
                     idx=0
                     ):
     # pass in the idx of the pokemon we are looking at
     # determine the battle state for the pokemon -> type, speed, move, etc
     # we should add information about the other allied pokemon?
+    
+    # Check if active pokemon exists at the given index
     
     # init default to high elo player
     player_elo, opponent_elo = 1800, 1800
@@ -1762,11 +1770,8 @@ def state_translate3(sim: LocalSim,
         opponent_boosts.append(mon._boosts)
         opponent_status.append(mon.status)
         opponent_is_dynamax.append(mon.is_dynamaxed)
+    
 
-    active_stats = battle.active_pokemon[idx].stats
-    if active_stats['atk'] is None:
-        active_stats = battle.active_pokemon[idx].base_stats
-    active_boosts = battle.active_pokemon[idx]._boosts
 
     # Type information
     opponent_type_list = []
@@ -1781,36 +1786,7 @@ def state_translate3(sim: LocalSim,
                 opponent_type = opponent_type + " and " + type_2.capitalize()
                 opponent_type_list.append(type_2)
 
-                
 
-    # species = battle.opponent_active_pokemon.species
-    # if species == 'polteageistantique':
-    #     species = 'polteageist'
-    # if battle.opponent_active_pokemon.ability:
-    #     opponent_ability = battle.opponent_active_pokemon.ability
-    # elif species in sim.pokemon_ability_dict:
-    #     opponent_ability = sim.pokemon_ability_dict[species][0]
-    # else:
-    #     opponent_ability = ""
-
-    # if opponent_ability:
-    #     try:
-    #         ability_name = sim.ability_effect[opponent_ability]["name"]
-    #         ability_effect = sim.ability_effect[opponent_ability]["effect"]
-    #         opponent_ability = f"{ability_name}({ability_effect})"
-    #     except:
-    #         pass
-
-    # opponent_prompt = (
-    #         f"Opposing active pokemon:{battle.opponent_active_pokemon.species},Type:{opponent_type},HP:{opponent_hp_fraction}%" +
-    #         (f"Status:{sim.check_status(opponent_status)}," if sim.check_status(opponent_status) else "") +
-    #         (f"Attack:{opponent_stats['atk']}," if opponent_boosts['atk']==0 else f"Attack:{round(opponent_stats['atk'] * sim.boost_multiplier('atk', opponent_boosts['atk']))}({opponent_boosts['atk']} stage boosted),") +
-    #         (f"Defense:{opponent_stats['def']}," if opponent_boosts['def']==0 else f"Defense:{round(opponent_stats['def'] * sim.boost_multiplier('def', opponent_boosts['def']))}({opponent_boosts['def']} stage boosted),") +
-    #         (f"Special attack:{opponent_stats['spa']}," if opponent_boosts['spa']==0 else f"Special attack:{round(opponent_stats['spa'] * sim.boost_multiplier('spa', opponent_boosts['spa']))}({opponent_boosts['spa']} stage boosted),") +
-    #         (f"Special defense:{opponent_stats['spd']}," if opponent_boosts['spd']==0 else f"Special defense:{round(opponent_stats['spd'] * sim.boost_multiplier('spd', opponent_boosts['spd']))}({opponent_boosts['spd']} stage boosted),") +
-    #         (f"Speed:{opponent_stats['spe']}," if opponent_boosts['spe'] == 0 else f"Speed:{round(opponent_stats['spe'] * sim.boost_multiplier('spe', opponent_boosts['spe']))}({opponent_boosts['spe']} stage boosted),") +
-    #         (f"Ability:{opponent_ability}" if opponent_ability else "")
-    # )
     opponent_speed = round(opponent_stats[idx]['spe'] * sim.boost_multiplier('spe', opponent_boosts[idx]['spe']))
 
     # we want to only work with one of our active pokemon at a time
@@ -1841,51 +1817,7 @@ def state_translate3(sim: LocalSim,
         if opponent_move_type_damage_prompt:
             opponent_prompt = opponent_prompt + opponent_move_type_damage_prompt + "\n"
 
-    # Opponent active pokemon move
-    # opponent_move_prompt = ""
-    # print('ACTIVE OPPONENT POKEMON FOUND', battle.opponent_active_pokemon, battle.opponent_active_pokemon.moves)
-    # if battle.opponent_active_pokemon.moves:
-    #     for move_id, opponent_move in battle.opponent_active_pokemon.moves.items():
-    #         if opponent_move.base_power == 0:
-    #             opponent_move_prompt += f"[{opponent_move.id},{opponent_move.type.name.capitalize()}],"
-    #             # continue # only count attack move
-    #         else:
-    #             if opponent_move.category.name == "SPECIAL":
-    #                 opponent_spa = opponent_stats['spa'] * sim.boost_multiplier('spa', opponent_boosts['spa'])
-    #                 active_spd = active_stats['spd'] * sim.boost_multiplier('spd', active_boosts['spd'])
-    #                 power = round(opponent_spa / active_spd * opponent_move.base_power)
-
-    #             elif opponent_move.category.name == "PHYSICAL":
-    #                 opponent_atk = opponent_stats['atk'] * sim.boost_multiplier('atk', opponent_boosts['atk'])
-    #                 active_def = active_stats['atk'] * sim.boost_multiplier('atk', active_boosts['atk'])
-    #                 power = round(opponent_atk/active_def * opponent_move.base_power)
-    #             else:
-    #                 power = 0
-
-    #             opponent_move_prompt += f"[{opponent_move.id},{opponent_move.type.name.capitalize()},Power:{power}],"
-    #             opponent_type_list.append(opponent_move.type.name)
-
-    # if opponent_move_prompt:
-    #     opponent_prompt = opponent_prompt + f"{battle.opponent_active_pokemon.species} used moves:" + opponent_move_prompt
-
-    # possible_move_prompt = ""
-    # try:
-    #     if species in sim.pokemon_move_dict:
-    #         possible_move_list = list(sim.pokemon_move_dict[species].values())
-    #         # possible_move_list.sort(key=lambda x: x[3], reverse=True)
-    #         for move in possible_move_list:
-    #             # if move[2]>0:
-    #             possible_move_prompt = possible_move_prompt + f"[{move[0]},{move[1].lower()},Power:{move[2]}],"
-    #             opponent_type_list.append(move[1].upper())
-    #     else:
-    #         possible_move_prompt = ""
-    # except:
-    #     possible_move_prompt = ""
-
-    # if possible_move_prompt:
-    #     opponent_prompt = opponent_prompt + f"{battle.opponent_active_pokemon.species}'s all the possible attacks:" + possible_move_prompt
-        
-    # opponent possible switches
+    
     opponent_prompt += f"\nOpponent has {opponent_unfainted_num} pokemons left.\n"
     opponent_prompt += 'Seen opponent pokemon:\n'
     for mon_opp in battle.opponent_team.values():
@@ -1911,61 +1843,67 @@ def state_translate3(sim: LocalSim,
         opponent_prompt = opponent_prompt + "Opponent team's side condition: " + opponent_side_condition
 
     opponent_prompt += "\n"
+    speed_prompt = "" 
+    # The active pokemon, if battle.force_switch[idx], we can skip all this and just move on to switching out
+    if not battle.force_switch[idx]:
+        active_stats = battle.active_pokemon[idx].stats
+        if active_stats['atk'] is None:
+            active_stats = battle.active_pokemon[idx].base_stats
+        active_boosts = battle.active_pokemon[idx]._boosts
 
-    # The active pokemon
-    active_hp_fraction = round(battle.active_pokemon[idx].current_hp / battle.active_pokemon[idx].max_hp * 100)
-    active_status = battle.active_pokemon[idx].status
+        active_hp_fraction = round(battle.active_pokemon[idx].current_hp / battle.active_pokemon[idx].max_hp * 100)
+        active_status = battle.active_pokemon[idx].status
 
-    active_type = ""
-    if battle.active_pokemon[idx].type_1:
-        active_type += battle.active_pokemon[idx].type_1.name.capitalize()
-        if battle.active_pokemon[idx].type_2:
-            active_type = active_type + " and " + battle.active_pokemon[idx].type_2.name.capitalize()
+        active_type = ""
+        if battle.active_pokemon[idx].type_1:
+            active_type += battle.active_pokemon[idx].type_1.name.capitalize()
+            if battle.active_pokemon[idx].type_2:
+                active_type = active_type + " and " + battle.active_pokemon[idx].type_2.name.capitalize()
 
-    active_move_type_damage_prompt = move_type_damage_wrapper(battle.active_pokemon[idx], sim.gen.type_chart, opponent_type_list)
-    speed_active_stats = active_stats['spe']
-    if speed_active_stats == None: speed_active_stats = 0
-    active_speed = round(speed_active_stats*sim.boost_multiplier('spe', active_boosts['spe']))
+        active_move_type_damage_prompt = move_type_damage_wrapper(battle.active_pokemon[idx], sim.gen.type_chart, opponent_type_list)
+        speed_active_stats = active_stats['spe']
+        if speed_active_stats == None: speed_active_stats = 0
+        active_speed = round(speed_active_stats*sim.boost_multiplier('spe', active_boosts['spe']))
 
-    try:
-        active_ability = sim.ability_effect[battle.active_pokemon[idx].ability]["name"]
-        ability_effect = sim.ability_effect[battle.active_pokemon[idx].ability]["effect"]
-    except:
-        active_ability = battle.active_pokemon[idx].ability
-        ability_effect = ""
-
-    # item
-    if battle.active_pokemon[idx].item:
         try:
-            active_item = sim.item_effect[battle.active_pokemon[idx].item]["name"]
-            item_effect = sim.item_effect[battle.active_pokemon[idx].item]["effect"]
-            active_item = f"{active_item}({item_effect})"
+            active_ability = sim.ability_effect[battle.active_pokemon[idx].ability]["name"]
+            ability_effect = sim.ability_effect[battle.active_pokemon[idx].ability]["effect"]
         except:
-            active_item = battle.active_pokemon[idx].item
-    else:
-        active_item = ""
+            active_ability = battle.active_pokemon[idx].ability
+            ability_effect = ""
 
-    speed_prompt = ""
-    for mon in battle.opponent_active_pokemon:
-        speed_prompt += (f"(slower than {mon.species})." if active_speed < opponent_speed else f"(faster than {mon.species}).")
-    
-    active_pokemon_prompt = (
-        f"Your current pokemon:{battle.active_pokemon[idx].species},Type:{active_type},HP:{active_hp_fraction}%" +
-        (f"Status:{sim.check_status(active_status)}," if sim.check_status(active_status) else "" ) +
-        (f"Attack:{active_stats['atk']}," if active_boosts['atk']==0 else f"Attack:{round(active_stats['atk']*sim.boost_multiplier('atk', active_boosts['atk']))}({active_boosts['atk']} stage boosted),") +
-        (f"Defense:{active_stats['def']}," if active_boosts['def']==0 else f"Defense:{round(active_stats['def']*sim.boost_multiplier('def', active_boosts['def']))}({active_boosts['def']} stage boosted),") +
-        (f"Special attack:{active_stats['spa']}," if active_boosts['spa']==0 else f"Special attack:{round(active_stats['spa']*sim.boost_multiplier('spa', active_boosts['spa']))}({active_boosts['spa']} stage boosted),") +
-        (f"Special defense:{active_stats['spd']}," if active_boosts['spd']==0 else f"Special defense:{round(active_stats['spd']*sim.boost_multiplier('spd', active_boosts['spd']))}({active_boosts['spd']} stage boosted),") +
-        (f"Speed:{active_stats['spe']}" if active_boosts['spe']==0 else f"Speed:{round(active_stats['spe']*sim.boost_multiplier('spe', active_boosts['spe']))}({active_boosts['spe']} stage boosted),") +
-        speed_prompt +
-        (f"Ability:{active_ability}({ability_effect})," if ability_effect else f"Ability:{active_ability},") +
-        (f"Item:{active_item}" if active_item else "")
-    )
+        # item
+        if battle.active_pokemon[idx].item:
+            try:
+                active_item = sim.item_effect[battle.active_pokemon[idx].item]["name"]
+                item_effect = sim.item_effect[battle.active_pokemon[idx].item]["effect"]
+                active_item = f"{active_item}({item_effect})"
+            except:
+                active_item = battle.active_pokemon[idx].item
+        else:
+            active_item = ""
 
-    
+        speed_prompt = ""
+        for mon in battle.opponent_active_pokemon:
+            speed_prompt += (f"(slower than {mon.species})." if active_speed < opponent_speed else f"(faster than {mon.species}).")
+        
+        active_pokemon_prompt = (
+            f"Your current pokemon:{battle.active_pokemon[idx].species},Type:{active_type},HP:{active_hp_fraction}%" +
+            (f"Status:{sim.check_status(active_status)}," if sim.check_status(active_status) else "" ) +
+            (f"Attack:{active_stats['atk']}," if active_boosts['atk']==0 else f"Attack:{round(active_stats['atk']*sim.boost_multiplier('atk', active_boosts['atk']))}({active_boosts['atk']} stage boosted),") +
+            (f"Defense:{active_stats['def']}," if active_boosts['def']==0 else f"Defense:{round(active_stats['def']*sim.boost_multiplier('def', active_boosts['def']))}({active_boosts['def']} stage boosted),") +
+            (f"Special attack:{active_stats['spa']}," if active_boosts['spa']==0 else f"Special attack:{round(active_stats['spa']*sim.boost_multiplier('spa', active_boosts['spa']))}({active_boosts['spa']} stage boosted),") +
+            (f"Special defense:{active_stats['spd']}," if active_boosts['spd']==0 else f"Special defense:{round(active_stats['spd']*sim.boost_multiplier('spd', active_boosts['spd']))}({active_boosts['spd']} stage boosted),") +
+            (f"Speed:{active_stats['spe']}" if active_boosts['spe']==0 else f"Speed:{round(active_stats['spe']*sim.boost_multiplier('spe', active_boosts['spe']))}({active_boosts['spe']} stage boosted),") +
+            speed_prompt +
+            (f"Ability:{active_ability}({ability_effect})," if ability_effect else f"Ability:{active_ability},") +
+            (f"Item:{active_item}" if active_item else "")
+        )
 
-    if active_move_type_damage_prompt:
-        active_pokemon_prompt = active_pokemon_prompt + active_move_type_damage_prompt + "\n"
+        
+
+        if active_move_type_damage_prompt:
+            active_pokemon_prompt = active_pokemon_prompt + active_move_type_damage_prompt + "\n"
 
     #NO CHANGES HERE
     side_condition_list = []
@@ -1991,60 +1929,63 @@ def state_translate3(sim: LocalSim,
     if side_condition_prompt:
         active_pokemon_prompt = active_pokemon_prompt + "Your team's side condition: " + side_condition_prompt + "\n"
 
-    # Move
-    move_prompt = f"Your {battle.active_pokemon[idx].species} has {len(battle.available_moves[idx])} moves:\n"
-    for i, move in enumerate(battle.available_moves[idx]):
-                    
-        try:
-            effect = sim.move_effect[move.id]
-        except:
-            effect = ""
-  
-        if move.category.name == "SPECIAL":
-            active_spa = active_stats["spa"] * sim.boost_multiplier("spa", active_boosts["spa"])
-            opponent_spd = [opp_stats["spd"] * sim.boost_multiplier("spd", active_boosts["spd"]) for opp_stats in opponent_stats]
-            power = [round(active_spa / spd * move.base_power) for spd in opponent_spd]
-            move_category = ""
-        elif move.category.name == "PHYSICAL":
-            active_atk = active_stats["atk"] * sim.boost_multiplier("atk", active_boosts["atk"])
-            opponent_def = [opp_stats["def"] * sim.boost_multiplier("def", active_boosts["def"]) for opp_stats in opponent_stats]
-            power = [round(active_atk / defense * move.base_power) for defense in opponent_def]
-            move_category = ""
-        else:   
-            move_category = move.category.name.capitalize()
-            power = 0
+    # Move, if battle.force_switch[idx], we can skip all this and just move on to switching out
+    if not battle.force_switch[idx]:
+        move_prompt = f"Your {battle.active_pokemon[idx].species} has {len(battle.available_moves[idx])} moves:\n"
+        for i, move in enumerate(battle.available_moves[idx]):
+                        
+            try:
+                effect = sim.move_effect[move.id]
+            except:
+                effect = ""
+    
+            if move.category.name == "SPECIAL":
+                active_spa = active_stats["spa"] * sim.boost_multiplier("spa", active_boosts["spa"])
+                opponent_spd = [opp_stats["spd"] * sim.boost_multiplier("spd", active_boosts["spd"]) for opp_stats in opponent_stats]
+                power = [round(active_spa / spd * move.base_power) for spd in opponent_spd]
+                move_category = ""
+            elif move.category.name == "PHYSICAL":
+                active_atk = active_stats["atk"] * sim.boost_multiplier("atk", active_boosts["atk"])
+                opponent_def = [opp_stats["def"] * sim.boost_multiplier("def", active_boosts["def"]) for opp_stats in opponent_stats]
+                power = [round(active_atk / defense * move.base_power) for defense in opponent_def]
+                move_category = ""
+            else:   
+                move_category = move.category.name.capitalize()
+                power = 0
 
-        move_prompt += (f"Move:{move.id},Type:{move.type.name.capitalize()}," +
-                        (f"{move_category}-move," if move_category else "") +
-                        f"Power:{power},Acc:{round(move.accuracy * sim.boost_multiplier('accuracy', active_boosts['accuracy'])*100)}%"
-                        )
+            move_prompt += (f"Move:{move.id},Type:{move.type.name.capitalize()}," +
+                            (f"{move_category}-move," if move_category else "") +
+                            f"Power:{power},Acc:{round(move.accuracy * sim.boost_multiplier('accuracy', active_boosts['accuracy'])*100)}%"
+                            )
 
-        if effect:
-            move_prompt += f",Effect:{effect}"
-        # whether is effective to the target.
-        move_type_damage_prompt = ""
-        for mon in battle.opponent_active_pokemon:
-            move_type_damage_prompt += move_type_damage_wrapper(mon, sim.gen.type_chart, [move.type.name]) + "\n"
-        if move_type_damage_prompt and move.base_power:
-            move_prompt += f'({move_type_damage_prompt.split("is ")[-1][:-1]})\n'
-        else:
-            move_prompt += "\n"
+            if effect:
+                move_prompt += f",Effect:{effect}"
+            # whether is effective to the target.
+            move_type_damage_prompt = ""
+            for mon in battle.opponent_active_pokemon:
+                move_type_damage_prompt += move_type_damage_wrapper(mon, sim.gen.type_chart, [move.type.name]) + "\n"
+            if move_type_damage_prompt and move.base_power:
+                move_prompt += f'({move_type_damage_prompt.split("is ")[-1][:-1]})\n'
+            else:
+                move_prompt += "\n"
 
-    move_choices = [move.id for move in battle.available_moves[idx]]
-    action_prompt = f' Your current Pokemon: {battle.active_pokemon[idx].species}.\nChoose only from the following action choices:\n'
-    action_prompt_move = ''
-    if len(move_choices) > 0:
-        action_prompt_move = f"[<move_name>] = {move_choices}\n"
+        moves = battle.available_moves[idx]
+        action_prompt = f' Your current Pokemon: {battle.active_pokemon[idx].species}.\nChoose only from the following action choices:\n'
+        action_prompt_move = ''
 
-    # TODO: add dynamax option to move_choices, max moves need to be translated
+        if moves:
+            move_choices = [f"{move.id} (target: {move.target})" for move in moves]
+            action_prompt_move = f"[<move_name>] = {move_choices}\n"
 
 
     # Switch
     switch_prompt = f"You have {len(battle.available_switches[idx])} pokemons:\n"
 
     for i, pokemon in enumerate(battle.available_switches[idx]):
-        if battle.active_pokemon[idx].species == pokemon.species:
-            continue
+        if battle.active_pokemon[idx] is not None:
+            if battle.active_pokemon[idx].species == pokemon.species:
+                continue
+
 
         type = ""
         if pokemon.type_1:
@@ -2103,17 +2044,26 @@ def state_translate3(sim: LocalSim,
         else:
             switch_prompt += "\n"
 
-    switch_choices = [pokemon.species for pokemon in battle.available_switches[idx]]
-    if battle.active_pokemon[idx].species in switch_choices:
+    switch_choices = [
+                pokemon.species
+                for pokemon in battle.available_switches[idx]
+                if pokemon.species not in [
+                    action.order.species
+                    for action in next_action
+                    if action is not None and isinstance(action.order, Pokemon)
+                ]
+            ]
+    # switch_choices = [pokemon.species for pokemon in battle.available_switches[idx]]
+    if not (battle.active_pokemon[idx] is None) and battle.active_pokemon[idx].species in switch_choices:
         switch_choices.remove(battle.active_pokemon[idx].species)
     action_prompt_switch = ''
     if len(switch_choices) > 0:
         action_prompt_switch = f"[<switch_pokemon_name>] = {switch_choices}\n"
 
-    if battle.active_pokemon[idx].fainted: # passive switching
-
+    if battle.force_switch[idx] or battle.active_pokemon[idx].fainted: # passive switching
+        action_prompt = f' Your current Pokemon: has fainted.\nChoose only from the following action choices:\n'
         system_prompt = (
-            f"You are a pokemon battler in generation {sim.gen.gen} OU format Pokemon Showdown that targets to win the pokemon battle. Your {battle.active_pokemon[idx].species} just fainted. Choose a suitable pokemon to continue the battle. Here are some tips:"
+            f"You are a pokemon battler in generation {sim.gen.gen} VGC format Pokemon Showdown that targets to win the pokemon battle. Your active pokemon just fainted. Choose a suitable pokemon to continue the battle. Here are some tips:"
             " Compare the speeds of your pokemon to the opposing pokemon, which determines who take the move first."
             " Consider the defense state and type-resistance of your pokemon when its speed is lower than the opposing pokemon."
             " Consider the move-type advantage of your pokemon pokemon when its speed is higher than the opposing pokemon."
@@ -2126,12 +2076,14 @@ def state_translate3(sim: LocalSim,
     else: # take a move or active switch
 
         system_prompt = (
-            f"You are a pokemon battler in generation {sim.gen.gen} OU format Pokemon Showdown that targets to win the pokemon battle. You can choose to take a move or switch in another pokemon. Here are some battle tips:"
+            f"You are a pokemon battler in generation {sim.gen.gen} VGC format Pokemon Showdown that targets to win the pokemon battle. You can choose to take a move or switch in another pokemon. Here are some battle tips:"
             " Use status-boosting moves like swordsdance, calmmind, dragondance, nastyplot strategically. The boosting will be reset when pokemon switch out."
             " Set traps like stickyweb, spikes, toxicspikes, stealthrock strategically."
             " When face to a opponent is boosting or has already boosted its attack/special attack/speed, knock it out as soon as possible, even sacrificing your pokemon."
             " if choose to switch, you forfeit to take a move this turn and the opposing pokemon will definitely move first. Therefore, you should pay attention to speed, type-resistance and defense of your switch-in pokemon to bear the damage from the opposing pokemon."
             " And If the switch-in pokemon has a slower speed then the opposing pokemon, the opposing pokemon will move twice continuously."
+            " If the selected move requires a target (target: normal or target:any), choose a valid target number (1, 2, -1, -2)."
+            " If the selected move does not require a target (ex: target: self, target: allAdjacent, target: all), choose target: 0"
             f" Player elo is {player_elo}. Player is P2. Opponent elo is {opponent_elo}. Opponent is P1.\n"
             )
 
