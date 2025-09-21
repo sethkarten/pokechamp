@@ -83,8 +83,6 @@ if __name__ == "__main__":
         paste_links = extract_pokepaste_links(SHEET_ID, GID)
         print(f"Found {len(paste_links)} PokéPaste links")
         
-        paste_links = paste_links[:10]
-        
         successful_exports = 0
         failed_exports = 0
         
@@ -97,14 +95,13 @@ if __name__ == "__main__":
                 if "Ability:" in raw_team and "- " in raw_team:
                     # Export to file
                     filepath = export_team_to_file(raw_team, OUTPUT_DIR, i, BATTLE_FORMAT)
-                    print(f"Exported team {i+1}/{len(paste_links)}: {filepath}")
                     successful_exports += 1
+                    if(successful_exports % 100 == 0):
+                        print(f"Exported {successful_exports} teams")
                 else:
-                    print(f"Skipping invalid team {i+1}: {url}")
                     failed_exports += 1
                     
             except Exception as e:
-                print(f"Error processing team {i+1} ({url}): {e}")
                 failed_exports += 1
                 continue
         
