@@ -173,7 +173,7 @@ class LLMVGCPlayer(Player):
         
         # handle one choice paths for each active pokemon
         for i, mon in enumerate(battle.active_pokemon):
-            if (mon is None or mon.fainted) and len(battle.available_switches[i]) == 1:
+            if (mon is None or mon.fainted or battle.force_switch[i]) and len(battle.available_switches[i]) == 1:
                 next_action[i] = BattleOrder(battle.available_switches[i][0])
             elif not (mon is None or mon.fainted) and len(battle.available_moves[i]) == 1 and len(battle.available_switches[i]) == 0:
                 next_action[i] = self.choose_max_damage_move(battle, i)
@@ -192,30 +192,41 @@ class LLMVGCPlayer(Player):
 
 
         for idx, mon in enumerate(battle.active_pokemon):
-
-            system_prompt, state_prompt, state_action_prompt = sim.state_translate(battle, idx) # add lower case
+            # if force switch is true for any pokemon, but the current pokemon is not forced to switch, we need its action to be None
+            # we will handle the forced to switch state in state_translate3
+            if any(battle.force_switch):
+                if not battle.force_switch[idx]:
+                    next_action[idx] = None
+                    continue
+            system_prompt, state_prompt, state_action_prompt = sim.prompt_translate(sim, battle, next_action=next_action, idx=idx) # add lower case
             moves = [move.id for move in battle.available_moves[idx]]
-            switches = [pokemon.species for pokemon in battle.available_switches[idx]]
+            # switches = [pokemon.species for pokemon in battle.available_switches[idx]]
+            # Exclude pokemon that are already chosen as switch-ins in next_action
+            switches = [
+                pokemon.species
+                for pokemon in battle.available_switches[idx]
+                if pokemon.species not in [
+                    action.order.species
+                    for action in next_action
+                    if action is not None and isinstance(action.order, Pokemon)
+                ]
+            ]
             actions = [moves, switches]
 
-            print(system_prompt)
-            print(state_prompt)
-            print(state_action_prompt)
-            
 
             gimmick_output_format = ''
             if 'pokellmon' not in self.ps_client.account_configuration.username: # make sure we dont mess with pokellmon original strat
                 gimmick_output_format = f'{f' or {{"dynamax":"<move_name>"}}' if battle.can_dynamax else ''}{f' or {{"terastallize":"<move_name>"}}' if battle.can_tera else ''}'
 
-            if battle.active_pokemon[idx].fainted or len(battle.available_moves[idx]) == 0:
+            if battle.force_switch[idx] or battle.active_pokemon[idx] is None or battle.active_pokemon[idx].fainted or len(battle.available_moves[idx]) == 0:
 
                 constraint_prompt_io = '''Choose the most suitable pokemon to switch. Your output MUST be a JSON like: {"switch":"<switch_pokemon_name>"}\n'''
                 
             elif len(battle.available_switches[idx]) == 0:
-                constraint_prompt_io = f'''Choose the best action and your output MUST be a JSON like: {{"move":"<move_name>"}}{gimmick_output_format}\n'''
+                constraint_prompt_io = f'''Choose the best action and your output MUST be a JSON like: {{"move":"<move_name>", "target":"<target number>"}}{gimmick_output_format}\n'''
                 
             else:
-                constraint_prompt_io = f'''Choose the best action and your output MUST be a JSON like: {{"move":"<move_name>"}}{gimmick_output_format} or {{"switch":"<switch_pokemon_name>"}}\n'''
+                constraint_prompt_io = f'''Choose the best action and your output MUST be a JSON like: {{"move":"<move_name>", "target":"<target number>"}}{gimmick_output_format} or {{"switch":"<switch_pokemon_name>"}}\n'''
             
 
             state_prompt_io = state_prompt + state_action_prompt + constraint_prompt_io
@@ -226,7 +237,8 @@ class LLMVGCPlayer(Player):
             # Chain-of-thought
             if self.prompt_algo == "io":
                 next_action[idx] = self.io(retries, system_prompt, state_prompt, constraint_prompt_cot, constraint_prompt_io, state_action_prompt, battle, sim, actions=actions, idx=idx)
-            #print(next_action[idx])
+            # print("next_action:", next_action[idx])
+
         next_action = DoubleBattleOrder(first_order=next_action[0], second_order=next_action[1])
         print(next_action)
         return next_action
@@ -236,6 +248,10 @@ class LLMVGCPlayer(Player):
         next_action = None
         cot_prompt = 'In fewer than 3 sentences, let\'s think step by step:'
         state_prompt_io = state_prompt + state_action_prompt + constraint_prompt_io + cot_prompt
+        # print(state_prompt_io)
+        # print('\n')
+        # print('--------------------------------')
+        # print('\n')
         for i in range(retries):
             try:
                 llm_output = self.get_LLM_action(system_prompt=system_prompt,
@@ -267,18 +283,23 @@ class LLMVGCPlayer(Player):
                     else:
                         llm_move_id = llm_action_json["move"].strip()
                     move_list = battle.available_moves[idx]
+
+                    # get target number
+                    llm_target = int(llm_action_json.get("target", 0))
+
                     if dont_verify: # opponent
                         move_list = battle.opponent_active_pokemon.moves.values()
                     
                     # Debug: print available moves
                     if DEBUG:
                         print(f"LLM requested move: '{llm_move_id}'")
+                        print(f"LLM requested target: '{llm_target}'")
                         print(f"Available moves: {[move.id for move in move_list]}")
                     
                     for i, move in enumerate(move_list):
                         if move.id.lower().replace(' ', '') == llm_move_id.lower().replace(' ', ''):
                             #next_action = self.create_order(move, dynamax=sim._should_dynamax(battle), terastallize=sim._should_terastallize(battle))
-                            next_action = self.create_order(move, dynamax=dynamax, terastallize=tera)
+                            next_action = self.create_order(move, dynamax=dynamax, terastallize=tera, move_target=llm_target)
                             if DEBUG:
                                 print(f"Move match found: {move.id}")
                             break
