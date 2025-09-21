@@ -998,7 +998,9 @@ class Pokemon:
                 'lycanrocmidday': 'Lycanroc', 'lycanrocmidnight': 'Lycanroc-Dusk', 'lycanrocdusk': 'Lycanroc-Dusk',
                 'oricoriomeadow': 'Kilowattrel', 'oricoriopompom': 'Kilowattrel',  # Map to common Electric/Flying
                 'oricoriopau': 'Kilowattrel', 'oricoriosensu': 'Kilowattrel',  # All Oricorio forms to common similar type
-                'toxapexgmax': 'Toxapex', 'corviknightgmax': 'Corviknight', 'grimmsnarrgmax': 'Grimmsnarl'
+                'toxapexgmax': 'Toxapex', 'corviknightgmax': 'Corviknight', 'grimmsnarrgmax': 'Grimmsnarl',
+                # VGC specific Pokemon
+                'calyrexice': 'Calyrex-Ice', 'calyrexshadow': 'Calyrex-Shadow'
             }
             lower_name = name.lower()
             return name_mapping.get(lower_name, name.capitalize())

@@ -44,11 +44,11 @@ from poke_env.player.local_simulation import LocalSim, SimNode
 from difflib import get_close_matches
 from pokechamp.prompts import get_number_turns_faint, get_status_num_turns_fnt, state_translate, get_gimmick_motivation
 
-DEBUG=True
+DEBUG=False
 
 class LLMVGCPlayer(Player):
     def __init__(self,
-                 battle_format,
+                 battle_format="gen9vgc2025regi",
                  api_key="",
                  backend="gpt-4-1106-preview",
                  temperature=1.0,
@@ -173,9 +173,9 @@ class LLMVGCPlayer(Player):
         
         # handle one choice paths for each active pokemon
         for i, mon in enumerate(battle.active_pokemon):
-            if mon.fainted and len(battle.available_switches[i]) == 1:
+            if (mon is None or mon.fainted) and len(battle.available_switches[i]) == 1:
                 next_action[i] = BattleOrder(battle.available_switches[i][0])
-            elif not mon.fainted and len(battle.available_moves[i]) == 1 and len(battle.available_switches[i]) == 0:
+            elif not (mon is None or mon.fainted) and len(battle.available_moves[i]) == 1 and len(battle.available_switches[i]) == 0:
                 next_action[i] = self.choose_max_damage_move(battle, i)
 
         # loop through all of our active pokemon
@@ -197,6 +197,10 @@ class LLMVGCPlayer(Player):
             moves = [move.id for move in battle.available_moves[idx]]
             switches = [pokemon.species for pokemon in battle.available_switches[idx]]
             actions = [moves, switches]
+
+            print(system_prompt)
+            print(state_prompt)
+            print(state_action_prompt)
             
 
             gimmick_output_format = ''
@@ -224,6 +228,7 @@ class LLMVGCPlayer(Player):
                 next_action[idx] = self.io(retries, system_prompt, state_prompt, constraint_prompt_cot, constraint_prompt_io, state_action_prompt, battle, sim, actions=actions, idx=idx)
             #print(next_action[idx])
         next_action = DoubleBattleOrder(first_order=next_action[0], second_order=next_action[1])
+        print(next_action)
         return next_action
 
         
