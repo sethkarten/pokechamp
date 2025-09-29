@@ -704,7 +704,12 @@ class Player(ABC):
                     self.logger.critical("Unexpected error message: %s", split_message)
             elif split_message[1] == "turn":
                 battle.parse_message(split_message)
-                await self._handle_battle_request(battle)
+                # Wait until we have moves available for turn 1
+                if battle.turn == 1 and not battle.available_moves and not battle.force_switch:
+                    # Set flag to handle request when it arrives
+                    battle.move_on_next_request = True
+                else:
+                    await self._handle_battle_request(battle)
             elif split_message[1] == "teampreview":
                 battle.parse_message(split_message)
                 await self._handle_battle_request(battle, from_teampreview_request=True)
