@@ -39,7 +39,7 @@ def get_available_bots():
 available_bots = get_available_bots()
 
 # Combine built-in bots with custom bots
-bot_choices = ['pokechamp', 'pokellmon', 'one_step', 'abyssal', 'max_power', 'random'] + available_bots
+bot_choices = ['pokechamp', 'pokellmon', 'one_step', 'abyssal', 'max_power', 'random', 'vgc'] + available_bots
 
 PNUMBER1 = str(np.random.randint(0,10000))
 print(PNUMBER1)

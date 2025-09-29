@@ -23,7 +23,7 @@ from pokechamp.gpt_player import GPTPlayer
 from pokechamp.llama_player import LLAMAPlayer
 from pokechamp.openrouter_player import OpenRouterPlayer
 #from pokechamp.gemini_player import GeminiPlayer
-#from pokechamp.ollama_player import OllamaPlayer
+from pokechamp.ollama_player import OllamaPlayer
 from pokechamp.data_cache import (
     get_cached_move_effect,
     get_cached_pokemon_move_dict,
@@ -231,7 +231,7 @@ class LLMVGCPlayer(Player):
 
             state_prompt_io = state_prompt + state_action_prompt + constraint_prompt_io
             constraint_prompt_cot = ""
-            #print(state_prompt_io)
+            print(state_prompt_io)
 
             retries = 10
             # Chain-of-thought
@@ -285,7 +285,15 @@ class LLMVGCPlayer(Player):
                     move_list = battle.available_moves[idx]
 
                     # get target number
-                    llm_target = int(llm_action_json.get("target", 0))
+                    llm_target = llm_action_json.get("target", 0)
+                    # fallbacks incase llm doesnt correctly specify target
+                    if(llm_target == "allAdjacentFoes" or llm_target == "self" or llm_target == "all"):
+                        llm_target = 0
+                    elif(llm_target == "normal"):
+                        llm_target = 1
+                    else:
+                        llm_target = int(llm_target)
+                    
 
                     if dont_verify: # opponent
                         move_list = battle.opponent_active_pokemon.moves.values()
@@ -1098,3 +1106,202 @@ class LLMVGCPlayer(Player):
             best_move = max(battle.available_moves[idx], key=lambda move: move.base_power)
             return self.create_order(best_move, move_target=DoubleBattle.OPPONENT_1_POSITION)
         return self.choose_random_move(battle)
+
+    def teampreview(self, battle: AbstractBattle) -> str:
+        """
+        Custom teampreview function for VGC double battles.
+        
+        This function uses LLM to analyze team composition and select the optimal
+        lead Pokemon and backline for the battle.
+        
+        :param battle: The battle object containing team information
+        :type battle: AbstractBattle
+        :return: Team preview order string in format "/team XXXX" where X is Pokemon position
+        :rtype: str
+        """
+        try:
+            # Get team information
+            team_members = list(battle.team.values())
+            team_size = len(team_members)
+            
+            if team_size < 2:
+                # Fallback to random if insufficient team members
+                return self.random_teampreview(battle)
+            
+            # Create team analysis prompt
+            team_analysis = self._analyze_team_composition(team_members)
+            
+            # Create LLM prompt for team selection
+            system_prompt = self._create_teampreview_system_prompt()
+            user_prompt = self._create_teampreview_user_prompt(team_analysis, battle)
+            
+            # Get LLM recommendation
+            llm_output = self.get_LLM_action(
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
+                model=self.backend,
+                temperature=0.7,
+                max_tokens=200,
+                json_format=True
+            )
+            
+            # Parse LLM response
+            team_selection = self._parse_teampreview_response(llm_output, team_size)
+            
+            if team_selection:
+                return f"/team {team_selection}"
+            else:
+                # Fallback to random selection
+                return self.random_teampreview(battle)
+                
+        except Exception as e:
+            print(f"Error in custom teampreview: {e}")
+            # Fallback to random selection
+            return self.random_teampreview(battle)
+
+    def _analyze_team_composition(self, team_members: List[Pokemon]) -> Dict:
+        """
+        Analyze team composition and create summary for LLM.
+        
+        :param team_members: List of Pokemon in the team
+        :type team_members: List[Pokemon]
+        :return: Dictionary containing team analysis
+        :rtype: Dict
+        """
+        team_analysis = {
+            "pokemon": [],
+            "type_coverage": set(),
+            "roles": [],
+            "speed_tiers": [],
+            "defensive_cores": []
+        }
+        
+        for i, pokemon in enumerate(team_members, 1):
+            pokemon_info = {
+                "position": i,
+                "species": pokemon.species,
+                "types": pokemon.types,
+                "base_stats": pokemon.base_stats,
+                "ability": pokemon.ability,
+                "item": pokemon.item,
+                "moves": list(pokemon.moves.keys()) if hasattr(pokemon, 'moves') else []
+            }
+            team_analysis["pokemon"].append(pokemon_info)
+            team_analysis["type_coverage"].update(pokemon.types)
+            
+            # Determine role based on stats
+            if pokemon.base_stats["atk"] > pokemon.base_stats["spa"]:
+                role = "Physical Attacker"
+            elif pokemon.base_stats["spa"] > pokemon.base_stats["atk"]:
+                role = "Special Attacker"
+            else:
+                role = "Mixed Attacker"
+            
+            if pokemon.base_stats["spe"] > 100:
+                role += " (Fast)"
+            elif pokemon.base_stats["spe"] < 60:
+                role += " (Slow)"
+            
+            team_analysis["roles"].append(role)
+            team_analysis["speed_tiers"].append(pokemon.base_stats["spe"])
+        
+        return team_analysis
+
+    def _create_teampreview_system_prompt(self) -> str:
+        """
+        Create system prompt for teampreview LLM call.
+        
+        :return: System prompt string
+        :rtype: str
+        """
+        return """You are an expert Pokemon VGC (Video Game Championships) team preview strategist. 
+        Your task is to select the optimal lead Pokemon and backline for a double battle.
+
+        Key considerations for VGC team preview:
+        1. Lead Pokemon should have good synergy and cover each other's weaknesses
+        2. Consider speed control, type coverage, and immediate threat potential
+        3. Backline Pokemon should provide coverage for what the leads can't handle
+        4. Consider opponent's potential team compositions and common VGC strategies
+        5. Balance between offensive pressure and defensive utility
+
+        Output your team selection in JSON format: {"leads": [position1, position2], "backline": [position3, position4], "reasoning": "brief explanation"}
+
+        For example: {"leads": [1, 3], "backline": [2, 4], "reasoning": "Lead with fast offensive Pokemon for early pressure"}"""
+
+    def _create_teampreview_user_prompt(self, team_analysis: Dict, battle: AbstractBattle) -> str:
+        """
+        Create user prompt for teampreview LLM call.
+        
+        :param team_analysis: Team composition analysis
+        :type team_analysis: Dict
+        :param battle: Battle object
+        :type battle: AbstractBattle
+        :return: User prompt string
+        :rtype: str
+        """
+        prompt = f"Analyze this VGC team and select the optimal lead Pokemon and backline:\n\n"
+        prompt += f"Team Composition:\n"
+        
+        for pokemon_info in team_analysis["pokemon"]:
+            prompt += f"Position {pokemon_info['position']}: {pokemon_info['species']} "
+            prompt += f"({'/'.join(pokemon_info['types'])}) "
+            prompt += f"- {pokemon_info['ability']} "
+            if pokemon_info['item']:
+                prompt += f"@ {pokemon_info['item']} "
+            prompt += f"- {pokemon_info['base_stats']}\n"
+        
+        prompt += f"\nType Coverage: {', '.join(team_analysis['type_coverage'])}\n"
+        prompt += f"Roles: {', '.join(team_analysis['roles'])}\n"
+        prompt += f"Speed Tiers: {team_analysis['speed_tiers']}\n"
+        prompt += f"Team Size: {len(team_analysis['pokemon'])}\n\n"
+        
+        prompt += "Select 2 Pokemon to lead with and 2 for the backline. "
+        prompt += "Consider VGC meta strategies, type synergy, and team balance."
+        
+        return prompt
+
+    def _parse_teampreview_response(self, llm_output: str, team_size: int) -> str:
+        """
+        Parse LLM response and validate team selection.
+        
+        :param llm_output: Raw LLM output
+        :type llm_output: str
+        :param team_size: Number of Pokemon in team
+        :type team_size: int
+        :return: Team selection string or None if invalid
+        :rtype: str or None
+        """
+        try:
+            response = json.loads(llm_output)
+            
+            if "leads" not in response or "backline" not in response:
+                return None
+            
+            leads = response["leads"]
+            backline = response["backline"]
+            
+            # Validate positions are within team size
+            all_positions = leads + backline
+            if not all(1 <= pos <= team_size for pos in all_positions):
+                return None
+            
+            # Check for duplicates
+            if len(set(all_positions)) != len(all_positions):
+                return None
+            
+            # Check we have exactly 2 leads and 2 backline
+            if len(leads) != 2 or len(backline) != 2:
+                return None
+            
+            # Create team string (leads first, then backline)
+            team_string = "".join(map(str, leads + backline))
+            
+            if DEBUG:
+                print(f"Team preview selection: {team_string}")
+                print(f"Reasoning: {response.get('reasoning', 'No reasoning provided')}")
+            
+            return team_string
+            
+        except (json.JSONDecodeError, KeyError, ValueError) as e:
+            print(f"Error parsing teampreview response: {e}")
+            return None

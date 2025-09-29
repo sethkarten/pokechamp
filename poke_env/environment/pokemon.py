@@ -1000,7 +1000,7 @@ class Pokemon:
                 'oricoriopau': 'Kilowattrel', 'oricoriosensu': 'Kilowattrel',  # All Oricorio forms to common similar type
                 'toxapexgmax': 'Toxapex', 'corviknightgmax': 'Corviknight', 'grimmsnarrgmax': 'Grimmsnarl',
                 # VGC specific Pokemon
-                'calyrexice': 'Calyrex-Ice', 'calyrexshadow': 'Calyrex-Shadow'
+                'calyrexice': 'Calyrex-Ice', 'calyrexshadow': 'Calyrex-Shadow', 'zamazentacrowned': 'Zamazenta-Crowned',
             }
             lower_name = name.lower()
             return name_mapping.get(lower_name, name.capitalize())
