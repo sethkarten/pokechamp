@@ -110,9 +110,8 @@ class Battle(AbstractBattle):
                 self._trapped = True
 
             if self.active_pokemon is not None:
-                self._available_moves.extend(
-                    self.active_pokemon.available_moves_from_request(active_request)
-                )
+                new_moves = self.active_pokemon.available_moves_from_request(active_request)
+                self._available_moves.extend(new_moves)
             if active_request.get("canMegaEvo", False):
                 self._can_mega_evolve = True
             if active_request.get("canZMove", False):

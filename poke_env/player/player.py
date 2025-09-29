@@ -704,12 +704,9 @@ class Player(ABC):
                     self.logger.critical("Unexpected error message: %s", split_message)
             elif split_message[1] == "turn":
                 battle.parse_message(split_message)
-                # Wait until we have moves available for turn 1
-                if battle.turn == 1 and not battle.available_moves and not battle.force_switch:
-                    # Set flag to handle request when it arrives
-                    battle.move_on_next_request = True
-                else:
-                    await self._handle_battle_request(battle)
+                # Always wait for fresh request data at the start of each turn
+                # This ensures moves and switches are always up-to-date
+                battle.move_on_next_request = True
             elif split_message[1] == "teampreview":
                 battle.parse_message(split_message)
                 await self._handle_battle_request(battle, from_teampreview_request=True)
@@ -740,10 +737,12 @@ class Player(ABC):
             message = self.choose_move(battle)
             if isinstance(message, Awaitable):
                 message = await message
-            if isinstance(message, str):
-                print(message)
             
-            if message is None:            # dealing with the occasional return of None by choose_move
+            # Handle incorrect return types
+            if isinstance(message, str):
+                print(f"Warning: choose_move returned string: {message}")
+                message = self.choose_default_move().message
+            elif message is None:  # dealing with the occasional return of None by choose_move
                 message = self.choose_default_move().message
             else:
                 message = message.message
