@@ -52,7 +52,7 @@ parser.add_argument("--opponent_backend", type=str, default="gemini-2.5-pro", ch
     # Google models
     "google/gemini-pro", "gemini-2.0-flash", "gemini-2.0-pro", "gemini-2.0-flash-lite", "gemini-2.5-flash", "gemini-2.5-pro",
     # Ollama models
-    "ollama/gpt-oss:20b", "ollama/llama3.1:8b", "ollama/mistral", "ollama/qwen2.5",
+    "ollama/gpt-oss:20b", "ollama/llama3.1:8b", "ollama/mistral", "ollama/qwen2.5", "ollama/gemma3:4b",
     # Meta models
     "meta-llama/llama-3.1-70b-instruct", "meta-llama/llama-3.1-8b-instruct",
     # Mistral models
@@ -73,7 +73,7 @@ parser.add_argument("--opponent_device", type=int, default=0)
 
 # Shared arguments
 parser.add_argument("--temperature", type=float, default=0.3)
-parser.add_argument("--battle_format", default="gen9ou", choices=["gen8randombattle", "gen8ou", "gen9ou", "gen9randombattle", "gen9vgc2024regg"])
+parser.add_argument("--battle_format", default="gen9ou", choices=["gen8randombattle", "gen8ou", "gen9ou", "gen9randombattle", "gen9vgc2025regi"])
 parser.add_argument("--log_dir", type=str, default="./battle_log/one_vs_one")
 parser.add_argument("--N", type=int, default=25)
 
@@ -101,12 +101,17 @@ async def main():
     opponent_teamloader = get_metamon_teams(args.battle_format, "modern_replays")
     
     if not 'random' in args.battle_format:
-        # Set teamloader on players for rejection recovery
-        player.set_teamloader(player_teamloader)
-        opponent.set_teamloader(opponent_teamloader)
-        
-        player.update_team(player_teamloader.yield_team())
-        opponent.update_team(opponent_teamloader.yield_team())
+
+        if 'vgc' in args.battle_format:
+            player.update_team(load_random_team(id=1, vgc=True))
+            opponent.update_team(load_random_team(id=1, vgc=True))
+        else:
+            # Set teamloader on players for rejection recovery
+            player.set_teamloader(player_teamloader)
+            opponent.set_teamloader(opponent_teamloader)
+            
+            player.update_team(player_teamloader.yield_team())
+            opponent.update_team(opponent_teamloader.yield_team())
 
     # play against bot for five battles
     N = args.N

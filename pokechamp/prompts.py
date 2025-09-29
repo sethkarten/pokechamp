@@ -1765,11 +1765,12 @@ def state_translate3(sim: LocalSim,
     opponent_status = []
     opponent_is_dynamax = []
     for mon in battle.opponent_active_pokemon:
-        opponent_hp_fractions.append(round(mon.current_hp / mon.max_hp * 100))
-        opponent_stats.append(mon.calculate_stats(battle_format=sim.format))
-        opponent_boosts.append(mon._boosts)
-        opponent_status.append(mon.status)
-        opponent_is_dynamax.append(mon.is_dynamaxed)
+        if(mon is not None):
+            opponent_hp_fractions.append(round(mon.current_hp / mon.max_hp * 100))
+            opponent_stats.append(mon.calculate_stats(battle_format=sim.format))
+            opponent_boosts.append(mon._boosts)
+            opponent_status.append(mon.status)
+            opponent_is_dynamax.append(mon.is_dynamaxed)
     
 
 
@@ -1777,14 +1778,15 @@ def state_translate3(sim: LocalSim,
     opponent_type_list = []
     opponent_type = ""
     for mon in battle.opponent_active_pokemon:
-        if mon.type_1:
-            type_1 = mon.type_1.name
-            opponent_type += type_1.capitalize()
-            opponent_type_list.append(type_1)
-            if mon.type_2:
-                type_2 = mon.type_2.name
-                opponent_type = opponent_type + " and " + type_2.capitalize()
-                opponent_type_list.append(type_2)
+        if(mon is not None):
+            if mon.type_1:
+                type_1 = mon.type_1.name
+                opponent_type += type_1.capitalize()
+                opponent_type_list.append(type_1)
+                if mon.type_2:
+                    type_2 = mon.type_2.name
+                    opponent_type = opponent_type + " and " + type_2.capitalize()
+                    opponent_type_list.append(type_2)
 
 
     opponent_speed = round(opponent_stats[idx]['spe'] * sim.boost_multiplier('spe', opponent_boosts[idx]['spe']))
