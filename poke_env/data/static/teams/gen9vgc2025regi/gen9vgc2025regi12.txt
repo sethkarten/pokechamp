@@ -1,0 +1,70 @@
+Calyrex-Ice @ Clear Amulet  
+Ability: As One (Glastrier)  
+Level: 50  
+Tera Type: Water  
+EVs: 196 HP / 252 Atk / 60 SpD  
+Brave Nature  
+IVs: 0 Spe  
+- Glacial Lance  
+- Close Combat  
+- Trick Room  
+- Protect  
+
+Incineroar @ Sitrus Berry  
+Ability: Intimidate  
+Level: 50  
+Tera Type: Ghost  
+EVs: 236 HP / 4 Atk / 76 Def / 156 SpD / 36 Spe  
+Careful Nature  
+- Fake Out  
+- Flare Blitz  
+- Parting Shot  
+- Throat Chop  
+
+Urshifu-Rapid-Strike @ Choice Scarf  
+Ability: Unseen Fist  
+Level: 50  
+Tera Type: Steel  
+EVs: 44 HP / 236 Atk / 4 Def / 20 SpD / 204 Spe  
+Adamant Nature  
+- Surging Strikes  
+- Close Combat  
+- Aqua Jet  
+- U-turn  
+
+Amoonguss @ Rocky Helmet  
+Ability: Regenerator  
+Level: 50  
+Tera Type: Water  
+EVs: 236 HP / 156 Def / 116 SpD  
+Bold Nature  
+IVs: 0 Atk / 0 Spe  
+- Pollen Puff  
+- Rage Powder  
+- Spore  
+- Protect  
+
+Farigiraf @ Safety Goggles  
+Ability: Armor Tail  
+Level: 50  
+Tera Type: Fairy  
+EVs: 252 HP / 172 Def / 84 SpD  
+Relaxed Nature  
+IVs: 0 Atk / 0 Spe  
+- Psychic  
+- Dazzling Gleam  
+- Helping Hand  
+- Trick Room  
+
+Ursaluna-Bloodmoon @ Life Orb  
+Ability: Mind's Eye  
+Level: 50  
+Tera Type: Normal  
+EVs: 164 HP / 252 SpA / 92 SpD  
+Quiet Nature  
+IVs: 0 Atk / 0 Spe  
+- Hyper Voice  
+- Blood Moon  
+- Earth Power  
+- Protect  
+

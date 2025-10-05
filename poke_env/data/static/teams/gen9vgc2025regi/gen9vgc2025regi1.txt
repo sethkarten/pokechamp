@@ -7,7 +7,7 @@ Calm Nature
 IVs: 0 Atk / 16 Spe  
 - Spore  
 - Rage Powder  
-- Pollen Puff  
+- Pollen Puff
 - Protect  
 
 Calyrex-Ice @ Leftovers  

@@ -81,7 +81,8 @@ def calculate_move_type_damage_multipier(type_1, type_2, type_chart, constraint_
            list(map(lambda x: x.capitalize(), immune_type_list)))
 
 def move_type_damage_wrapper(pokemon, type_chart, constraint_type_list=None):
-
+    if pokemon is None:
+        return ""
     type_1 = None
     type_2 = None
     if pokemon.type_1:
@@ -596,7 +597,7 @@ class LocalSim():
     def get_opponent_current_moves(self, mon=None, return_switch=False, is_player=False, return_separate=False):
         if is_player:
             return list(self.battle.active_pokemon.moves.keys())
-        if mon == None:
+        if mon == None: #fainted pokemon 
             mon = self.battle.opponent_active_pokemon
         # get definite moves for the current pokemon
         opponent_moves = []

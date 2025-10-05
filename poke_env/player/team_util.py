@@ -84,7 +84,8 @@ def load_random_team(id=None, vgc=False):
     else:
         team_id = id
     if vgc is True:
-        with open(f'poke_env/data/static/teams/gen9vgc2025regg{team_id}.txt', 'r') as f:
+        print(f'Loading VGC team {team_id}')
+        with open(f'poke_env/data/static/teams/gen9vgc2025regi/gen9vgc2025regi{team_id}.txt', 'r') as f:
             team = f.read()
     else:
         with open(f'poke_env/data/static/teams/gen9ou{team_id}.txt', 'r') as f:

@@ -103,8 +103,8 @@ async def main():
     if not 'random' in args.battle_format:
 
         if 'vgc' in args.battle_format:
-            player.update_team(load_random_team(id=1, vgc=True))
-            opponent.update_team(load_random_team(id=1, vgc=True))
+            player.update_team(load_random_team(id=None, vgc=True))
+            opponent.update_team(load_random_team(id=None, vgc=True))
         else:
             # Set teamloader on players for rejection recovery
             player.set_teamloader(player_teamloader)
@@ -122,9 +122,14 @@ async def main():
             await player.battle_against(opponent, n_battles=1)
         else:
             await opponent.battle_against(player, n_battles=1)
+        
         if not 'random' in args.battle_format:
-            player.update_team(player_teamloader.yield_team())
-            opponent.update_team(opponent_teamloader.yield_team())
+            if 'vgc' in args.battle_format:
+                player.update_team(load_random_team(id=None, vgc=True))
+                opponent.update_team(load_random_team(id=None, vgc=True))
+            else:
+                player.update_team(player_teamloader.yield_team())
+                opponent.update_team(opponent_teamloader.yield_team())
         pbar.set_description(f"{player.win_rate*100:.2f}%")
         pbar.update(1)
     print(f'player winrate: {player.win_rate*100}')

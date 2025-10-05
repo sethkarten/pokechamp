@@ -14,7 +14,8 @@ from poke_env.environment.move_category import MoveCategory
 from poke_env.environment.pokemon import Pokemon
 from poke_env.environment.side_condition import SideCondition
 from poke_env.player.player import Player, BattleOrder, DoubleBattleOrder
-from typing import Callable, Dict, List, Optional, Tuple, Union
+from poke_env.player.battle_order import DefaultBattleOrder
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 from poke_env.environment.move import Move
 import time
 import json
@@ -22,7 +23,7 @@ from poke_env.data.gen_data import GenData
 from pokechamp.gpt_player import GPTPlayer
 from pokechamp.llama_player import LLAMAPlayer
 from pokechamp.openrouter_player import OpenRouterPlayer
-#from pokechamp.gemini_player import GeminiPlayer
+from pokechamp.gemini_player import GeminiPlayer
 from pokechamp.ollama_player import OllamaPlayer
 from pokechamp.data_cache import (
     get_cached_move_effect,
@@ -153,6 +154,68 @@ class LLMVGCPlayer(Player):
         pokemon = Pokemon(species=pokemon_str, gen=self.genNum)
         return pokemon
 
+    def _parse_target_string(self, target_str: str) -> int:
+        """
+        Parse various word targets into proper integer values.
+        
+        Target mapping:
+        - -2: Ally position 2 (in triples)
+        - -1: Ally position 1 (self in doubles)
+        - 0: EMPTY_TARGET_POSITION (no specific target, affects field/all)
+        - 1: OPPONENT_1_POSITION (left opponent)
+        - 2: OPPONENT_2_POSITION (right opponent)
+        """
+        target_str = target_str.lower().strip()
+        
+        # Self-targeting moves
+        if target_str in ["self", "user", "myself", "own"]:
+            return -1
+        
+        # Field/area effects (no specific target)
+        if target_str in ["all", "alladjacent", "alladjacentfoes", "allies", "allyside", 
+                         "allyteam", "foeside", "randomnormal", "scripted", "empty", "none", "0"]:
+            return 0
+        
+        # Opponent targeting
+        if target_str in ["opponent", "opponent1", "left", "leftopponent", "foe1", "1"]:
+            return 1
+        if target_str in ["opponent2", "right", "rightopponent", "foe2", "2"]:
+            return 2
+        
+        # Ally targeting
+        if target_str in ["ally", "ally1", "teammate", "partner", "-1"]:
+            return -1
+        if target_str in ["ally2", "teammate2", "partner2", "-2"]:
+            return -2
+        
+        # Adjacent targeting (can target either opponent)
+        if target_str in ["adjacent", "adjacentfoe", "normal", "any", "foe"]:
+            return 1  # Default to first opponent
+        
+        # Try to parse as integer
+        try:
+            parsed = int(target_str)
+            if parsed in [-2, -1, 0, 1, 2]:
+                return parsed
+        except ValueError:
+            pass
+        
+        # Default fallback
+        print(f"WARNING: Unknown target string '{target_str}', using default target")
+        return 0
+
+    def parse_request(self, request: Dict[str, Any]) -> None:
+        """
+        Override parse_request to store team data for teampreview.
+        """
+        # Call parent parse_request first
+        super().parse_request(request)
+        
+        # Store team data if this is a teampreview request
+        if request.get("teamPreview", False) and "side" in request:
+            self._teampreview_team_data = request["side"]["pokemon"]
+            print(f"Stored teampreview team data: {len(self._teampreview_team_data)} Pokemon")
+    
     def choose_move(self, battle: AbstractBattle):
         sim = LocalSim(battle, 
                     self.move_effect,
@@ -178,18 +241,13 @@ class LLMVGCPlayer(Player):
             elif not (mon is None or mon.fainted) and len(battle.available_moves[i]) == 1 and len(battle.available_switches[i]) == 0:
                 next_action[i] = self.choose_max_damage_move(battle, i)
 
-        # loop through all of our active pokemon
-        # for each pokemon -> determine an action of type BattleOrder and add it to next_action
-        # to do this, we need to:
-        # determine the battle state for the pokemon -> type, speed, move, etc
-        # we should add information about the other allied pokemon?
-        # create the proper constraint prompt for the pokemon based on if it is fainted or not, or if it has no moves, etc
-        # query the LLM for the action, can return in the same format as we have been using for singles
-        # parse the LMM query into a BattleOrder object and add it to next_action (need to rewrite io)
-        #TODO: debug state_translate3
-        #TODO: stucture choose_move to loop through each active pokemon and create constraint prompts
-        #TODO: speed bugged
-
+        # handle all forced switch cases
+        if all(battle.force_switch):
+            #print("INFO: Both slots are forced to switch")
+            # Ensure we don't try to use moves for any slot
+            for idx in range(len(battle.active_pokemon)):
+                if not battle.force_switch[idx]:
+                    next_action[idx] = None
 
         for idx, mon in enumerate(battle.active_pokemon):
             # if force switch is true for any pokemon, but the current pokemon is not forced to switch, we need its action to be None
@@ -198,6 +256,90 @@ class LLMVGCPlayer(Player):
                 if not battle.force_switch[idx]:
                     next_action[idx] = None
                     continue
+            
+            # SAFEGUARD 1: Handle forced switch scenarios
+            if battle.force_switch[idx]:
+                # Only allow switches, no moves when forced to switch
+                if len(battle.available_switches[idx]) == 0:
+                    # No switches available - this shouldn't happen but handle gracefully
+                    print(f"WARNING: Forced to switch but no switches available for slot {idx}")
+                    next_action[idx] = None
+                    continue
+                
+                # Build switch list excluding already chosen switches
+                already_chosen = []
+                for i, action in enumerate(next_action):
+                    if i != idx and action is not None and not isinstance(action, DefaultBattleOrder):
+                        if hasattr(action, 'order') and isinstance(action.order, Pokemon):
+                            already_chosen.append(action.order.species)
+                        elif hasattr(action, 'order') and hasattr(action.order, 'species'):
+                            already_chosen.append(action.order.species)
+                
+                switches = [
+                    pokemon.species
+                    for pokemon in battle.available_switches[idx]
+                    if pokemon.species not in already_chosen
+                ]
+                
+                print(f"DEBUG: Slot {idx} - Already chosen: {already_chosen}, Available: {[p.species for p in battle.available_switches[idx]]}, Filtered: {switches}")
+                
+                # If no valid switches left, use first available
+                if not switches:
+                    switches = [pokemon.species for pokemon in battle.available_switches[idx]]
+                
+                actions = [[], switches]  # No moves allowed when forced to switch
+                constraint_prompt_io = f'''You MUST switch. Choose the most suitable pokemon to switch. Your output MUST be a JSON like: {{"switch":"<switch_pokemon_name>"}}. Available switches: {switches}\n'''
+                
+                system_prompt, state_prompt, state_action_prompt = sim.prompt_translate(sim, battle, next_action=next_action, idx=idx)
+                state_prompt_io = state_prompt + state_action_prompt + constraint_prompt_io
+                
+                retries = 10
+                if self.prompt_algo == "io":
+                    next_action[idx] = self.io(retries, system_prompt, state_prompt, "", constraint_prompt_io, state_action_prompt, battle, sim, actions=actions, idx=idx)
+                
+                # SAFEGUARD 2: Validate that the chosen switch is valid and not duplicate
+                if next_action[idx] is not None and not isinstance(next_action[idx], DefaultBattleOrder):
+                    if hasattr(next_action[idx], 'order') and isinstance(next_action[idx].order, Pokemon):
+                        chosen_species = next_action[idx].order.species
+                        
+                        # Check if this species is already chosen by another slot
+                        is_duplicate = False
+                        for i, action in enumerate(next_action):
+                            if i != idx and action is not None and not isinstance(action, DefaultBattleOrder):
+                                if hasattr(action, 'order') and isinstance(action.order, Pokemon):
+                                    if action.order.species == chosen_species:
+                                        is_duplicate = True
+                                        break
+                        
+                        if is_duplicate:
+                            print(f"WARNING: LLM chose duplicate switch {chosen_species}, using fallback")
+                            # Use first available non-duplicate switch
+                            for pokemon in battle.available_switches[idx]:
+                                is_available = True
+                                for i, action in enumerate(next_action):
+                                    if i != idx and action is not None and not isinstance(action, DefaultBattleOrder):
+                                        if hasattr(action, 'order') and isinstance(action.order, Pokemon):
+                                            if action.order.species == pokemon.species:
+                                                is_available = False
+                                                break
+                                if is_available:
+                                    next_action[idx] = self.create_order(pokemon)
+                                    break
+                            else:
+                                # If all switches are duplicates, use first available
+                                next_action[idx] = self.create_order(battle.available_switches[idx][0])
+                        elif chosen_species not in switches:
+                            #print(f"WARNING: LLM chose invalid switch {chosen_species}, falling back to first available")
+                            next_action[idx] = self.create_order(battle.available_switches[idx][0])
+                    else:
+                        #print(f"WARNING: Invalid action type for forced switch, setting to None")
+                        next_action[idx] = None
+                else:
+                    # Fallback to first available switch
+                    next_action[idx] = self.create_order(battle.available_switches[idx][0])
+                
+                continue
+            
             system_prompt, state_prompt, state_action_prompt = sim.prompt_translate(sim, battle, next_action=next_action, idx=idx) # add lower case
             moves = [move.id for move in battle.available_moves[idx]]
             # switches = [pokemon.species for pokemon in battle.available_switches[idx]]
@@ -208,30 +350,48 @@ class LLMVGCPlayer(Player):
                 if pokemon.species not in [
                     action.order.species
                     for action in next_action
-                    if action is not None and isinstance(action.order, Pokemon)
+                    if action is not None and not isinstance(action, DefaultBattleOrder) and isinstance(action.order, Pokemon)
                 ]
             ]
             actions = [moves, switches]
-
 
             gimmick_output_format = ''
             if 'pokellmon' not in self.ps_client.account_configuration.username: # make sure we dont mess with pokellmon original strat
                 gimmick_output_format = f'{f' or {{"dynamax":"<move_name>"}}' if battle.can_dynamax else ''}{f' or {{"terastallize":"<move_name>"}}' if battle.can_tera else ''}'
 
-            if battle.force_switch[idx] or battle.active_pokemon[idx] is None or battle.active_pokemon[idx].fainted or len(battle.available_moves[idx]) == 0:
-
+            # ADDITIONAL CHECK: Validate actions based on available options
+            # Check if Pokemon is fainted or None first (highest priority)
+            if battle.active_pokemon[idx] is None or battle.active_pokemon[idx].fainted:
+                if len(switches) > 0:
+                    #print(f"INFO: Pokemon fainted/None for slot {idx}, forcing switch selection only")
+                    constraint_prompt_io = '''Choose the most suitable pokemon to switch. Your output MUST be a JSON like: {"switch":"<switch_pokemon_name>"}\n'''
+                else:
+                    #print(f"ERROR: Pokemon fainted/None but no switches available for slot {idx}, setting action to None")
+                    next_action[idx] = None
+                    continue
+            # If no switches are available but moves are available
+            elif len(switches) == 0 and len(moves) > 0:
+                #print(f"INFO: No switches available for slot {idx}, forcing move selection only")
+                constraint_prompt_io = f'''Choose the best action and your output MUST be a JSON like: {{"move":"<move_name>", "target":"<target_number>"}}{gimmick_output_format}
+        Target numbers: 1=left opponent, 2=right opponent, 0=field effect, 0=self\n'''
+            # If no moves are available but switches are available
+            elif len(moves) == 0 and len(switches) > 0:
+                #print(f"INFO: No moves available for slot {idx}, forcing switch selection only")
                 constraint_prompt_io = '''Choose the most suitable pokemon to switch. Your output MUST be a JSON like: {"switch":"<switch_pokemon_name>"}\n'''
-                
-            elif len(battle.available_switches[idx]) == 0:
-                constraint_prompt_io = f'''Choose the best action and your output MUST be a JSON like: {{"move":"<move_name>", "target":"<target number>"}}{gimmick_output_format}\n'''
-                
+            # If neither moves nor switches are available (error state)
+            elif len(moves) == 0 and len(switches) == 0:
+                #print(f"ERROR: No moves or switches available for slot {idx}, setting action to None")
+                next_action[idx] = None
+                continue
+            # Normal case: both moves and switches are available
             else:
-                constraint_prompt_io = f'''Choose the best action and your output MUST be a JSON like: {{"move":"<move_name>", "target":"<target number>"}}{gimmick_output_format} or {{"switch":"<switch_pokemon_name>"}}\n'''
+                constraint_prompt_io = f'''Choose the best action and your output MUST be a JSON like: {{"move":"<move_name>", "target":"<target_number>"}}{gimmick_output_format} or {{"switch":"<switch_pokemon_name>"}}
+Target numbers: 1=left opponent, 2=right opponent, 0=field effect, 0=self\n'''
             
 
             state_prompt_io = state_prompt + state_action_prompt + constraint_prompt_io
             constraint_prompt_cot = ""
-            print(state_prompt_io)
+            #print(state_prompt_io)
 
             retries = 10
             # Chain-of-thought
@@ -240,6 +400,8 @@ class LLMVGCPlayer(Player):
             # print("next_action:", next_action[idx])
 
         next_action = DoubleBattleOrder(first_order=next_action[0], second_order=next_action[1])
+        print(constraint_prompt_io)
+        print("avail actions", actions)
         print(next_action)
         return next_action
 
@@ -282,17 +444,43 @@ class LLMVGCPlayer(Player):
                         llm_move_id = llm_action_json["terastallize"].strip()
                     else:
                         llm_move_id = llm_action_json["move"].strip()
+                    
+                    # ENSURE TARGET IS PROVIDED: Check if target is specified
+                    if "target" not in llm_action_json:
+                        #print(f"WARNING: LLM did not provide target for move '{llm_move_id}', adding default target")
+                        llm_action_json["target"] = 0  # Add default target
+                    
+                    # ADDITIONAL VALIDATION: Check if move is in available actions
+                    if actions is not None and len(actions) > 0:
+                        available_moves = actions[0]  # First element is moves list
+                        # Convert to lowercase and remove spaces for case-insensitive comparison
+                        llm_move_normalized = llm_move_id.lower().replace(' ', '')
+                        available_moves_normalized = [move.lower().replace(' ', '') for move in available_moves]
+                        if llm_move_normalized not in available_moves_normalized:
+                            #print(f"WARNING: LLM requested move '{llm_move_id}' not in available moves {available_moves}")
+                            continue  # Skip this iteration and try again
+                    
                     move_list = battle.available_moves[idx]
 
-                    # get target number
-                    llm_target = llm_action_json.get("target", 0)
-                    # fallbacks incase llm doesnt correctly specify target
-                    if(llm_target == "allAdjacentFoes" or llm_target == "self" or llm_target == "all"):
-                        llm_target = 0
-                    elif(llm_target == "normal"):
-                        llm_target = 1
-                    else:
+                    # get target number with comprehensive parsing
+                    llm_target = llm_action_json.get("target", None)
+                    
+                    # ENHANCED TARGET HANDLING: Parse various word targets into proper integers
+                    if llm_target is None:
+                        #print(f"WARNING: No target specified for move '{llm_move_id}', using default target")
+                        llm_target = 0  # Default to EMPTY_TARGET_POSITION
+                    elif isinstance(llm_target, str):
+                        llm_target = self._parse_target_string(llm_target)
+                    elif isinstance(llm_target, (int, float)):
                         llm_target = int(llm_target)
+                    else:
+                        #print(f"WARNING: Invalid target type '{type(llm_target)}' for move '{llm_move_id}', using default target")
+                        llm_target = 0
+                    
+                    # Validate target is within valid range
+                    if llm_target not in [-2, -1, 0, 1, 2]:
+                        #print(f"WARNING: Target '{llm_target}' out of valid range [-2, -1, 0, 1, 2], using default target")
+                        llm_target = 0
                     
 
                     if dont_verify: # opponent
@@ -305,11 +493,10 @@ class LLMVGCPlayer(Player):
                         print(f"Available moves: {[move.id for move in move_list]}")
                     
                     for i, move in enumerate(move_list):
-                        if move.id.lower().replace(' ', '') == llm_move_id.lower().replace(' ', ''):
-                            #next_action = self.create_order(move, dynamax=sim._should_dynamax(battle), terastallize=sim._should_terastallize(battle))
+                        if move.id.lower().replace(' ', '') == llm_move_id.lower().replace(' ', ''):                
                             next_action = self.create_order(move, dynamax=dynamax, terastallize=tera, move_target=llm_target)
                             if DEBUG:
-                                print(f"Move match found: {move.id}")
+                                print(f"Move match found: {move.id} with target: {llm_target}")
                             break
                     
                     if next_action is None and dont_verify:
@@ -320,7 +507,24 @@ class LLMVGCPlayer(Player):
                     if next_action is None and DEBUG:
                         print(f"No move match found for '{llm_move_id}'")
                 elif "switch" in llm_action_json.keys():
+                    # Check if switches are available - if not, force move selection
+                    if len(battle.available_switches[idx]) == 0:
+                        #print(f"WARNING: LLM attempted to switch but no switches available for slot {idx}. Forcing move selection.")
+                        # Skip switch processing and continue to next iteration to try move selection
+                        continue
+                    
                     llm_switch_species = llm_action_json["switch"].strip()
+                    
+                    # ADDITIONAL VALIDATION: Check if switch is in available actions
+                    if actions is not None and len(actions) > 1:
+                        available_switches = actions[1]  # Second element is switches list
+                        # Convert to lowercase and remove spaces for case-insensitive comparison
+                        llm_switch_normalized = llm_switch_species.lower().replace(' ', '')
+                        available_switches_normalized = [switch.lower().replace(' ', '') for switch in available_switches]
+                        if llm_switch_normalized not in available_switches_normalized:
+                            #print(f"WARNING: LLM requested switch '{llm_switch_species}' not in available switches {available_switches}")
+                            continue  # Skip this iteration and try again
+                    
                     switch_list = battle.available_switches[idx]
                     if dont_verify: # opponent prediction
                         observable_switches = []
@@ -1108,200 +1312,242 @@ class LLMVGCPlayer(Player):
         return self.choose_random_move(battle)
 
     def teampreview(self, battle: AbstractBattle) -> str:
-        """
-        Custom teampreview function for VGC double battles.
+        """Returns a teampreview order for the given battle using LLM analysis.
         
-        This function uses LLM to analyze team composition and select the optimal
-        lead Pokemon and backline for the battle.
+        This method queries the LLM to select the best 4 Pokemon and their order
+        based on the available team and opponent's team information.
         
-        :param battle: The battle object containing team information
+        :param battle: The battle.
         :type battle: AbstractBattle
-        :return: Team preview order string in format "/team XXXX" where X is Pokemon position
+        :return: The teampreview order in format /team XXXX
         :rtype: str
         """
         try:
-            # Get team information
-            team_members = list(battle.team.values())
-            team_size = len(team_members)
-            
-            if team_size < 2:
-                # Fallback to random if insufficient team members
+            # Get available Pokemon from battle.available_switches, filtering out empty lists
+            raw_available = list(battle.available_switches)
+            available_pokemon = [pokemon for pokemon in raw_available if pokemon and not isinstance(pokemon, list)]
+            print(f"Debug: raw_available length: {len(raw_available)}, filtered available_pokemon length: {len(available_pokemon)}")
+            if available_pokemon:
+                print(f"Debug: first available item type: {type(available_pokemon[0])}")
+                print(f"Debug: first available item: {available_pokemon[0]}")
+            if not available_pokemon:
+                # Fallback to random selection if no valid Pokemon
                 return self.random_teampreview(battle)
             
-            # Create team analysis prompt
-            team_analysis = self._analyze_team_composition(team_members)
+            # Get opponent team from battle._teampreview_opponent_team
+            opponent_team = list(battle._teampreview_opponent_team)
             
-            # Create LLM prompt for team selection
-            system_prompt = self._create_teampreview_system_prompt()
-            user_prompt = self._create_teampreview_user_prompt(team_analysis, battle)
             
-            # Get LLM recommendation
-            llm_output = self.get_LLM_action(
+            
+            # Format Pokemon data for LLM
+            team_data = self._format_team_data_for_llm(available_pokemon, opponent_team)
+            
+            # Create system prompt for team selection
+            system_prompt = """You are an expert Pokemon VGC (Video Game Championships) team analyst. Your task is to select the best 4 Pokemon from the available team to bring to battle against the opponent's team.
+
+        Key considerations for team selection:
+        1. Type matchups and coverage
+        2. Speed control and priority moves
+        3. Synergy between Pokemon (weather, terrain, abilities)
+        4. Countering opponent's threats
+        5. Lead Pokemon strategy (who goes first)
+        6. Backup options and flexibility
+
+        Respond with ONLY a 4-digit number representing the indices of your selected Pokemon in order (e.g., "1234" means bring Pokemon 1, 2, 3, 4 in that order).
+
+        The first two Pokemon will be your leads, the last two will be in the back.
+        
+        Do not repeat the same index more than once."""
+            
+            # Create user prompt with team data
+            user_prompt = self._create_teampreview_user_prompt(team_data)
+            
+            # Query LLM for team selection
+            llm_response = self.get_LLM_action(
                 system_prompt=system_prompt,
                 user_prompt=user_prompt,
                 model=self.backend,
                 temperature=0.7,
-                max_tokens=200,
-                json_format=True
+                max_tokens=200
             )
             
-            # Parse LLM response
-            team_selection = self._parse_teampreview_response(llm_output, team_size)
+            # Parse LLM response and convert to team order
+            team_order = self._parse_teampreview_response(llm_response, available_pokemon)
             
-            if team_selection:
-                return f"/team {team_selection}"
+            if team_order:
+                print(f"Team order: {team_order}")
+                return f"/team {team_order}"
             else:
-                # Fallback to random selection
+                # Fallback to random selection if parsing fails
+                print("fallback to random teampreview")
                 return self.random_teampreview(battle)
                 
         except Exception as e:
-            print(f"Error in custom teampreview: {e}")
-            # Fallback to random selection
+            print(f"Error in teampreview: {e}")
+            # Fallback to random selection on any error
             return self.random_teampreview(battle)
 
-    def _analyze_team_composition(self, team_members: List[Pokemon]) -> Dict:
-        """
-        Analyze team composition and create summary for LLM.
-        
-        :param team_members: List of Pokemon in the team
-        :type team_members: List[Pokemon]
-        :return: Dictionary containing team analysis
-        :rtype: Dict
-        """
-        team_analysis = {
-            "pokemon": [],
-            "type_coverage": set(),
-            "roles": [],
-            "speed_tiers": [],
-            "defensive_cores": []
+    def _format_team_data_for_llm(self, available_pokemon: List[Pokemon], opponent_team: List[Pokemon]) -> Dict[str, Any]:
+        """Format Pokemon data for LLM analysis."""
+        team_data = {
+            "available_pokemon": [],
+            "opponent_pokemon": []
         }
         
-        for i, pokemon in enumerate(team_members, 1):
-            pokemon_info = {
-                "position": i,
-                "species": pokemon.species,
-                "types": pokemon.types,
-                "base_stats": pokemon.base_stats,
-                "ability": pokemon.ability,
-                "item": pokemon.item,
-                "moves": list(pokemon.moves.keys()) if hasattr(pokemon, 'moves') else []
-            }
-            team_analysis["pokemon"].append(pokemon_info)
-            team_analysis["type_coverage"].update(pokemon.types)
-            
-            # Determine role based on stats
-            if pokemon.base_stats["atk"] > pokemon.base_stats["spa"]:
-                role = "Physical Attacker"
-            elif pokemon.base_stats["spa"] > pokemon.base_stats["atk"]:
-                role = "Special Attacker"
-            else:
-                role = "Mixed Attacker"
-            
-            if pokemon.base_stats["spe"] > 100:
-                role += " (Fast)"
-            elif pokemon.base_stats["spe"] < 60:
-                role += " (Slow)"
-            
-            team_analysis["roles"].append(role)
-            team_analysis["speed_tiers"].append(pokemon.base_stats["spe"])
+        # Format available Pokemon - numbering starts from 1 for first actual Pokemon
+        for i, pokemon in enumerate(available_pokemon, 1):
+            try:
+                pokemon_info = {
+                    "index": i,  # This will be 1, 2, 3, 4, 5, 6 for the actual Pokemon
+                    "name": pokemon.species,
+                    "type1": pokemon.type_1.name if pokemon.type_1 else "Unknown",
+                    "type2": pokemon.type_2.name if pokemon.type_2 else None,
+                    "ability": pokemon.ability or "Unknown",
+                    "item": pokemon.item or "None",
+                    "moves": [move.name for move in pokemon.moves.values()] if hasattr(pokemon, 'moves') and pokemon.moves else [],
+                    "base_stats": {
+                        "hp": pokemon.base_stats.get("hp", 0),
+                        "atk": pokemon.base_stats.get("atk", 0),
+                        "def": pokemon.base_stats.get("def", 0),
+                        "spa": pokemon.base_stats.get("spa", 0),
+                        "spd": pokemon.base_stats.get("spd", 0),
+                        "spe": pokemon.base_stats.get("spe", 0)
+                    } if hasattr(pokemon, 'base_stats') and pokemon.base_stats else {}
+                }
+                team_data["available_pokemon"].append(pokemon_info)
+            except Exception as e:
+                print(f"Debug: Error processing available pokemon {i} {pokemon}: {e}")
+                import traceback
+                traceback.print_exc()
+                # Create a minimal pokemon info if there's an error
+                pokemon_info = {
+                    "index": i,
+                    "name": str(pokemon) if hasattr(pokemon, '__str__') else "Unknown",
+                    "type1": "Unknown",
+                    "type2": None,
+                    "ability": "Unknown",
+                    "item": "None",
+                    "moves": [],
+                    "base_stats": {}
+                }
+                team_data["available_pokemon"].append(pokemon_info)
         
-        return team_analysis
+        # Format opponent Pokemon
+        for pokemon in opponent_team:
+            print(f"Debug: Processing opponent pokemon: {pokemon}, type: {type(pokemon)}")
+            try:
+                pokemon_info = {
+                    "name": pokemon.species,
+                    "type1": pokemon.type_1.name if pokemon.type_1 else "Unknown",
+                    "type2": pokemon.type_2.name if pokemon.type_2 else None,
+                    "ability": pokemon.ability or "Unknown",
+                    "item": pokemon.item or "None",
+                    "moves": [move.name for move in pokemon.moves.values()] if hasattr(pokemon, 'moves') and pokemon.moves else [],
+                    "base_stats": {
+                        "hp": pokemon.base_stats.get("hp", 0),
+                        "atk": pokemon.base_stats.get("atk", 0),
+                        "def": pokemon.base_stats.get("def", 0),
+                        "spa": pokemon.base_stats.get("spa", 0),
+                        "spd": pokemon.base_stats.get("spd", 0),
+                        "spe": pokemon.base_stats.get("spe", 0)
+                    } if hasattr(pokemon, 'base_stats') and pokemon.base_stats else {}
+                }
+                team_data["opponent_pokemon"].append(pokemon_info)
+            except Exception as e:
+                print(f"Debug: Error processing opponent pokemon {pokemon}: {e}")
+                # Create a minimal pokemon info if there's an error
+                pokemon_info = {
+                    "name": str(pokemon) if hasattr(pokemon, '__str__') else "Unknown",
+                    "type1": "Unknown",
+                    "type2": None,
+                    "ability": "Unknown",
+                    "item": "None",
+                    "moves": [],
+                    "base_stats": {}
+                }
+                team_data["opponent_pokemon"].append(pokemon_info)
+        
+        return team_data
 
-    def _create_teampreview_system_prompt(self) -> str:
-        """
-        Create system prompt for teampreview LLM call.
-        
-        :return: System prompt string
-        :rtype: str
-        """
-        return """You are an expert Pokemon VGC (Video Game Championships) team preview strategist. 
-        Your task is to select the optimal lead Pokemon and backline for a double battle.
 
-        Key considerations for VGC team preview:
-        1. Lead Pokemon should have good synergy and cover each other's weaknesses
-        2. Consider speed control, type coverage, and immediate threat potential
-        3. Backline Pokemon should provide coverage for what the leads can't handle
-        4. Consider opponent's potential team compositions and common VGC strategies
-        5. Balance between offensive pressure and defensive utility
 
-        Output your team selection in JSON format: {"leads": [position1, position2], "backline": [position3, position4], "reasoning": "brief explanation"}
-
-        For example: {"leads": [1, 3], "backline": [2, 4], "reasoning": "Lead with fast offensive Pokemon for early pressure"}"""
-
-    def _create_teampreview_user_prompt(self, team_analysis: Dict, battle: AbstractBattle) -> str:
-        """
-        Create user prompt for teampreview LLM call.
+    def _create_teampreview_user_prompt(self, team_data: Dict[str, Any]) -> str:
+        """Create user prompt with team data for LLM analysis."""
+        prompt = "Available Pokemon:\n"
         
-        :param team_analysis: Team composition analysis
-        :type team_analysis: Dict
-        :param battle: Battle object
-        :type battle: AbstractBattle
-        :return: User prompt string
-        :rtype: str
-        """
-        prompt = f"Analyze this VGC team and select the optimal lead Pokemon and backline:\n\n"
-        prompt += f"Team Composition:\n"
+        for pokemon in team_data["available_pokemon"]:
+            prompt += f"{pokemon['index']}. {pokemon['name']} "
+            prompt += f"({pokemon['type1']}"
+            if pokemon['type2']:
+                prompt += f"/{pokemon['type2']}"
+            prompt += f") "
+            prompt += f"Ability: {pokemon['ability']}, Item: {pokemon['item']}\n"
+            if pokemon['moves']:
+                prompt += f"   Moves: {', '.join(pokemon['moves'])}\n"
+            if pokemon['base_stats']:
+                stats = pokemon['base_stats']
+                prompt += f"   Stats: HP:{stats.get('hp', 0)} Atk:{stats.get('atk', 0)} Def:{stats.get('def', 0)} "
+                prompt += f"Spa:{stats.get('spa', 0)} Spd:{stats.get('spd', 0)} Spe:{stats.get('spe', 0)}\n"
+            prompt += "\n"
         
-        for pokemon_info in team_analysis["pokemon"]:
-            prompt += f"Position {pokemon_info['position']}: {pokemon_info['species']} "
-            prompt += f"({'/'.join(pokemon_info['types'])}) "
-            prompt += f"- {pokemon_info['ability']} "
-            if pokemon_info['item']:
-                prompt += f"@ {pokemon_info['item']} "
-            prompt += f"- {pokemon_info['base_stats']}\n"
+        prompt += "\nOpponent's Team:\n"
+        for pokemon in team_data["opponent_pokemon"]:
+            prompt += f"- {pokemon['name']} "
+            prompt += f"({pokemon['type1']}"
+            if pokemon['type2']:
+                prompt += f"/{pokemon['type2']}"
+            prompt += f") "
+            prompt += f"Ability: {pokemon['ability']}, Item: {pokemon['item']}\n"
+            if pokemon['moves']:
+                prompt += f"  Moves: {', '.join(pokemon['moves'])}\n"
+            if pokemon['base_stats']:
+                stats = pokemon['base_stats']
+                prompt += f"  Stats: HP:{stats.get('hp', 0)} Atk:{stats.get('atk', 0)} Def:{stats.get('def', 0)} "
+                prompt += f"Spa:{stats.get('spa', 0)} Spd:{stats.get('spd', 0)} Spe:{stats.get('spe', 0)}\n"
+            prompt += "\n"
         
-        prompt += f"\nType Coverage: {', '.join(team_analysis['type_coverage'])}\n"
-        prompt += f"Roles: {', '.join(team_analysis['roles'])}\n"
-        prompt += f"Speed Tiers: {team_analysis['speed_tiers']}\n"
-        prompt += f"Team Size: {len(team_analysis['pokemon'])}\n\n"
-        
-        prompt += "Select 2 Pokemon to lead with and 2 for the backline. "
-        prompt += "Consider VGC meta strategies, type synergy, and team balance."
+        prompt += "\nSelect your 4 Pokemon (respond with 4 digits):"
         
         return prompt
 
-    def _parse_teampreview_response(self, llm_output: str, team_size: int) -> str:
-        """
-        Parse LLM response and validate team selection.
-        
-        :param llm_output: Raw LLM output
-        :type llm_output: str
-        :param team_size: Number of Pokemon in team
-        :type team_size: int
-        :return: Team selection string or None if invalid
-        :rtype: str or None
-        """
+    def _parse_teampreview_response(self, response: str, available_pokemon: List[Pokemon]) -> Optional[str]:
+        """Parse LLM response and convert to team order format."""
         try:
-            response = json.loads(llm_output)
+            # Clean the response
+            response = response.strip()
             
-            if "leads" not in response or "backline" not in response:
-                return None
+            # Extract 4-digit number from response
+            import re
+            match = re.search(r'\b(\d{4})\b', response)
+            if match:
+                team_indices = match.group(1)
+                
+                # Validate indices
+                valid_indices = []
+                for idx_str in team_indices:
+                    idx = int(idx_str)
+                    if 1 <= idx <= len(available_pokemon):
+                        valid_indices.append(idx_str)
+                
+                if len(valid_indices) == 4:
+                    return ''.join(valid_indices)
             
-            leads = response["leads"]
-            backline = response["backline"]
+            # If no valid 4-digit number found, try to extract individual numbers
+            numbers = re.findall(r'\b(\d)\b', response)
+            if len(numbers) >= 4:
+                valid_indices = []
+                for num in numbers[:4]:
+                    idx = int(num)
+                    if 1 <= idx <= len(available_pokemon):
+                        valid_indices.append(num)
+                
+                if len(valid_indices) == 4:
+                    return ''.join(valid_indices)
             
-            # Validate positions are within team size
-            all_positions = leads + backline
-            if not all(1 <= pos <= team_size for pos in all_positions):
-                return None
+            return None
             
-            # Check for duplicates
-            if len(set(all_positions)) != len(all_positions):
-                return None
-            
-            # Check we have exactly 2 leads and 2 backline
-            if len(leads) != 2 or len(backline) != 2:
-                return None
-            
-            # Create team string (leads first, then backline)
-            team_string = "".join(map(str, leads + backline))
-            
-            if DEBUG:
-                print(f"Team preview selection: {team_string}")
-                print(f"Reasoning: {response.get('reasoning', 'No reasoning provided')}")
-            
-            return team_string
-            
-        except (json.JSONDecodeError, KeyError, ValueError) as e:
+        except Exception as e:
             print(f"Error parsing teampreview response: {e}")
             return None
+
+    

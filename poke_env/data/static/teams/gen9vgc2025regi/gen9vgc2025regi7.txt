@@ -1,0 +1,71 @@
+Kyogre @ Assault Vest  
+Ability: Drizzle  
+Level: 50  
+Tera Type: Fairy  
+EVs: 252 HP / 132 SpA / 124 Spe  
+Modest Nature  
+IVs: 28 Atk  
+- Water Spout  
+- Origin Pulse  
+- Ice Beam  
+- Thunder  
+
+Altaria @ Rocky Helmet  
+Ability: Cloud Nine  
+Level: 50  
+Tera Type: Fairy  
+EVs: 252 HP / 196 Def / 60 SpD  
+Bold Nature  
+IVs: 22 Atk  
+- Fire Spin  
+- Helping Hand  
+- Tailwind  
+- Protect  
+
+Incineroar @ Safety Goggles  
+Ability: Intimidate  
+Level: 50  
+Tera Type: Ghost  
+EVs: 252 HP / 164 Def / 92 SpD  
+Relaxed Nature  
+IVs: 8 SpA / 0 Spe  
+- Knock Off  
+- Roar  
+- Parting Shot  
+- Fake Out  
+
+Rillaboom @ Miracle Seed  
+Ability: Grassy Surge  
+Level: 50  
+Tera Type: Steel  
+EVs: 156 HP / 252 Atk / 4 Def / 20 SpD / 76 Spe  
+Adamant Nature  
+- Wood Hammer  
+- Grassy Glide  
+- Fake Out  
+- Protect  
+
+Gholdengo @ Leftovers  
+Ability: Good as Gold  
+Level: 50  
+Tera Type: Normal  
+EVs: 252 HP / 12 Def / 44 SpA / 28 SpD / 164 Spe  
+Modest Nature  
+IVs: 2 Atk  
+- Make It Rain  
+- Shadow Ball  
+- Nasty Plot  
+- Protect  
+
+Flutter Mane @ Booster Energy  
+Ability: Protosynthesis  
+Level: 50  
+Tera Type: Fairy  
+EVs: 132 HP / 124 Def / 252 Spe  
+Timid Nature  
+IVs: 20 Atk  
+- Moonblast  
+- Icy Wind  
+- Thunder Wave  
+- Protect  
+
