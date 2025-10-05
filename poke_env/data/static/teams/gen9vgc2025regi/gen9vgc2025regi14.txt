@@ -1,0 +1,68 @@
+Calyrex-Shadow @ Focus Sash  
+Ability: As One (Spectrier)  
+Level: 50  
+Tera Type: Psychic  
+EVs: 252 SpA / 4 SpD / 252 Spe  
+Timid Nature  
+IVs: 0 Atk  
+- Astral Barrage  
+- Expanding Force  
+- Nasty Plot  
+- Protect  
+
+Indeedee-F @ Psychic Seed  
+Ability: Psychic Surge  
+Level: 50  
+Tera Type: Fairy  
+EVs: 252 HP / 252 Def / 4 SpA  
+Relaxed Nature  
+IVs: 0 Atk / 0 Spe  
+- Trick Room  
+- Imprison  
+- Follow Me  
+- Dazzling Gleam  
+
+Incineroar @ Sitrus Berry  
+Ability: Intimidate  
+Tera Type: Water  
+EVs: 244 HP / 4 Atk / 72 Def / 188 SpD  
+Careful Nature  
+- Parting Shot  
+- Knock Off  
+- Fake Out  
+- Flare Blitz  
+
+Ogerpon (F) @ Razor Claw  
+Ability: Defiant  
+Tera Type: Grass  
+EVs: 4 HP / 252 Atk / 252 Spe  
+Adamant Nature  
+- Stomping Tantrum  
+- Ivy Cudgel  
+- Knock Off  
+- Spiky Shield  
+
+Suicune @ Mental Herb  
+Ability: Inner Focus  
+Tera Type: Grass  
+EVs: 252 HP / 4 SpA / 252 Spe  
+Modest Nature  
+IVs: 0 Atk  
+- Scald  
+- Helping Hand  
+- Icy Wind  
+- Tailwind  
+
+Kingambit (M) @ Assault Vest  
+Ability: Defiant  
+Level: 50  
+Shiny: Yes  
+Tera Type: Dark  
+EVs: 236 HP / 252 Atk / 4 Def / 12 SpD / 4 Spe  
+Adamant Nature  
+IVs: 0 Spe  
+- Kowtow Cleave  
+- Iron Head  
+- Sucker Punch  
+- Brick Break  
+

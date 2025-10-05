@@ -12,8 +12,8 @@ class ServerConfiguration(NamedTuple):
 
 
 LocalhostServerConfiguration = ServerConfiguration(
-    #"localhost:8000", "https://play.pokemonshowdown.com/action.php?"
-    "localhost:8001", "https://play.pokemonshowdown.com/action.php?"
+    "localhost:8000", "https://play.pokemonshowdown.com/action.php?"
+    #"localhost:8001", "https://play.pokemonshowdown.com/action.php?"
 )
 """Server configuration with localhost and smogon's authentication endpoint."""
 

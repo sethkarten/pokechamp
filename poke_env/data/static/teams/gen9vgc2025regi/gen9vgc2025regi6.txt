@@ -1,0 +1,66 @@
+Terapagos @ Leftovers  
+Ability: Tera Shift  
+Level: 50  
+Tera Type: Stellar  
+EVs: 172 HP / 68 Def / 204 SpA / 4 SpD / 60 Spe  
+Modest Nature  
+- Protect  
+- Calm Mind  
+- Substitute  
+- Tera Starstorm  
+
+Flutter Mane @ Booster Energy  
+Ability: Protosynthesis  
+Level: 50  
+Tera Type: Water  
+EVs: 252 HP / 252 Def / 4 Spe  
+Timid Nature  
+- Protect  
+- Thunder Wave  
+- Taunt  
+- Moonblast  
+
+Urshifu @ Focus Sash  
+Ability: Unseen Fist  
+Level: 50  
+Tera Type: Ghost  
+EVs: 4 HP / 252 Atk / 252 Spe  
+Jolly Nature  
+- Detect  
+- Taunt  
+- Low Sweep  
+- Wicked Blow  
+
+Rillaboom @ Assault Vest  
+Ability: Grassy Surge  
+Level: 50  
+Tera Type: Normal  
+EVs: 4 HP / 252 Atk / 252 Spe  
+Jolly Nature  
+- U-turn  
+- Fake Out  
+- Drum Beating  
+- Wood Hammer  
+
+Incineroar @ Sitrus Berry  
+Ability: Intimidate  
+Level: 50  
+Tera Type: Grass  
+EVs: 252 HP / 4 Atk / 12 Def / 236 SpD / 4 Spe  
+Careful Nature  
+- U-turn  
+- Fake Out  
+- Helping Hand  
+- Knock Off  
+
+Clefairy @ Eviolite  
+Ability: Friend Guard  
+Level: 50  
+Tera Type: Grass  
+EVs: 252 HP / 252 Def / 4 SpD  
+Bold Nature  
+- Protect  
+- Helping Hand  
+- Follow Me  
+- Life Dew  
+
