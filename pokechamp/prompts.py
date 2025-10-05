@@ -6,6 +6,7 @@ from poke_env.environment.move_category import MoveCategory
 from poke_env.environment.pokemon import Pokemon
 from poke_env.environment.side_condition import SideCondition
 from poke_env.player.local_simulation import LocalSim, move_type_damage_wrapper
+from poke_env.player.battle_order import DefaultBattleOrder
 
 def get_turn_summary(sim: LocalSim,
                      battle: Battle,
@@ -1789,7 +1790,14 @@ def state_translate3(sim: LocalSim,
                     opponent_type_list.append(type_2)
 
 
-    opponent_speed = round(opponent_stats[idx]['spe'] * sim.boost_multiplier('spe', opponent_boosts[idx]['spe']))
+    # Safely compute opponent speed for this slot
+    opp_mon = battle.opponent_active_pokemon[idx] if idx < len(battle.opponent_active_pokemon) else None
+    if opp_mon is not None:
+        opp_stats_slot = opp_mon.calculate_stats(battle_format=sim.format)
+        opp_boosts_slot = opp_mon._boosts
+        opponent_speed = round(opp_stats_slot['spe'] * sim.boost_multiplier('spe', opp_boosts_slot['spe']))
+    else:
+        opponent_speed = 0
 
     # we want to only work with one of our active pokemon at a time
     team_move_type = []
@@ -1806,6 +1814,8 @@ def state_translate3(sim: LocalSim,
     
     opponent_prompt = 'Opponent active pokemon:'
     for pokemon in battle.opponent_active_pokemon:
+        if(pokemon is None):
+            continue
         moves_opp_str, moves_opp_possible_str = sim.get_opponent_current_moves(mon=pokemon, return_separate=True)
         moves_opp = [Move(move_opp, sim.gen.gen) for move_opp in moves_opp_str]
         moves_opp_possible = []
@@ -1823,7 +1833,7 @@ def state_translate3(sim: LocalSim,
     opponent_prompt += f"\nOpponent has {opponent_unfainted_num} pokemons left.\n"
     opponent_prompt += 'Seen opponent pokemon:\n'
     for mon_opp in battle.opponent_team.values():
-        if mon_opp.fainted or any(mon_opp.species == pokemon.species for pokemon in battle.opponent_active_pokemon):
+        if mon_opp.fainted or mon_opp is None or any((pokemon is not None) and (mon_opp.species == pokemon.species) for pokemon in battle.opponent_active_pokemon):
             continue
         moves_opp_str, moves_opp_possible_str = sim.get_opponent_current_moves(mon=mon_opp, return_separate=True)
         moves_opp = [Move(move_opp, sim.gen.gen) for move_opp in moves_opp_str]
@@ -1846,8 +1856,12 @@ def state_translate3(sim: LocalSim,
 
     opponent_prompt += "\n"
     speed_prompt = "" 
+    
+    # Initialize active_pokemon_prompt to avoid None reference error
+    active_pokemon_prompt = ""
+    
     # The active pokemon, if battle.force_switch[idx], we can skip all this and just move on to switching out
-    if not battle.force_switch[idx]:
+    if not battle.force_switch[idx] and battle.active_pokemon[idx] is not None:
         active_stats = battle.active_pokemon[idx].stats
         if active_stats['atk'] is None:
             active_stats = battle.active_pokemon[idx].base_stats
@@ -1887,6 +1901,8 @@ def state_translate3(sim: LocalSim,
 
         speed_prompt = ""
         for mon in battle.opponent_active_pokemon:
+            if mon is None:
+                continue
             speed_prompt += (f"(slower than {mon.species})." if active_speed < opponent_speed else f"(faster than {mon.species}).")
         
         active_pokemon_prompt = (
@@ -1932,7 +1948,7 @@ def state_translate3(sim: LocalSim,
         active_pokemon_prompt = active_pokemon_prompt + "Your team's side condition: " + side_condition_prompt + "\n"
 
     # Move, if battle.force_switch[idx], we can skip all this and just move on to switching out
-    if not battle.force_switch[idx]:
+    if not battle.force_switch[idx] and battle.active_pokemon[idx] is not None:
         move_prompt = f"Your {battle.active_pokemon[idx].species} has {len(battle.available_moves[idx])} moves:\n"
         for i, move in enumerate(battle.available_moves[idx]):
                         
@@ -1965,6 +1981,8 @@ def state_translate3(sim: LocalSim,
             # whether is effective to the target.
             move_type_damage_prompt = ""
             for mon in battle.opponent_active_pokemon:
+                if mon is None:
+                    continue
                 move_type_damage_prompt += move_type_damage_wrapper(mon, sim.gen.type_chart, [move.type.name]) + "\n"
             if move_type_damage_prompt and move.base_power:
                 move_prompt += f'({move_type_damage_prompt.split("is ")[-1][:-1]})\n'
@@ -2011,6 +2029,8 @@ def state_translate3(sim: LocalSim,
             else:
                 move_type_damage_prompt = ""
                 for mon in battle.opponent_active_pokemon:
+                    if mon is None:
+                        continue
                     move_type_damage_prompt += move_type_damage_wrapper(mon, sim.gen.type_chart, [move.type.name]) + "\n"
                 if "2x" in move_type_damage_prompt:
                     damage_multiplier = "2"
@@ -2052,7 +2072,7 @@ def state_translate3(sim: LocalSim,
                 if pokemon.species not in [
                     action.order.species
                     for action in next_action
-                    if action is not None and isinstance(action.order, Pokemon)
+                    if action is not None and not isinstance(action, DefaultBattleOrder) and isinstance(action.order, Pokemon)
                 ]
             ]
     # switch_choices = [pokemon.species for pokemon in battle.available_switches[idx]]
@@ -2062,7 +2082,7 @@ def state_translate3(sim: LocalSim,
     if len(switch_choices) > 0:
         action_prompt_switch = f"[<switch_pokemon_name>] = {switch_choices}\n"
 
-    if battle.force_switch[idx] or battle.active_pokemon[idx].fainted: # passive switching
+    if battle.force_switch[idx] or battle.active_pokemon[idx] is None or battle.active_pokemon[idx].fainted: # passive switching
         action_prompt = f' Your current Pokemon: has fainted.\nChoose only from the following action choices:\n'
         system_prompt = (
             f"You are a pokemon battler in generation {sim.gen.gen} VGC format Pokemon Showdown that targets to win the pokemon battle. Your active pokemon just fainted. Choose a suitable pokemon to continue the battle. Here are some tips:"

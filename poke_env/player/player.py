@@ -392,7 +392,7 @@ class Player(ABC):
         :param split_message: The received battle message.
         :type split_message: str
         """
-        #print(f'[battle messages]', split_messages)
+        print(f'[battle messages]', split_messages)
         # Battle messages can be multiline
         if (
             len(split_messages) > 1
