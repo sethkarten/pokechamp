@@ -315,14 +315,7 @@ class LLMVGCPlayer(Player):
                             print(f"WARNING: LLM chose duplicate switch {chosen_species}, using fallback")
                             # Use first available non-duplicate switch
                             for pokemon in battle.available_switches[idx]:
-                                is_available = True
-                                for i, action in enumerate(next_action):
-                                    if i != idx and action is not None and not isinstance(action, DefaultBattleOrder):
-                                        if hasattr(action, 'order') and isinstance(action.order, Pokemon):
-                                            if action.order.species == pokemon.species:
-                                                is_available = False
-                                                break
-                                if is_available:
+                                if pokemon.species not in already_chosen:
                                     next_action[idx] = self.create_order(pokemon)
                                     break
                             else:
@@ -400,8 +393,6 @@ Target numbers: 1=left opponent, 2=right opponent, 0=field effect, 0=self\n'''
             # print("next_action:", next_action[idx])
 
         next_action = DoubleBattleOrder(first_order=next_action[0], second_order=next_action[1])
-        print(constraint_prompt_io)
-        print("avail actions", actions)
         print(next_action)
         return next_action
 
@@ -1326,10 +1317,6 @@ Target numbers: 1=left opponent, 2=right opponent, 0=field effect, 0=self\n'''
             # Get available Pokemon from battle.available_switches, filtering out empty lists
             raw_available = list(battle.available_switches)
             available_pokemon = [pokemon for pokemon in raw_available if pokemon and not isinstance(pokemon, list)]
-            print(f"Debug: raw_available length: {len(raw_available)}, filtered available_pokemon length: {len(available_pokemon)}")
-            if available_pokemon:
-                print(f"Debug: first available item type: {type(available_pokemon[0])}")
-                print(f"Debug: first available item: {available_pokemon[0]}")
             if not available_pokemon:
                 # Fallback to random selection if no valid Pokemon
                 return self.random_teampreview(battle)
@@ -1434,7 +1421,7 @@ Target numbers: 1=left opponent, 2=right opponent, 0=field effect, 0=self\n'''
         
         # Format opponent Pokemon
         for pokemon in opponent_team:
-            print(f"Debug: Processing opponent pokemon: {pokemon}, type: {type(pokemon)}")
+            #print(f"Debug: Processing opponent pokemon: {pokemon}, type: {type(pokemon)}")
             try:
                 pokemon_info = {
                     "name": pokemon.species,
