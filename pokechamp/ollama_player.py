@@ -19,7 +19,11 @@ class OllamaPlayer():
         self.request_timeout = 300  # 5 minutes timeout
         self.temperature = 0.7
         self.context_window = 8192  # Use larger context window for pokechamp context
+<<<<<<< HEAD
         self.max_tokens = 1024  # Limit response length but ensure complete JSON
+=======
+        self.max_tokens = 8192  # Limit response length but ensure complete JSON
+>>>>>>> main
         
         # Initialize client with configuration
         self.client = ollama.Client(host=self.base_url)
@@ -41,9 +45,12 @@ class OllamaPlayer():
         Args:
             think: Whether to enable thinking mode for models that support it
         """
+<<<<<<< HEAD
         if 'qwen3' in self.model.lower() or 'oss' in self.model.lower():
             user_prompt = user_prompt + '\nDo not think, just answer.'
         
+=======
+>>>>>>> main
         # Prepare the prompt - add JSON formatting
         if json_format:
             user_prompt_with_json = user_prompt + '\n{"'
@@ -61,6 +68,7 @@ class OllamaPlayer():
         if stop:
             options['stop'] = stop
         
+<<<<<<< HEAD
         # Add thinking mode parameter for models that support it
         if 'qwen3' in self.model.lower() or 'oss' in self.model.lower():
             # Try multiple approaches to disable thinking
@@ -69,6 +77,8 @@ class OllamaPlayer():
             options['thinking'] = False
             print(f"Disabling thinking for {self.model}")
         
+=======
+>>>>>>> main
         try:
             # Use chat endpoint
             messages = [

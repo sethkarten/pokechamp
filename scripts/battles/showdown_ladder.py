@@ -14,7 +14,11 @@ from poke_env.player.team_util import get_llm_player, get_metamon_teams, load_ra
 parser = argparse.ArgumentParser()
 parser.add_argument("--temperature", type=float, default=0.5)
 parser.add_argument("--prompt_algo", default="minimax", choices=prompt_algos)
+<<<<<<< HEAD
 parser.add_argument("--battle_format", default="gen9ou", choices=["gen8randombattle", "gen8ou", "gen9ou", "gen9randombattle", "gen9vgc2025regi"])
+=======
+parser.add_argument("--battle_format", default="gen9ou", choices=["gen8randombattle", "gen8ou", "gen9ou", "gen9randombattle"])
+>>>>>>> main
 parser.add_argument("--backend", type=str, default="gemini-2.5-flash", choices=[
     # OpenAI models
     "gpt-4o-mini", "gpt-4o", "gpt-4o-2024-05-13", "gpt-4-turbo", "gpt-4", "gpt-3.5-turbo",
@@ -35,11 +39,15 @@ parser.add_argument("--backend", type=str, default="gemini-2.5-flash", choices=[
     # Microsoft models
     "microsoft/wizardlm-2-8x22b", "microsoft/phi-3-medium-128k-instruct",
     # Ollama models
+<<<<<<< HEAD
     "ollama/gpt-oss:20b", "ollama/llama3.1:8b", "ollama/llama3.1:8b-instruct-q4_K_M", 
     "ollama/mistral", "ollama/qwen2.5:32b", "ollama/qwen3:30b", "ollama/qwen3:14b", 
     "ollama/qwen3:8b", "ollama/qwen3:4b", "ollama/gemma3:4b", "ollama/gemma3:4b-it-qat", 
     "ollama/gemma3:1b-it-qat", "ollama/gemma3:27b", "ollama/gemma3:27b-it-qat", 
     "ollama/gemma3:12b-it-qat", 
+=======
+    "ollama/gpt-oss:20b", "ollama/llama3.1:8b", "ollama/qwen2.5:32b", "ollama/gemma3:4b", "ollama/gemma3:27b",
+>>>>>>> main
     # Local models (via OpenRouter)
     "llama", 'None'
 ])
@@ -49,6 +57,7 @@ parser.add_argument("--name", type=str, default='pokechamp', choices=bot_choices
 parser.add_argument("--USERNAME", type=str, default='')
 parser.add_argument("--PASSWORD", type=str, default='')
 parser.add_argument("--N", type=int, default=1)
+<<<<<<< HEAD
 parser.add_argument("--timeout", type=int, default=90, help="LLM timeout in seconds (0 to disable)")
 parser.add_argument("--seed", type=int, default=None, help="Random seed for reproducibility")
 args = parser.parse_args()
@@ -60,6 +69,9 @@ if args.seed is not None:
     random.seed(args.seed)
     np.random.seed(args.seed)
     print(f"Using random seed: {args.seed}")
+=======
+args = parser.parse_args()
+>>>>>>> main
     
 async def main():
     player = get_llm_player(args, 
@@ -70,6 +82,7 @@ async def main():
                             battle_format=args.battle_format, 
                             online=True, 
                             USERNAME=args.USERNAME, 
+<<<<<<< HEAD
                             PASSWORD=args.PASSWORD,
                             use_timeout=(args.timeout > 0),
                             timeout_seconds=args.timeout)
@@ -78,18 +91,26 @@ async def main():
         team_list = "competitive"
     print(f"Using {team_list} team list")
     teamloader = get_metamon_teams(args.battle_format, team_list)
+=======
+                            PASSWORD=args.PASSWORD)
+    
+    teamloader = get_metamon_teams(args.battle_format, "competitive")
+>>>>>>> main
     
     if not 'random' in args.battle_format:
         # Set teamloader on player for rejection recovery
         player.set_teamloader(teamloader)
         player.update_team(teamloader.yield_team())
 
+<<<<<<< HEAD
     # Warm up player components before battles to avoid turn-time delays
     print("🔥 Warming up player before battles...")
     if hasattr(player, 'warm_up'):
         player.warm_up()
     print("🔥 Player warm-up complete!")
 
+=======
+>>>>>>> main
     # Playing n_challenges games on the ladder
     n_challenges = args.N
     pbar = tqdm(total=n_challenges)
@@ -109,6 +130,7 @@ async def main():
         print(winner)
         player.reset_battles()
     print(f'player 2 winrate: {wins/n_challenges*100}')
+<<<<<<< HEAD
     
     # Print timeout statistics if using timeout player
     if hasattr(player, 'get_timeout_stats'):
@@ -117,6 +139,8 @@ async def main():
         print(f"  Total moves: {stats['total_moves']}")
         print(f"  Timeouts: {stats['timeouts']}")
         print(f"  Timeout rate: {stats['timeout_rate']:.1f}%")
+=======
+>>>>>>> main
 
 if __name__ == "__main__":
     asyncio.run(main())

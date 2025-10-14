@@ -70,6 +70,72 @@ def get_metamon_teams(battle_format: str, set_name: str) -> TeamSet:
         raise ValueError(
             f"Invalid set name: {set_name}. Must be one of: competitive, paper_replays, paper_variety, modern_replays"
         )
+    path = download_teams(battle_format, set_name=set_name)
+    if not os.path.exists(path):
+        raise ValueError(
+            f"Cannot locate valid team directory for format {battle_format} at path {path}"
+        )
+    return TeamSet(path, battle_format)
+>>>>>>> main
+
+class TeamSet(Teambuilder):
+    """Sample from a directory of Showdown team files.
+
+    A simple wrapper around poke-env's Teambuilder that randomly samples a team from a
+    directory of team files.
+
+    Args:
+        team_file_dir: The directory containing the team files (searched recursively).
+            Team files are just text files in the standard Showdown export format. See
+            https://pokepast.es/syntax.html for details.
+        battle_format: The battle format of the team files (e.g. "gen1ou", "gen2ubers",
+            etc.). Note that we assume files have a matching extension (e.g.
+            "any_name.gen1ou_team").
+    """
+
+    def __init__(self, team_file_dir: str, battle_format: str):
+        super().__init__()
+        self.team_file_dir = team_file_dir
+        self.battle_format = battle_format
+        self.team_files = self._find_team_files()
+
+    def _find_team_files(self):
+        team_files = []
+        for root, _, files in os.walk(self.team_file_dir):
+            for file in files:
+                if file.endswith(f".{self.battle_format}_team"):
+                    team_files.append(os.path.join(root, file))
+        return team_files
+
+    def yield_team(self):
+        file = random.choice(self.team_files)
+        with open(file, "r") as f:
+            team_data = f.read()
+        team = self.parse_showdown_team(team_data)
+        print(team)
+        for mon in team:
+            if mon.species is not None:
+                mon.nickname = mon.species
+        return self.join_team(team)
+
+def get_metamon_teams(battle_format: str, set_name: str) -> TeamSet:
+    """
+    Download a set of teams from huggingface (if necessary) and return a TeamSet.
+
+    Args:
+        battle_format: The battle format of the team files (e.g. "gen1ou", "gen2ubers", etc.).
+        set_name: The name of the set of teams to download. See the README for options.
+    """
+    if set_name not in {
+        "competitive",
+        "paper_replays",
+        "paper_variety",
+        "modern_replays",
+        "pokeagent_modern_replays",
+    }:
+        raise ValueError(
+            f"Invalid set name: {set_name}. Must be one of: competitive, paper_replays, paper_variety, modern_replays"
+        )
     #path = download_teams(battle_format, set_name=set_name)
     path = "bayesian_dataset"
     if not os.path.exists(path):
@@ -250,7 +316,24 @@ def get_llm_player(args,
                        account_configuration=AccountConfiguration(f'{USERNAME}{PNUMBER1}', PASSWORD),
                        server_configuration=server_config,
                        save_replays=args.log_dir,
-                       prompt_translate=state_translate3,
+                       # Use state_translate3 for VGC formats, state_translate2 for others
+                       prompt_translate=state_translate3 if "vgc" in battle_format.lower() else state_translate2,
+                       device=device,
+                       llm_backend=llm_backend)
+    elif 'pokechamp' in name:
+        return LLMPlayer(battle_format=battle_format,
+                       api_key=KEY,
+                       backend=backend,
+                       temperature=args.temperature,
+                       prompt_algo=prompt_algo,
+                    #    prompt_algo="minimax",
+                    #    prompt_algo="io",
+                       log_dir=args.log_dir,
+                       account_configuration=AccountConfiguration(f'{USERNAME}{PNUMBER1}', PASSWORD),
+                       server_configuration=server_config,
+                       save_replays=args.log_dir,
+                    #    prompt_translate=prompt_translate,
+                       prompt_translate=state_translate3 if "vgc" in battle_format.lower() else state_translate2,
                        device=device,
                        llm_backend=llm_backend)
     else:
