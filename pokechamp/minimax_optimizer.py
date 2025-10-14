@@ -79,14 +79,14 @@ class LocalSimPool:
         """Initialize the pool with template LocalSim instances."""
         self._creation_template = localsim_kwargs
         
-        print(f"🔄 Initializing LocalSim pool with {self._initial_size} instance (memory optimized)...")
+        print(f"[INIT] Initializing LocalSim pool with {self._initial_size} instance (memory optimized)...")
         for i in range(self._initial_size):
             sim = LocalSim(
                 battle=deepcopy(template_battle),
                 **localsim_kwargs
             )
             self._available_sims.append(sim)
-        print(f"✅ LocalSim pool initialized with {len(self._available_sims)} instance")
+        print(f"[OK] LocalSim pool initialized with {len(self._available_sims)} instance")
     
     def acquire_sim(self, battle: Battle) -> LocalSim:
         """Get a LocalSim from the pool, creating new one if needed."""
@@ -236,7 +236,7 @@ class MinimaxOptimizer:
     def initialize(self, battle: Battle, **localsim_kwargs):
         """Initialize the optimizer with battle template."""
         self.sim_pool.initialize_pool(battle, **localsim_kwargs)
-        print(f"🚀 MinimaxOptimizer initialized")
+        print(f"[INIT] MinimaxOptimizer initialized")
     
     def create_optimized_root(self, battle: Battle) -> OptimizedSimNode:
         """Create an optimized root node for minimax search."""

@@ -192,7 +192,7 @@ def test_bot_system():
     test_instance = TestBotSystem()
     test_instance.test_get_available_bots()
     test_instance.test_bot_choices_consistency()
-    print("✅ Bot system tests completed!")
+    print("[OK] Bot system tests completed!")
 
 
 if __name__ == "__main__":

@@ -469,7 +469,7 @@ def run_ladder_session(agent, session_id):
     print(f"\n[{datetime.now().strftime('%H:%M:%S')}] Starting ladder session #{session_id}: {agent['username']}")
     print(f"  Games: {GAMES_PER_MATCHUP} | Timeout: {TIMEOUT_SECONDS}s | LLM Timeout: {LLM_TIMEOUT_SECONDS}s | Seed: {unique_seed}")
     print(f"  Log: {log_file}")
-    print(f"  🎯 LADDER BATTLES: Agent vs random opponents on Pokemon Showdown")
+    print(f"  [LADDER] Agent vs random opponents on Pokemon Showdown")
     
     try:
         with open(log_file, "w") as f:
@@ -616,7 +616,7 @@ def forfeit_existing_battles():
                     
                     # Send universal forfeit command - works for any active battles
                     await temp_player.ps_client.send_message("/forfeit")
-                    print(f"  ✅ Sent forfeit command")
+                    print(f"  [OK] Sent forfeit command")
                     
                     # Brief delay to let forfeit process
                     await asyncio.sleep(2)
@@ -625,7 +625,7 @@ def forfeit_existing_battles():
                     forfeit_count += 1
                     
                 except Exception as e:
-                    print(f"  ❌ Error with {agent['username']}: {e}")
+                    print(f"  [ERROR] Error with {agent['username']}: {e}")
                 finally:
                     # Ensure clean shutdown regardless of errors
                     try:
@@ -644,7 +644,7 @@ def forfeit_existing_battles():
                                 pass
                                 
                     except Exception as cleanup_error:
-                        print(f"  ⚠️  Cleanup error: {cleanup_error}")
+                        print(f"  [WARN] Cleanup error: {cleanup_error}")
             
             # Run the forfeit operation with timeout
             try:
@@ -653,12 +653,12 @@ def forfeit_existing_battles():
                 loop.run_until_complete(asyncio.wait_for(forfeit_agent_battles(), timeout=15))
                 loop.close()
             except asyncio.TimeoutError:
-                print(f"  ⚠️  Timeout checking {agent['username']} (15s)")
+                print(f"  [WARN] Timeout checking {agent['username']} (15s)")
             except Exception as e:
-                print(f"  ⚠️  Error during forfeit for {agent['username']}: {e}")
+                print(f"  [WARN] Error during forfeit for {agent['username']}: {e}")
             
         except Exception as e:
-            print(f"  ❌ Failed to setup forfeit for {agent['username']}: {e}")
+            print(f"  [ERROR] Failed to setup forfeit for {agent['username']}: {e}")
         
         time.sleep(2)  # Small delay between agents
     

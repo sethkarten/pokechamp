@@ -32,7 +32,7 @@ class PokemonPredictor:
         """Load the pre-trained model."""
         try:
             self.predictor.load_and_train(force_retrain=False)
-            print(f"✅ Model loaded successfully!")
+            print(f"[OK] Model loaded successfully!")
             print(f"   Trained on {self.predictor.total_teams:,} teams")
             print(f"   Knows {len(self.predictor.species_counts):,} Pokemon species")
         except Exception as e:
@@ -142,7 +142,7 @@ class PokemonPredictor:
 
 def main():
     """Example usage of the Pokemon Predictor."""
-    print("🔮 Pokemon Team Predictor - Production Interface")
+    print("[PREDICT] Pokemon Team Predictor - Production Interface")
     print("=" * 50)
     
     try:
@@ -150,7 +150,7 @@ def main():
         predictor = PokemonPredictor()
         
         # Example 1: Predict teammates for a popular core
-        print("\n📊 Example 1: Predicting teammates for Kingambit + Gholdengo")
+        print("\n[EXAMPLE 1] Predicting teammates for Kingambit + Gholdengo")
         core = ["Kingambit", "Gholdengo"]
         teammates = predictor.predict_teammates(core)
         
@@ -160,7 +160,7 @@ def main():
             print(f"  • {species}: {prob:.1%}")
         
         # Example 2: Predict moveset for a specific Pokemon
-        print(f"\n🎯 Example 2: Predicting moveset for {teammates[0][0]}")
+        print(f"\n[EXAMPLE 2] Predicting moveset for {teammates[0][0]}")
         moveset = predictor.predict_moveset(teammates[0][0], core)
         
         print(f"Predicted configuration for {teammates[0][0]}:")
@@ -170,14 +170,14 @@ def main():
         print(f"  • Confidence: {moveset.get('probability', 0):.1%}")
         
         # Example 3: Usage statistics
-        print("\n📈 Example 3: Top 10 most used Pokemon")
+        print("\n[EXAMPLE 3] Top 10 most used Pokemon")
         usage = predictor.get_usage_stats(10)
         
         for i, (species, count, pct) in enumerate(usage, 1):
             print(f"  {i:2}. {species:<20} {count:,} uses ({pct:.1f}%)")
         
         # Example 4: Team core analysis
-        print(f"\n🔍 Example 4: Analyzing team core")
+        print(f"\n[EXAMPLE 4] Analyzing team core")
         analysis = predictor.analyze_team_core(["Dragonite", "Zamazenta"])
         
         print(f"Core: {analysis['core_pokemon']}")
@@ -187,7 +187,7 @@ def main():
             species = suggestion['species']
             prob = suggestion['teammate_probability']
             config = suggestion['predicted_config']
-            print(f"\n  🎯 {species} ({prob:.1%} probability)")
+            print(f"\n  [TARGET] {species} ({prob:.1%} probability)")
             if 'moves' in config:
                 print(f"     Moves: {', '.join(config['moves'])}")
             if 'item' in config:
@@ -195,10 +195,10 @@ def main():
             if 'nature' in config:
                 print(f"     Nature: {config['nature']}")
         
-        print(f"\n✨ All examples completed successfully!")
+        print(f"\n[OK] All examples completed successfully!")
         
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"[ERROR] {e}")
         import traceback
         traceback.print_exc()
 
