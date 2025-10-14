@@ -36,7 +36,7 @@ class LLAMAPlayer():
             json_end = message.find('}') + 1 # find the first "}
             message_json = '{"' + message[json_start:json_end]
             if len(message_json) > 0:
-                # print('output:', message_json)
+                print('output:', message_json)
                 return message_json, True
         return message, False
     

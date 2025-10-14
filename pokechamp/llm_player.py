@@ -22,8 +22,8 @@ from poke_env.data.gen_data import GenData
 from pokechamp.gpt_player import GPTPlayer
 from pokechamp.llama_player import LLAMAPlayer
 from pokechamp.openrouter_player import OpenRouterPlayer
-#from pokechamp.gemini_player import GeminiPlayer
-#from pokechamp.ollama_player import OllamaPlayer
+from pokechamp.gemini_player import GeminiPlayer
+from pokechamp.ollama_player import OllamaPlayer
 from pokechamp.data_cache import (
     get_cached_move_effect,
     get_cached_pokemon_move_dict,
@@ -132,6 +132,9 @@ class LLMPlayer(Player):
         self.use_damage_calc_early_exit = True  # Use damage calculator to exit early when advantageous
         self.use_llm_value_function = True  # Use LLM for leaf node evaluation (vs fast heuristic)
         self.max_depth_for_llm_eval = 2  # Only use LLM evaluation for shallow depths to save time
+        
+        # Warm-up flag to track if pre-initialization is complete
+        self._warmed_up = False
 
     def get_LLM_action(self, system_prompt, user_prompt, model, temperature=0.7, json_format=False, seed=None, stop=[], max_tokens=200, actions=None, llm=None) -> str:
         if llm is None:
@@ -139,6 +142,49 @@ class LLMPlayer(Player):
         else:
             output, _ = llm.get_LLM_action(system_prompt, user_prompt, model, temperature, True, seed, stop, max_tokens=max_tokens, actions=actions)
         return output
+    
+    def warm_up(self, dummy_battle=None):
+        """
+        Pre-initialize all expensive components to avoid delays during first battle turn.
+        This should be called after player creation but before battles start.
+        """
+        if self._warmed_up:
+            return
+            
+        print("🔥 Warming up player components...")
+        
+        # 1. Data cache is already loaded during __init__
+        
+        # 2. Pre-initialize minimax optimizer if using minimax
+        if self.prompt_algo == "minimax" and self.use_optimized_minimax:
+            # Skip minimax warm-up for now - it requires a real battle state
+            # The optimizer will initialize on first actual battle turn
+            print("   ⚪ Minimax optimizer will initialize on first battle turn")
+        
+        # 3. Pre-load team predictor (triggers Bayesian model loading)
+        try:
+            from bayesian.predictor_singleton import get_pokemon_predictor
+            predictor = get_pokemon_predictor()
+            print("   ✅ Pokemon predictor loaded")
+        except Exception as e:
+            print(f"   ⚪ Pokemon predictor not available: {e}")
+        
+        # 4. Test LLM backend connection (optional)
+        try:
+            test_output = self.get_LLM_action(
+                system_prompt="You are a test.",
+                user_prompt="Respond with: {\"test\":\"success\"}",
+                model=self.backend,
+                temperature=0.0,
+                max_tokens=50,
+                json_format=True
+            )
+            print("   ✅ LLM backend connection verified")
+        except Exception as e:
+            print(f"   ⚠️  LLM backend test failed: {e}")
+        
+        self._warmed_up = True
+        print("🔥 Warm-up complete!")
     
     def check_all_pokemon(self, pokemon_str: str) -> Pokemon:
         valid_pokemon = None
@@ -303,6 +349,10 @@ class LLMPlayer(Player):
                 # load when llm does heavylifting for parsing
                 if DEBUG:
                     print(f"Raw LLM output: {llm_output}")
+                
+                # Always show LLM reasoning in chat
+                print(f"🧠 LLM [{self.ps_client.account_configuration.username}]: {llm_output}")
+                
                 llm_action_json = json.loads(llm_output)
                 if DEBUG:
                     print(f"Parsed JSON: {llm_action_json}")

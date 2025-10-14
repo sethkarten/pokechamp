@@ -42,6 +42,7 @@ htmlcov/
 .env
 .env.local
 *.env
+passwords.json
 
 # Documentation for AI assistants (optional - uncomment if desired)
 # CLAUDE.md

@@ -3,6 +3,7 @@ from time import sleep
 from typing import List
 import json
 import os
+import random
 
 import numpy as np
 
@@ -15,11 +16,20 @@ from poke_env.environment.pokemon import Pokemon
 from poke_env.environment.side_condition import SideCondition
 from poke_env.player.local_simulation import LocalSim, SimNode
 from poke_env.player.player import Player
+from poke_env.player.battle_order import DoubleBattleOrder
 from poke_env.data.gen_data import GenData
 from pokechamp.prompts import get_micro_strat, get_move_prompt, get_number_turns_faint, get_status_num_turns_fnt, prompt_translate
+from pokechamp.data_cache import (
+    get_cached_move_effect,
+    get_cached_pokemon_move_dict,
+    get_cached_ability_effect,
+    get_cached_pokemon_ability_dict,
+    get_cached_item_effect,
+    get_cached_pokemon_item_dict,
+    get_cached_pokedex
+)
 
-with open("./poke_env/data/static/moves/moves_effect.json", "r") as f:
-    move_effect = json.load(f)
+move_effect = get_cached_move_effect()
 
 def calculate_move_type_damage_multipier(type_1, type_2, type_chart, constraint_type_list):
     TYPE_list = 'BUG,DARK,DRAGON,ELECTRIC,FAIRY,FIGHTING,FIRE,FLYING,GHOST,GRASS,GROUND,ICE,NORMAL,POISON,PSYCHIC,ROCK,STEEL,WATER'.split(",")
@@ -127,24 +137,19 @@ class Human(Player):
         self.team_str = team
         self.use_strat_prompt = _use_strat_prompt
         
-        with open("./poke_env/data/static/moves/moves_effect.json", "r") as f:
-            self.move_effect = json.load(f)
-        # only used in old prompting method, replaced by statistcal sets data
-        with open(f"./poke_env/data/static/moves/gen8pokemon_move_dict.json", "r") as f:
-            self.pokemon_move_dict = json.load(f)
-        with open("./poke_env/data/static/abilities/ability_effect.json", "r") as f:
-            self.ability_effect = json.load(f)
+        # Use cached data instead of loading files repeatedly
+        self.move_effect = get_cached_move_effect()
+        # only used in old prompting method, replaced by statistical sets data
+        self.pokemon_move_dict = get_cached_pokemon_move_dict()
+        self.ability_effect = get_cached_ability_effect()
         # only used is old prompting method
-        with open("./poke_env/data/static/abilities/gen8pokemon_ability_dict.json", "r") as f:
-            self.pokemon_ability_dict = json.load(f)
-        with open("./poke_env/data/static/items/item_effect.json", "r") as f:
-            self.item_effect = json.load(f)
+        self.pokemon_ability_dict = get_cached_pokemon_ability_dict()
+        self.item_effect = get_cached_item_effect()
         # unused
         # with open(f"./poke_env/data/static/items/gen8pokemon_item_dict.json", "r") as f:
         #     self.pokemon_item_dict = json.load(f)
-        self.pokemon_item_dict = {}
-        with open(f"./poke_env/data/static/pokedex/gen{self.gen.gen}pokedex.json", "r") as f:
-            self._pokemon_dict = json.load(f)
+        self.pokemon_item_dict = get_cached_pokemon_item_dict()
+        self._pokemon_dict = get_cached_pokedex(self.gen.gen)
 
         self.last_plan = ""
     def choose_move(self, battle: AbstractBattle):
@@ -176,10 +181,47 @@ class Human(Player):
 class MaxBasePowerPlayer(Player):
     
     def choose_move(self, battle: AbstractBattle):
+        if isinstance(battle, DoubleBattle):
+            return self._choose_max_power_doubles_move(battle)
         if battle.available_moves:
             best_move = max(battle.available_moves, key=lambda move: move.base_power)
             return self.create_order(best_move)
         return self.choose_random_move(battle)
+    
+    def _choose_max_power_doubles_move(self, battle: DoubleBattle):
+        """Double battle implementation that chooses max base power moves for each slot."""
+        
+        orders = [None, None]
+        
+        # Handle force switch cases properly
+        if any(battle.force_switch):
+            for i in range(2):
+                if battle.force_switch[i]:
+                    if battle.available_switches[i]:
+                        orders[i] = self.create_order(random.choice(battle.available_switches[i]))
+                else:
+                    # Pokemon not forced to switch - set to None for partial switches
+                    orders[i] = None
+            return DoubleBattleOrder(first_order=orders[0], second_order=orders[1])
+        
+        # Normal battle logic
+        for i in range(2):
+            # If Pokemon is None or fainted, must switch
+            if battle.active_pokemon[i] is None or battle.active_pokemon[i].fainted:
+                if battle.available_switches[i]:
+                    orders[i] = self.create_order(random.choice(battle.available_switches[i]))
+                continue
+            
+            # Choose max base power move if available
+            if battle.available_moves[i]:
+                best_move = max(battle.available_moves[i], key=lambda move: move.base_power)
+                # Target opponent 1 by default
+                orders[i] = self.create_order(best_move, move_target=1)
+            elif battle.available_switches[i]:
+                # Fall back to switching if no moves available
+                orders[i] = self.create_order(random.choice(battle.available_switches[i]))
+        
+        return DoubleBattleOrder(first_order=orders[0], second_order=orders[1])
 
 class OneStepPlayer(Player):
     def __init__(self,
@@ -197,20 +239,14 @@ class OneStepPlayer(Player):
                          server_configuration=server_configuration)
         
         self.gen = GenData.from_format(battle_format)
-        with open("./poke_env/data/static/moves/moves_effect.json", "r") as f:
-            self.move_effect = json.load(f)
-        with open("./poke_env/data/static/moves/gen8pokemon_move_dict.json", "r") as f:
-            self.pokemon_move_dict = json.load(f)
-        with open("./poke_env/data/static/abilities/ability_effect.json", "r") as f:
-            self.ability_effect = json.load(f)
-        with open("./poke_env/data/static/abilities/gen8pokemon_ability_dict.json", "r") as f:
-            self.pokemon_ability_dict = json.load(f)
-        with open("./poke_env/data/static/items/item_effect.json", "r") as f:
-            self.item_effect = json.load(f)
-        with open("./poke_env/data/static/items/gen8pokemon_item_dict.json", "r") as f:
-            self.pokemon_item_dict = json.load(f)
-        with open("./poke_env/data/static/pokedex/gen8pokedex.json", "r") as f:
-            self._pokemon_dict = json.load(f)
+        # Use cached data instead of loading files repeatedly
+        self.move_effect = get_cached_move_effect()
+        self.pokemon_move_dict = get_cached_pokemon_move_dict()
+        self.ability_effect = get_cached_ability_effect()
+        self.pokemon_ability_dict = get_cached_pokemon_ability_dict()
+        self.item_effect = get_cached_item_effect()
+        self.pokemon_item_dict = get_cached_pokemon_item_dict()
+        self._pokemon_dict = get_cached_pokedex(self.gen.gen)
             
         self.t = 0
         self.K = 1
@@ -493,7 +529,7 @@ class AbyssalPlayer(Player):
 
     def choose_move(self, battle: AbstractBattle):
         if isinstance(battle, DoubleBattle):
-            return self.choose_random_doubles_move(battle)
+            return self._choose_abyssal_doubles_move(battle)
 
         # calculate reward for the last step
         # last_action_reward = self.calc_reward(battle)
@@ -553,12 +589,10 @@ class AbyssalPlayer(Player):
         # with open("./poke_env/data/static/moves/gen7pokemon_move_dict.json", "w") as f:
         #     json.dump(self.pokemon_move_dict, f, indent=4)
 
-        with open("./poke_env/data/static/moves/moves_effect.json", "r") as f:
-            self.move_effect = json.load(f)
-        with open("./poke_env/data/static/abilities/ability_effect.json", "r") as f:
-            self.ability_effect = json.load(f)
-        with open("./poke_env/data/static/items/item_effect.json", "r") as f:
-            self.item_effect = json.load(f)
+        # Use cached data instead of loading files repeatedly
+        self.move_effect = get_cached_move_effect()
+        self.ability_effect = get_cached_ability_effect()
+        self.item_effect = get_cached_item_effect()
 
         set(self.move_effect.keys())
 
@@ -680,6 +714,130 @@ class AbyssalPlayer(Player):
 
 
         return next_action
+
+    def _choose_abyssal_doubles_move(self, battle: DoubleBattle):
+        """Double battle implementation for AbyssalPlayer using SimpleHeuristicPlayer logic."""
+        
+        orders = [None, None]
+        
+        # Handle force switch cases properly
+        if any(battle.force_switch):
+            for i in range(2):
+                if battle.force_switch[i]:
+                    if battle.available_switches[i]:
+                        # Use best matchup for forced switches
+                        best_switch = max(
+                            battle.available_switches[i],
+                            key=lambda s: self._estimate_matchup(s, battle.opponent_active_pokemon[0]) 
+                                         if battle.opponent_active_pokemon[0] else 0
+                        )
+                        orders[i] = self.create_order(best_switch)
+                else:
+                    # Pokemon not forced to switch - set to None for partial switches
+                    orders[i] = None
+            return DoubleBattleOrder(first_order=orders[0], second_order=orders[1])
+        
+        # Normal battle logic with improved decision making
+        for i in range(2):
+            # If Pokemon is None or fainted, must switch
+            if battle.active_pokemon[i] is None or battle.active_pokemon[i].fainted:
+                if battle.available_switches[i]:
+                    # Choose best matchup switch
+                    best_switch = max(
+                        battle.available_switches[i],
+                        key=lambda s: self._estimate_matchup(s, battle.opponent_active_pokemon[0]) 
+                                     if battle.opponent_active_pokemon[0] else 0
+                    )
+                    orders[i] = self.create_order(best_switch)
+                continue
+            
+            active = battle.active_pokemon[i]
+            
+            # Check if we should switch out (bad matchup) - simplified
+            if (battle.available_switches[i] and battle.opponent_active_pokemon[0] and
+                self._estimate_matchup(active, battle.opponent_active_pokemon[0]) < self.SWITCH_OUT_MATCHUP_THRESHOLD):
+                # Switch to better Pokemon
+                best_switch = max(
+                    battle.available_switches[i],
+                    key=lambda s: self._estimate_matchup(s, battle.opponent_active_pokemon[0]) 
+                                 if battle.opponent_active_pokemon[0] else 0
+                )
+                orders[i] = self.create_order(best_switch)
+                continue
+            
+            # Choose best move with improved target selection
+            if battle.available_moves[i]:
+                best_move = None
+                best_score = -float('inf')
+                best_target = 1
+                
+                for move in battle.available_moves[i]:
+                    # Calculate move power with double target consideration
+                    move_power = self._move_power_with_double_target(move, battle)
+                    
+                    # Try targeting each opponent
+                    for target_idx, opp in enumerate(battle.opponent_active_pokemon):
+                        if opp is None:
+                            continue
+                        
+                        target = target_idx + 1  # Convert to showdown position
+                        
+                        # Calculate move effectiveness
+                        type_multiplier = opp.damage_multiplier(move) if move.type else 1.0
+                        stab_bonus = 1.5 if move.type in active.types else 1.0
+                        
+                        # Calculate relative power with null checks
+                        try:
+                            if move.category.name == "PHYSICAL":
+                                atk_stat = active.stats.get("atk", 100) if active.stats else 100
+                                def_stat = opp.stats.get("def", 100) if opp.stats else 100
+                                power_ratio = atk_stat / max(def_stat, 1)
+                            elif move.category.name == "SPECIAL":
+                                spa_stat = active.stats.get("spa", 100) if active.stats else 100
+                                spd_stat = opp.stats.get("spd", 100) if opp.stats else 100
+                                power_ratio = spa_stat / max(spd_stat, 1)
+                            else:
+                                power_ratio = 1.0
+                        except (AttributeError, TypeError):
+                            power_ratio = 1.0
+                        
+                        score = (move_power * type_multiplier * stab_bonus * 
+                                power_ratio * move.accuracy * move.expected_hits)
+                        
+                        if score > best_score:
+                            best_score = score
+                            best_move = move
+                            best_target = target
+                
+                if best_move:
+                    # No dynamax in Gen 9 VGC, so just use the move
+                    orders[i] = self.create_order(best_move, move_target=best_target)
+                else:
+                    # Fallback to random move
+                    move = random.choice(battle.available_moves[i])
+                    target = random.choice([1, 2])
+                    orders[i] = self.create_order(move, move_target=target)
+            elif battle.available_switches[i]:
+                # No moves available, must switch
+                best_switch = max(
+                    battle.available_switches[i],
+                    key=lambda s: self._estimate_matchup(s, battle.opponent_active_pokemon[0]) 
+                                 if battle.opponent_active_pokemon[0] else 0
+                )
+                orders[i] = self.create_order(best_switch)
+        
+        return DoubleBattleOrder(first_order=orders[0], second_order=orders[1])
+    
+    def _move_power_with_double_target(self, move, battle: DoubleBattle):
+        """Calculate move power considering double battle targeting."""
+        base_power = move.base_power
+        
+        # Check if move can hit multiple targets (simplified check)
+        if move.target in ["allAdjacentFoes", "allAdjacent"]:
+            # Multi-target moves get power boost in calculation
+            return base_power * 1.5
+        
+        return base_power
 
     def state_translate(self, battle: AbstractBattle):
 
