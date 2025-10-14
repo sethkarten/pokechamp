@@ -51,6 +51,7 @@ passwords.json
 
 # Sensitive credentials
 passwords.json
+passwords_vgc.json
 
 # Documentation for AI assistants (optional - uncomment if desired)
 # CLAUDE.md
