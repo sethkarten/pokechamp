@@ -96,21 +96,27 @@ async def main():
                             PNUMBER1=PNUMBER1 + '2',  # for name uniqueness locally
                             battle_format=args.battle_format)
 
-    # Use old teamloader for player, modern for opponent
-    player_teamloader = get_metamon_teams(args.battle_format, "competitive")
-    opponent_teamloader = get_metamon_teams(args.battle_format, "modern_replays")
+    # Try to use metamon teams, fallback to static teams if not available
+    player_teamloader = None
+    opponent_teamloader = None
+    
+    try:
+        player_teamloader = get_metamon_teams(args.battle_format, "competitive")
+        opponent_teamloader = get_metamon_teams(args.battle_format, "modern_replays")
+    except ValueError as e:
+        print(f"Metamon teams not available for {args.battle_format}: {e}")
+        print(f"Falling back to static teams...")
     
     if not 'random' in args.battle_format:
-
         if 'vgc' in args.battle_format:
             player.update_team(load_random_team(id=None, vgc=True))
             opponent.update_team(load_random_team(id=None, vgc=True))
-        elif 'gen9ou' in args.battle_format:
-            # Use static teams for gen9ou
+        elif player_teamloader is None or opponent_teamloader is None:
+            # Fallback to static teams when metamon teams not available
             player.update_team(load_random_team(id=None, vgc=False))
             opponent.update_team(load_random_team(id=None, vgc=False))
         else:
-            # Set teamloader on players for rejection recovery
+            # Use metamon teams if available
             player.set_teamloader(player_teamloader)
             opponent.set_teamloader(opponent_teamloader)
             
@@ -131,11 +137,12 @@ async def main():
             if 'vgc' in args.battle_format:
                 player.update_team(load_random_team(id=None, vgc=True))
                 opponent.update_team(load_random_team(id=None, vgc=True))
-            elif 'gen9ou' in args.battle_format:
-                # Use static teams for gen9ou
+            elif player_teamloader is None or opponent_teamloader is None:
+                # Fallback to static teams when metamon teams not available
                 player.update_team(load_random_team(id=None, vgc=False))
                 opponent.update_team(load_random_team(id=None, vgc=False))
             else:
+                # Use metamon teams if available
                 player.update_team(player_teamloader.yield_team())
                 opponent.update_team(opponent_teamloader.yield_team())
         pbar.set_description(f"{player.win_rate*100:.2f}%")

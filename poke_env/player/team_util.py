@@ -76,7 +76,16 @@ def get_metamon_teams(battle_format: str, set_name: str) -> TeamSet:
         raise ValueError(
             f"Cannot locate valid team directory for format {battle_format} at path {path}"
         )
-    return TeamSet(path, battle_format)
+    
+    # Check if team files exist for this format
+    team_set = TeamSet(path, battle_format)
+    if not team_set.team_files:
+        raise ValueError(
+            f"No team files found for format {battle_format} in {path}. "
+            f"Expected files with extension '.{battle_format}_team'"
+        )
+    
+    return team_set
 
 def load_random_team(id=None, vgc=False):
     if id == None:
