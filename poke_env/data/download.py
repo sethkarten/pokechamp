@@ -67,10 +67,7 @@ def download_parsed_replays(
     parsed_replay_dir = os.path.join(METAMON_CACHE_DIR, "parsed-replays")
     tar_path = os.path.join(parsed_replay_dir, f"{battle_format}.tar.gz")
     out_path = os.path.join(parsed_replay_dir, battle_format)
-<<<<<<< HEAD
     print(out_path)
-=======
->>>>>>> main
     if os.path.exists(out_path):
         if not force_download:
             return out_path

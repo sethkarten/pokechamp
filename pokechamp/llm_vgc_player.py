@@ -350,7 +350,9 @@ class LLMVGCPlayer(Player):
 
             gimmick_output_format = ''
             if 'pokellmon' not in self.ps_client.account_configuration.username: # make sure we dont mess with pokellmon original strat
-                gimmick_output_format = f'{f' or {{"dynamax":"<move_name>"}}' if battle.can_dynamax else ''}{f' or {{"terastallize":"<move_name>"}}' if battle.can_tera else ''}'
+                dynamax_format = ' or {"dynamax":"<move_name>"}' if battle.can_dynamax else ''
+                tera_format = ' or {"terastallize":"<move_name>"}' if battle.can_tera else ''
+                gimmick_output_format = f'{dynamax_format}{tera_format}'
 
             # ADDITIONAL CHECK: Validate actions based on available options
             # Check if Pokemon is fainted or None first (highest priority)

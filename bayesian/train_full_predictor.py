@@ -5,16 +5,12 @@ This will download ~1M teams if not already cached and train the model.
 """
 
 import os
-<<<<<<< HEAD
 import sys
 import time
 # Add the project root to Python path
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, project_root)
 
-=======
-import time
->>>>>>> main
 from bayesian.team_predictor import BayesianTeamPredictor
 
 
@@ -35,11 +31,7 @@ def main():
     start_time = time.time()
     
     try:
-<<<<<<< HEAD
-        predictor.load_and_train(force_retrain=True)  # Use cache if available
-=======
         predictor.load_and_train(force_retrain=False)  # Use cache if available
->>>>>>> main
         
         end_time = time.time()
         duration = end_time - start_time
