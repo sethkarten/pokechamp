@@ -594,13 +594,13 @@ class AbyssalPlayer(Player):
         self.ability_effect = get_cached_ability_effect()
         self.item_effect = get_cached_item_effect()
 
-        set(self.move_effect.keys())
+        # set(self.move_effect.keys())
 
-        set(self.ability_effect.keys())
+        # set(self.ability_effect.keys())
 
-        self.item_set - set(self.item_effect.keys())
-        self.ability_set - set(self.ability_effect.keys())
-        self.move_set - set(self.move_effect.keys())
+        # self.item_set - set(self.item_effect.keys())
+        # self.ability_set - set(self.ability_effect.keys())
+        # self.move_set - set(self.move_effect.keys())
 
         # Main mons shortcuts
         active = battle.active_pokemon
