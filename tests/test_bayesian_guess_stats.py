@@ -273,4 +273,4 @@ if __name__ == "__main__":
     print("Running basic Bayesian guess_stats tests...")
     test_hoopa_unbound_fix()
     test_battle_forms_fix()
-    print("✅ Basic tests completed!")
+    print("[OK] Basic tests completed!")

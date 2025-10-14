@@ -721,9 +721,9 @@ Target numbers: 1=left opponent, 2=right opponent, 0=field effect, 0=self\n'''
                 prompt_translate=self.prompt_translate
             )
             self._minimax_initialized = True
-            print("🚀 Minimax optimizer initialized")
+            print("[INIT] Minimax optimizer initialized")
         except Exception as e:
-            print(f"⚠️  Failed to initialize minimax optimizer: {e}")
+            print(f"[WARN] Failed to initialize minimax optimizer: {e}")
             self.use_optimized_minimax = False  # Fallback to original
 
     def check_timeout(self, start_time, battle):
@@ -1198,7 +1198,7 @@ Target numbers: 1=left opponent, 2=right opponent, 0=field effect, 0=self\n'''
             # Log performance stats
             end_time = time.time()
             stats = optimizer.get_performance_stats()
-            print(f"⚡ Optimized minimax: {end_time - start_time:.2f}s, "
+            print(f"[PERF] Optimized minimax: {end_time - start_time:.2f}s, "
                   f"Pool reuse: {stats['pool_stats']['reuse_rate']:.2f}, "
                   f"Cache hit rate: {stats['cache_stats']['hit_rate']:.2f}")
             

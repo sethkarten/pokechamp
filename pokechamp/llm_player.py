@@ -144,7 +144,7 @@ class LLMPlayer(Player):
         if self._warmed_up:
             return
             
-        print("🔥 Warming up player components...")
+        print("[WARMUP] Starting player component initialization...")
         
         # 1. Data cache is already loaded during __init__
         
@@ -152,7 +152,7 @@ class LLMPlayer(Player):
         if self.prompt_algo == "minimax" and self.use_optimized_minimax:
             # Skip minimax warm-up for now - it requires a real battle state
             # The optimizer will initialize on first actual battle turn
-            print("   ⚪ Minimax optimizer will initialize on first battle turn")
+            print("   [INFO] Minimax optimizer will initialize on first battle turn")
         
         # 3. Pre-load team predictor (triggers Bayesian model loading)
         try:
@@ -163,20 +163,20 @@ class LLMPlayer(Player):
                 predictor.load_and_train()
             elif hasattr(predictor, 'team_predictor') and hasattr(predictor.team_predictor, 'load_and_train'):
                 predictor.team_predictor.load_and_train()
-            print("   ✅ Pokemon predictor pre-loaded")
+            print("   [OK] Pokemon predictor pre-loaded")
         except Exception as e:
-            print(f"   ⚠️  Pokemon predictor warm-up failed: {e}")
+            print(f"   [WARN] Pokemon predictor warm-up failed: {e}")
         
         # 4. Pre-load move set data
         try:
             from pokechamp.data_cache import get_cached_moves_set
             get_cached_moves_set('gen9ou')
-            print("   ✅ Move set data pre-loaded")
+            print("   [OK] Move set data pre-loaded")
         except Exception as e:
-            print(f"   ⚠️  Move set data warm-up failed: {e}")
+            print(f"   [WARN] Move set data warm-up failed: {e}")
         
         self._warmed_up = True
-        print("🔥 Player warm-up complete!")
+        print("[WARMUP] Player warm-up complete!")
 
     def get_LLM_action(self, system_prompt, user_prompt, model, temperature=0.7, json_format=False, seed=None, stop=[], max_tokens=200, actions=None, llm=None) -> str:
         if llm is None:
@@ -595,9 +595,9 @@ class LLMPlayer(Player):
                 prompt_translate=self.prompt_translate
             )
             self._minimax_initialized = True
-            print("🚀 Minimax optimizer initialized")
+            print("[INIT] Minimax optimizer initialized")
         except Exception as e:
-            print(f"⚠️  Failed to initialize minimax optimizer: {e}")
+            print(f"[WARN] Failed to initialize minimax optimizer: {e}")
             self.use_optimized_minimax = False  # Fallback to original
 
     def check_timeout(self, start_time, battle):
@@ -1072,7 +1072,7 @@ class LLMPlayer(Player):
             # Log performance stats
             end_time = time.time()
             stats = optimizer.get_performance_stats()
-            print(f"⚡ Optimized minimax: {end_time - start_time:.2f}s, "
+            print(f"[PERF] Optimized minimax: {end_time - start_time:.2f}s, "
                   f"Pool reuse: {stats['pool_stats']['reuse_rate']:.2f}, "
                   f"Cache hit rate: {stats['cache_stats']['hit_rate']:.2f}")
             

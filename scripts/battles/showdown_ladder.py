@@ -85,10 +85,10 @@ async def main():
         player.update_team(teamloader.yield_team())
 
     # Warm up player components before battles to avoid turn-time delays
-    print("🔥 Warming up player before battles...")
+    print("[WARMUP] Warming up player before battles...")
     if hasattr(player, 'warm_up'):
         player.warm_up()
-    print("🔥 Player warm-up complete!")
+    print("[WARMUP] Player warm-up complete!")
 
     # Playing n_challenges games on the ladder
     n_challenges = args.N
