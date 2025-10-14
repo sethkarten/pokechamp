@@ -44,6 +44,13 @@ from poke_env.player.local_simulation import LocalSim, SimNode
 from difflib import get_close_matches
 from pokechamp.prompts import get_number_turns_faint, get_status_num_turns_fnt, state_translate, get_gimmick_motivation
 
+# Visual effects import (optional)
+try:
+    from pokechamp.visual_effects import visual, print_banner, print_status
+    VISUAL_EFFECTS = True
+except ImportError:
+    VISUAL_EFFECTS = False
+
 DEBUG=False
 
 class LLMPlayer(Player):
@@ -144,7 +151,11 @@ class LLMPlayer(Player):
         if self._warmed_up:
             return
             
-        print("[WARMUP] Starting player component initialization...")
+        if VISUAL_EFFECTS:
+            print_banner("WARMUP", "water")
+            print("Starting player component initialization...")
+        else:
+            print("[WARMUP] Starting player component initialization...")
         
         # 1. Data cache is already loaded during __init__
         
@@ -176,7 +187,11 @@ class LLMPlayer(Player):
             print(f"   [WARN] Move set data warm-up failed: {e}")
         
         self._warmed_up = True
-        print("[WARMUP] Player warm-up complete!")
+        if VISUAL_EFFECTS:
+            print(visual.create_banner("READY", font="small", style="greenblue"))
+            print("Player warm-up complete!")
+        else:
+            print("[WARMUP] Player warm-up complete!")
 
     def get_LLM_action(self, system_prompt, user_prompt, model, temperature=0.7, json_format=False, seed=None, stop=[], max_tokens=200, actions=None, llm=None) -> str:
         if llm is None:
@@ -595,7 +610,10 @@ class LLMPlayer(Player):
                 prompt_translate=self.prompt_translate
             )
             self._minimax_initialized = True
-            print("[INIT] Minimax optimizer initialized")
+            if VISUAL_EFFECTS:
+                print_status("Minimax optimizer initialized", "success")
+            else:
+                print("[INIT] Minimax optimizer initialized")
         except Exception as e:
             print(f"[WARN] Failed to initialize minimax optimizer: {e}")
             self.use_optimized_minimax = False  # Fallback to original
@@ -1072,9 +1090,12 @@ class LLMPlayer(Player):
             # Log performance stats
             end_time = time.time()
             stats = optimizer.get_performance_stats()
-            print(f"[PERF] Optimized minimax: {end_time - start_time:.2f}s, "
-                  f"Pool reuse: {stats['pool_stats']['reuse_rate']:.2f}, "
-                  f"Cache hit rate: {stats['cache_stats']['hit_rate']:.2f}")
+            if VISUAL_EFFECTS:
+                print(visual.minimax_progress(depth, evaluated_nodes, end_time - start_time))
+            else:
+                print(f"[PERF] Optimized minimax: {end_time - start_time:.2f}s, nodes: {evaluated_nodes}, "
+                      f"Pool reuse: {stats['pool_stats']['reuse_rate']:.2f}, "
+                      f"Cache hit rate: {stats['cache_stats']['hit_rate']:.2f}")
             
             if return_opp:
                 return action, action_opp

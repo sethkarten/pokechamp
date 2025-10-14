@@ -18,6 +18,10 @@ openai
 bitsandbytes
 google-genai
 ollama
+# Visual effects libraries for enhanced terminal output
+pyfiglet
+rich
+fade
 requests
 pytest
 huggingface-hub

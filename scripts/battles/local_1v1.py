@@ -4,6 +4,13 @@ import os
 import sys
 import argparse
 
+# Import visual effects early
+try:
+    from pokechamp.visual_effects import visual, print_banner, print_status
+    VISUAL_EFFECTS = True
+except ImportError:
+    VISUAL_EFFECTS = False
+
 # Add the project root to Python path
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
 sys.path.insert(0, project_root)
@@ -80,6 +87,18 @@ parser.add_argument("--N", type=int, default=25)
 args = parser.parse_args()
 
 async def main():
+    # Visual banner for local battles
+    if VISUAL_EFFECTS:
+        print_banner("LOCAL", "fire")
+        print_banner("BATTLE", "water")
+        print(f"Player: {args.player_name} ({args.player_backend})")
+        print(f"Opponent: {args.opponent_name} ({args.opponent_backend})")
+        print(f"Format: {args.battle_format}")
+        print("=" * 50)
+    else:
+        print(f"\n=== LOCAL BATTLE ===")
+        print(f"Player: {args.player_name} vs Opponent: {args.opponent_name}")
+        print(f"Format: {args.battle_format}\n")
     player = get_llm_player(args, 
                             args.player_backend, 
                             args.player_prompt_algo, 
@@ -104,8 +123,12 @@ async def main():
         player_teamloader = get_metamon_teams(args.battle_format, "competitive")
         opponent_teamloader = get_metamon_teams(args.battle_format, "modern_replays")
     except ValueError as e:
-        print(f"Metamon teams not available for {args.battle_format}: {e}")
-        print(f"Falling back to static teams...")
+        if VISUAL_EFFECTS:
+            print_status(f"Metamon teams not available for {args.battle_format}: {e}", "warning")
+            print_status("Falling back to static teams...", "info")
+        else:
+            print(f"Metamon teams not available for {args.battle_format}: {e}")
+            print(f"Falling back to static teams...")
     
     if not 'random' in args.battle_format:
         if 'vgc' in args.battle_format:

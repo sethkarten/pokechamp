@@ -11,6 +11,13 @@ from typing import Dict, Any
 from functools import lru_cache
 from poke_env.data.gen_data import GenData
 
+# Visual effects import (optional)
+try:
+    from pokechamp.visual_effects import visual, print_banner
+    VISUAL_EFFECTS = True
+except ImportError:
+    VISUAL_EFFECTS = False
+
 
 class GameDataCache:
     """Singleton cache for static game data."""
@@ -30,7 +37,11 @@ class GameDataCache:
     
     def _load_all_data(self):
         """Load all static game data into memory."""
-        print("[CACHE] Loading static game data into cache...")
+        if VISUAL_EFFECTS:
+            print_banner("CACHE", "water")
+            print("Loading static game data...")
+        else:
+            print("[CACHE] Loading static game data into cache...")
         
         # Move effects and Pokemon move mappings
         try:
@@ -73,7 +84,10 @@ class GameDataCache:
         # Pokemon item mappings (if needed)
         self._data['pokemon_item_dict'] = {}  # Currently unused
         
-        print("[OK] Static game data loaded into cache")
+        if VISUAL_EFFECTS:
+            print(visual.create_banner("LOADED", font="small", style="greenblue"))
+        else:
+            print("[OK] Static game data loaded into cache")
     
     def get_move_effect(self) -> Dict[str, Any]:
         """Get cached move effects data."""

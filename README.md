@@ -1,3 +1,11 @@
+```
+██████╗  ██████╗ ██╗  ██╗███████╗ ██████╗██╗  ██╗ █████╗ ███╗   ███╗██████╗ 
+██╔══██╗██╔═══██╗██║ ██╔╝██╔════╝██╔════╝██║  ██║██╔══██╗████╗ ████║██╔══██╗
+██████╔╝██║   ██║█████╔╝ █████╗  ██║     ███████║███████║██╔████╔██║██████╔╝
+██╔═══╝ ██║   ██║██╔═██╗ ██╔══╝  ██║     ██╔══██║██╔══██║██║╚██╔╝██║██╔═══╝ 
+██║     ╚██████╔╝██║  ██╗███████╗╚██████╗██║  ██║██║  ██║██║ ╚═╝ ██║██║     
+╚═╝      ╚═════╝ ╚═╝  ╚═╝╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝╚═╝     
+```
 # Pokémon Champion
 <!-- project badges -->
 [![Paper (ICML '25)](https://img.shields.io/badge/Paper-ICML-blue?style=flat)](https://openreview.net/pdf?id=SnZ7SKykHh)
@@ -80,7 +88,7 @@ node pokemon-showdown start --no-security
 
 3. Open http://localhost:8000/ in your browser
 
-## 🤖 Available Bots
+## Available Bots
 
 ### Built-in Bots
 - `pokechamp` - Main PokéChamp agent using minimax algorithm
@@ -109,7 +117,7 @@ class MyCustomBot(LLMPlayer):
 
 3. Your bot automatically becomes available in battle scripts
 
-## 🧠 LLM Backend Support
+## LLM Backend Support
 
 The system supports multiple LLM backends through OpenRouter, providing access to hundreds of models:
 
@@ -225,7 +233,7 @@ filtered_dataset = load_filtered_dataset(
 )
 ```
 
-## 🧪 Testing
+## Testing
 
 Run the comprehensive test suite:
 
@@ -245,30 +253,6 @@ The test suite includes:
 - [OK] Team loading and rejection handling
 - [OK] Bot system integration
 - [OK] Core battle engine functionality
-
-## Development Commands
-
-All development commands are documented in `CLAUDE.md` for AI assistants and include:
-
-### Environment Setup
-```bash
-conda create -n pokechamp python=3.12
-conda activate pokechamp
-pip install -r requirements.txt
-```
-
-### Testing Commands
-```bash
-pytest tests/ -v                    # Run all tests
-pytest tests/ -m "not slow"        # Skip slow tests
-pytest tests/test_bayesian_*.py     # Test Bayesian functionality
-```
-
-### Battle Commands
-```bash
-python local_1v1.py --help         # See all options
-python scripts/evaluation/evaluate_gen9ou.py  # Cross-evaluation
-```
 
 ## Reproducing Paper Results
 

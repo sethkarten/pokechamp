@@ -469,7 +469,9 @@ def run_ladder_session(agent, session_id):
     print(f"\n[{datetime.now().strftime('%H:%M:%S')}] Starting ladder session #{session_id}: {agent['username']}")
     print(f"  Games: {GAMES_PER_MATCHUP} | Timeout: {TIMEOUT_SECONDS}s | LLM Timeout: {LLM_TIMEOUT_SECONDS}s | Seed: {unique_seed}")
     print(f"  Log: {log_file}")
-    print(f"  [LADDER] Agent vs random opponents on Pokemon Showdown")
+    from pokechamp.visual_effects import visual, print_banner
+    print_banner("LADDER", "fire")
+    print("Agent vs random opponents on Pokemon Showdown")
     
     try:
         with open(log_file, "w") as f:
@@ -616,7 +618,8 @@ def forfeit_existing_battles():
                     
                     # Send universal forfeit command - works for any active battles
                     await temp_player.ps_client.send_message("/forfeit")
-                    print(f"  [OK] Sent forfeit command")
+                    from pokechamp.visual_effects import print_status
+                    print_status("Sent forfeit command", "success")
                     
                     # Brief delay to let forfeit process
                     await asyncio.sleep(2)
@@ -625,7 +628,7 @@ def forfeit_existing_battles():
                     forfeit_count += 1
                     
                 except Exception as e:
-                    print(f"  [ERROR] Error with {agent['username']}: {e}")
+                    print_status(f"Error with {agent['username']}: {e}", "error")
                 finally:
                     # Ensure clean shutdown regardless of errors
                     try:
