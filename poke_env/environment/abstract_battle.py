@@ -1,4 +1,6 @@
 import os
+import asyncio
+
 from abc import ABC, abstractmethod
 from logging import Logger
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
@@ -16,6 +18,8 @@ def sanitize_string(s: str) -> str:
     return ''.join(char for char in s if char.isalnum()).lower()
 
 class AbstractBattle(ABC):
+    _pokemon_predictor = None  # Class-level singleton for PokemonPredictor
+    
     MESSAGES_TO_IGNORE = {
         "-anim",
         "-burst",
@@ -175,7 +179,17 @@ class AbstractBattle(ABC):
         self._team: Dict[str, Pokemon] = {}
         self._opponent_team: Dict[str, Pokemon] = {}
 
-
+    @classmethod
+    def get_pokemon_predictor(cls):
+        """Get the shared PokemonPredictor instance, creating it if necessary.
+        
+        This is a class-level singleton that loads the model only once and
+        shares it across all battle instances.
+        """
+        if cls._pokemon_predictor is None:
+            from bayesian.predictor_singleton import get_pokemon_predictor
+            cls._pokemon_predictor = get_pokemon_predictor()
+        return cls._pokemon_predictor
 
     def get_pokemon(
         self,
@@ -531,6 +545,9 @@ class AbstractBattle(ABC):
                         self.battle_tag,
                         self.turn,
                     )
+            elif len(split_message) == 6 and split_message[5].startswith("[from]"):
+                # Handle moves with [from] tags like lockedmove, Magic Bounce, etc.
+                pokemon, move, presumed_target = split_message[2:5]
             else:
                 pokemon, move, presumed_target = split_message[2:5]
                 if self.logger is not None:
@@ -670,10 +687,15 @@ class AbstractBattle(ABC):
         elif split_message[1] == "-prepare":
             try:
                 attacker, move, defender = split_message[2:5]
-                defender = self.get_pokemon(defender)
-                if to_id_str(move) == "skydrop":
-                    defender.start_effect("Sky Drop")
-            except ValueError:
+                # Check if defender is a valid pokemon identifier (starts with p1 or p2)
+                if defender.startswith(('p1', 'p2')):
+                    defender = self.get_pokemon(defender)
+                    if to_id_str(move) == "skydrop":
+                        defender.start_effect("Sky Drop")
+                else:
+                    # Defender is a special flag like [premajor], not a pokemon
+                    defender = None
+            except (ValueError, IndexError):
                 attacker, move = split_message[2:4]
                 defender = None
             self.get_pokemon(attacker).prepare(move, defender)
@@ -746,6 +768,7 @@ class AbstractBattle(ABC):
                 }
             )
         elif split_message[1] == "poke":
+            #pass    #TODO make this not register teampreview pokemon while playing VGC b/c it messes with showteam
             player, details = split_message[2:4]
             self._register_teampreview_pokemon(player, details)
         elif split_message[1] == "premove":
@@ -805,9 +828,7 @@ class AbstractBattle(ABC):
             if pokemon.terastallized:
                 if pokemon in set(self.opponent_team.values()):
                     self._opponent_can_terrastallize = False
-        else:
-            raise NotImplementedError(split_message)
-
+    
     @abstractmethod
     def parse_request(self, request: Dict[str, Any]):
         pass

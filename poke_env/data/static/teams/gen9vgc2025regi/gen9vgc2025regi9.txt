@@ -1,0 +1,70 @@
+Flutter Mane @ Booster Energy  
+Ability: Protosynthesis  
+Level: 50  
+Tera Type: Fairy  
+EVs: 20 HP / 44 Def / 188 SpA / 4 SpD / 252 Spe  
+Timid Nature  
+IVs: 0 Atk  
+- Moonblast  
+- Icy Wind  
+- Taunt  
+- Protect  
+
+Bronzong @ Safety Goggles  
+Ability: Levitate  
+Level: 50  
+Tera Type: Fire  
+EVs: 252 HP / 252 Def / 4 SpD  
+Relaxed Nature  
+IVs: 0 Spe  
+- Body Press  
+- Gyro Ball  
+- Iron Defense  
+- Trick Room  
+
+Basculegion @ Choice Scarf  
+Ability: Adaptability  
+Level: 50  
+Tera Type: Dragon  
+EVs: 220 Atk / 36 SpD / 252 Spe  
+Jolly Nature  
+- Wave Crash  
+- Last Respects  
+- Icy Wind  
+- Aqua Jet  
+
+Whimsicott @ Focus Sash  
+Ability: Prankster  
+Level: 50  
+Tera Type: Ghost  
+EVs: 4 HP / 252 SpA / 252 Spe  
+Timid Nature  
+IVs: 0 Atk  
+- Moonblast  
+- Tailwind  
+- Encore  
+- Helping Hand  
+
+Arcanine-Hisui @ Choice Band  
+Ability: Intimidate  
+Level: 50  
+Tera Type: Grass  
+EVs: 4 HP / 252 Atk / 252 Spe  
+Jolly Nature  
+- Flare Blitz  
+- Rock Slide  
+- Extreme Speed  
+- Head Smash  
+
+Terapagos @ Power Herb  
+Ability: Tera Shift  
+Level: 50  
+Tera Type: Stellar  
+EVs: 252 SpA / 4 SpD / 252 Spe  
+Modest Nature  
+IVs: 15 Atk  
+- Tera Starstorm  
+- Earth Power  
+- Meteor Beam  
+- Protect  
+

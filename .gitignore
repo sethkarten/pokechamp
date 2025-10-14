@@ -1,8 +1,63 @@
-data
+# IDE and system files
 .idea/*
 .DS_Store
+.vscode/
+*.swp
+*.swo
+*~
+
+# Python
 *.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Model and data files
 *.pkl
 *.jsonl
 *.log
-__pycache__
+/tmp/metamon_cache/
+
+# Battle logs and replays
+battle_log/*
+*.html
+
+# Test files and debugging
+test_bots.py
+test_openrouter.py
+example_openrouter_usage.py
+debug_*.py
+
+# Testing artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Environment and config
+.env
+.env.local
+*.env
+
+# Documentation for AI assistants (optional - uncomment if desired)
+# CLAUDE.md
+
+# Jupyter notebooks (if any)
+*.ipynb_checkpoints/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+CLAUDE.md

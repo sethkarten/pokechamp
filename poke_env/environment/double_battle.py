@@ -37,9 +37,15 @@ class DoubleBattle(AbstractBattle):
         self._opponent_can_dynamax: List[bool] = [True, True]
         self._opponent_can_mega_evolve: List[bool] = [True, True]
         self._opponent_can_z_move: List[bool] = [True, True]
+        self._opponent_can_tera: List[bool] = [False, False]
         self._force_switch: List[bool] = [False, False]
         self._maybe_trapped: List[bool] = [False, False]
         self._trapped: List[bool] = [False, False]
+
+        self.battle_msg_history = ""
+        self.pokemon_hp_log_dict = {}
+        self.speed_list = []
+
 
         # Battle state attributes
         self._active_pokemon: Dict[str, Pokemon] = {}
@@ -88,6 +94,8 @@ class DoubleBattle(AbstractBattle):
         :param request: Parsed JSON request object.
         :type request: dict
         """
+        #print('[battle request]', request)
+
         if self.logger is not None:
             self.logger.debug(
                 "Parsing the following request update in battle %s:\n%s",
@@ -244,90 +252,7 @@ class DoubleBattle(AbstractBattle):
         else:
             active[slot_a], active[slot_b] = active[slot_b], active[slot_a]
 
-    def get_possible_showdown_targets(
-        self, move: Move, pokemon: Pokemon, dynamax: bool = False
-    ) -> List[int]:
-        """
-        Given move of an ALLY Pokemon, returns a list of possible Pokemon Showdown
-        targets for it. This is smart enough so that it figures whether the Pokemon
-        is already dynamaxed.
-
-        :param move: Move instance for which possible targets should be returned
-        :type move: Move
-        :param dynamax: whether given move also STARTS dynamax for its user
-        :return: a list of integers indicating Pokemon Showdown targets:
-            -1, -2, 1, 2 or self.EMPTY_TARGET_POSITION that indicates "no target"
-        :rtype: List[int]
-        """
-        if move.id in SPECIAL_MOVES:
-            return [self.EMPTY_TARGET_POSITION]
-
-        pokemon_1, pokemon_2 = self.active_pokemon
-        if pokemon == pokemon_1 and move in self.available_moves[0]:
-            self_position = self.POKEMON_1_POSITION
-            ally_position = self.POKEMON_2_POSITION
-        elif pokemon == pokemon_2 and move in self.available_moves[1]:
-            self_position = self.POKEMON_2_POSITION
-            ally_position = self.POKEMON_1_POSITION
-        else:
-            raise Exception(
-                f"Selected move {move.id} is not owned by any active ally Pokemon "
-                f"that is currently battling"
-            )
-
-        if dynamax or pokemon.is_dynamaxed:
-            if move.category == MoveCategory.STATUS:
-                targets = [self.EMPTY_TARGET_POSITION]
-            else:
-                targets = [self.OPPONENT_1_POSITION, self.OPPONENT_2_POSITION]
-        elif move.non_ghost_target and (
-            PokemonType.GHOST not in pokemon.types
-        ):  # fixing target for Curse
-            return [self.EMPTY_TARGET_POSITION]
-        else:
-            targets = {
-                "adjacentAlly": [ally_position],
-                "adjacentAllyOrSelf": [ally_position, self_position],
-                "adjacentFoe": [self.OPPONENT_1_POSITION, self.OPPONENT_2_POSITION],
-                "all": [self.EMPTY_TARGET_POSITION],
-                "allAdjacent": [self.EMPTY_TARGET_POSITION],
-                "allAdjacentFoes": [self.EMPTY_TARGET_POSITION],
-                "allies": [self.EMPTY_TARGET_POSITION],
-                "allySide": [self.EMPTY_TARGET_POSITION],
-                "allyTeam": [self.EMPTY_TARGET_POSITION],
-                "any": [
-                    ally_position,
-                    self.OPPONENT_1_POSITION,
-                    self.OPPONENT_2_POSITION,
-                ],
-                "foeSide": [self.EMPTY_TARGET_POSITION],
-                "normal": [
-                    ally_position,
-                    self.OPPONENT_1_POSITION,
-                    self.OPPONENT_2_POSITION,
-                ],
-                "randomNormal": [self.EMPTY_TARGET_POSITION],
-                "scripted": [self.EMPTY_TARGET_POSITION],
-                "self": [self.EMPTY_TARGET_POSITION],
-                self.EMPTY_TARGET_POSITION: [self.EMPTY_TARGET_POSITION],
-                None: [self.OPPONENT_1_POSITION, self.OPPONENT_2_POSITION],
-            }[move.deduced_target]
-
-        pokemon_ids = set(self._opponent_active_pokemon.keys())
-        pokemon_ids.update(self._active_pokemon.keys())
-        targets_to_keep = {
-            {
-                f"{self.player_role}a": -1,
-                f"{self.player_role}b": -2,
-                f"{self.opponent_role}a": 1,
-                f"{self.opponent_role}b": 2,
-            }[pokemon_identifier]
-            for pokemon_identifier in pokemon_ids
-        }
-        targets_to_keep.add(self.EMPTY_TARGET_POSITION)
-        targets = [target for target in targets if target in targets_to_keep]
-
-        return targets
+    
 
     @property
     def active_pokemon(self) -> List[Optional[Pokemon]]:
@@ -444,6 +369,21 @@ class DoubleBattle(AbstractBattle):
         else:
             self._opponent_can_dynamax = value
 
+    @property
+    def opponent_can_tera(self) -> List[bool]:
+        """
+        :return: Whether or not opponent's current active pokemon can terastallize
+        :rtype: List[bool]
+        """
+        return self._opponent_can_tera
+    
+    @opponent_can_tera.setter
+    def opponent_can_tera(self, value: Union[bool, List[bool]]):
+        if isinstance(value, bool):
+            self._opponent_can_tera = [value, value]
+        else:
+            self._opponent_can_tera = value
+    
     @property
     def opponent_can_mega_evolve(self) -> List[bool]:
         """
