@@ -124,6 +124,7 @@ class Player(ABC):
         self.ps_client._handle_battle_message = self._handle_battle_message  # type: ignore
         self.ps_client._update_challenges = self._update_challenges  # type: ignore
         self.ps_client._handle_challenge_request = self._handle_challenge_request  # type: ignore
+        self.ps_client._handle_team_rejection = self._handle_team_rejection  # type: ignore
 
         self._format: str = battle_format
         self._max_concurrent_battles: int = max_concurrent_battles
@@ -158,7 +159,63 @@ class Player(ABC):
         self.pokemon_move_dict = {}
         self.pokemon_item_dict = {}
         self.pokemon_ability_dict = {}
+        self._team_rejection_count = 0
+        self._max_team_rejections = 10
+        self._last_challenge_info = None  # Track last challenge/accept for retry
+        self._teamloader = None  # Store teamloader for rejection recovery
         self.logger.debug("Player initialisation finished")
+    
+    async def _handle_team_rejection(self, message: str):
+        """Handle team rejection by loading a different team.
+        
+        Args:
+            message: The rejection message from the server
+        """
+        self._team_rejection_count += 1
+        self.logger.warning(f"Team rejected (attempt {self._team_rejection_count}): {message}")
+        
+        if self._team_rejection_count >= self._max_team_rejections:
+            self.logger.error(f"Too many team rejections ({self._max_team_rejections}), giving up")
+            return
+        
+        # Try to load a different team
+        try:
+            new_team = None
+            
+            # First try to use teamloader if available
+            if self._teamloader:
+                new_team = self._teamloader.yield_team()
+                self.logger.info(f"Loaded new team from teamloader after rejection")
+            else:
+                # Fallback to static teams if no teamloader
+                from poke_env.player.team_util import load_random_team
+                new_team_id = ((self._team_rejection_count - 1) % 13) + 1
+                new_team = load_random_team(new_team_id)
+                self.logger.info(f"Loaded static team #{new_team_id} after rejection")
+            
+            # Update the team
+            if new_team:
+                self._team = ConstantTeambuilder(new_team)
+                
+                # Retry the challenge/accept with the new team
+                if hasattr(self.ps_client, '_last_challenge_info') and self.ps_client._last_challenge_info:
+                    action, username, format_, _ = self.ps_client._last_challenge_info
+                    new_packed_team = self._team.yield_team()
+                    
+                    if action == 'challenge':
+                        self.logger.info(f"Retrying challenge to {username} with new team")
+                        await self.ps_client.challenge(username, format_, new_packed_team)
+                    elif action == 'accept':
+                        self.logger.info(f"Retrying accept from {username} with new team")
+                        await self.ps_client.accept_challenge(username, new_packed_team)
+                else:
+                    # Fallback: just set the team
+                    await self.ps_client.set_team(self._team.yield_team())
+                    self.logger.info(f"Set new team on server")
+            else:
+                self.logger.error("Failed to load alternative team")
+        except Exception as e:
+            self.logger.error(f"Error loading alternative team: {e}")
     
     def check_all_moves(self, move_str: str, species: str) -> Move:
         if self.gen.gen == 8:
@@ -248,6 +305,13 @@ class Player(ABC):
             self._team = team
         else:
             self._team = ConstantTeambuilder(team)
+    
+    def set_teamloader(self, teamloader):
+        """Set the teamloader for rejection recovery.
+        
+        :param teamloader: The teamloader to use for getting new teams on rejection.
+        """
+        self._teamloader = teamloader
         
 
         # TODO: set tera types for pokemon
@@ -328,6 +392,7 @@ class Player(ABC):
         :param split_message: The received battle message.
         :type split_message: str
         """
+        #print(f'[battle messages]', split_messages)
         # Battle messages can be multiline
         if (
             len(split_messages) > 1
@@ -544,8 +609,9 @@ class Player(ABC):
                     description = " It caused " + msg[idx][2] + " " + status_dict[msg[idx][3]] + "."
 
                 if description:
+                    #print(description)
                     battle.battle_msg_history = battle.battle_msg_history + description
-                    # print(description)
+                    
 
                 idx += 1
 
@@ -554,6 +620,7 @@ class Player(ABC):
                 continue
             elif split_message[1] in self.MESSAGES_TO_IGNORE:
                 pass
+            
             elif split_message[1] == "request":
                 if split_message[2]:
                     request = orjson.loads(split_message[2])
@@ -571,6 +638,8 @@ class Player(ABC):
                 self._battle_finished_callback(battle)
                 async with self._battle_end_condition:
                     self._battle_end_condition.notify_all()
+            elif split_message[1] == "uhtml" and "otsrequest" in split_message[2]:
+                await self.ps_client.send_message("/acceptopenteamsheets", battle.battle_tag)
             elif split_message[1] == "error":
                 self.logger.log(
                     25, "Error message received: %s", "|".join(split_message)
@@ -594,8 +663,16 @@ class Player(ABC):
                 ):
                     await self._handle_battle_request(battle, maybe_default_order=True)
                 elif split_message[2].startswith(
+                    "[Invalid choice] Can't switch: You do not have a Pokémon named " 
+                ) and split_message[2].endswith("to switch to"):
+                    await self._handle_battle_request(battle, maybe_default_order=True)
+                elif split_message[2].startswith(
                     "[Invalid choice] Can't switch: You can't switch to a fainted "
                     "Pokémon"
+                ):
+                    await self._handle_battle_request(battle, maybe_default_order=True)
+                elif split_message[2].startswith(
+                    "[Invalid choice] Can't switch: The Pokémon in slot "
                 ):
                     await self._handle_battle_request(battle, maybe_default_order=True)
                 elif split_message[2].startswith(
@@ -640,7 +717,9 @@ class Player(ABC):
                     self.logger.critical("Unexpected error message: %s", split_message)
             elif split_message[1] == "turn":
                 battle.parse_message(split_message)
-                await self._handle_battle_request(battle)
+                # Always wait for fresh request data at the start of each turn
+                # This ensures moves and switches are always up-to-date
+                battle.move_on_next_request = True
             elif split_message[1] == "teampreview":
                 battle.parse_message(split_message)
                 await self._handle_battle_request(battle, from_teampreview_request=True)
@@ -655,11 +734,7 @@ class Player(ABC):
         from_teampreview_request: bool = False,
         maybe_default_order: bool = False,
     ):
-        
-        #print("BATTLE REQUEST BRANCH")
-        #print("from_teampreview_request", from_teampreview_request)
-        #print("battle.teampreview", battle.teampreview)
-        #print("battle.in_team_preview", battle.in_team_preview)
+    
 
         if maybe_default_order and random.random() < self.DEFAULT_CHOICE_CHANCE:
             message = self.choose_default_move().message
@@ -671,11 +746,12 @@ class Player(ABC):
             message = self.choose_move(battle)
             if isinstance(message, Awaitable):
                 message = await message
-            if isinstance(message, str):
-                print(message)
-            print("Choose Move Message:", message)
             
-            if message is None:            # dealing with the occasional return of None by choose_move
+            # Handle incorrect return types
+            if isinstance(message, str):
+                print(f"Warning: choose_move returned string: {message}")
+                message = self.choose_default_move().message
+            elif message is None:  # dealing with the occasional return of None by choose_move
                 message = self.choose_default_move().message
             else:
                 message = message.message
@@ -1165,7 +1241,7 @@ class Player(ABC):
         :type move_target: int
         :return: Formatted move order
         :rtype: str
-        """
+        """ 
         
         # input(order)
         
@@ -1177,6 +1253,19 @@ class Player(ABC):
             dynamax=dynamax,
             terastallize=terastallize,
         )
+    
+    @staticmethod
+    def create_double_order(
+        order_list: List[Optional[BattleOrder]]
+    ) -> DoubleBattleOrder:
+        """Formats a DoubleBattleOrder object based on the input list of BattleOrder objects
+        """
+
+        return DoubleBattleOrder(
+            first_order=order_list[0],
+            second_order=order_list[1]
+        )
+
 
     @property
     def battles(self) -> Dict[str, AbstractBattle]:

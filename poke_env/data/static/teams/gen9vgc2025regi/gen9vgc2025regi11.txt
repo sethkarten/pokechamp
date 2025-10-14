@@ -1,0 +1,70 @@
+Umbreon @ Safety Goggles  
+Ability: Inner Focus  
+Level: 50  
+Tera Type: Fairy  
+EVs: 252 HP / 204 Def / 4 SpA / 44 SpD / 4 Spe  
+Calm Nature  
+IVs: 0 Atk  
+- Moonlight  
+- Taunt  
+- Foul Play  
+- Snarl  
+
+Groudon @ Clear Amulet  
+Ability: Drought  
+Level: 50  
+Tera Type: Water  
+EVs: 116 HP / 116 Atk / 4 Def / 44 SpD / 228 Spe  
+Adamant Nature  
+- Precipice Blades  
+- Heat Crash  
+- Swords Dance  
+- Protect  
+
+Venusaur @ Life Orb  
+Ability: Chlorophyll  
+Level: 50  
+Tera Type: Ghost  
+EVs: 204 HP / 124 Def / 44 SpA / 20 SpD / 116 Spe  
+Modest Nature  
+IVs: 0 Atk  
+- Helping Hand  
+- Sleep Powder  
+- Sludge Bomb  
+- Leaf Storm  
+
+Porygon2 @ Eviolite  
+Ability: Download  
+Level: 50  
+Tera Type: Poison  
+EVs: 244 HP / 212 Def / 12 SpA / 36 SpD  
+Sassy Nature  
+IVs: 0 Atk  
+- Trick Room  
+- Eerie Impulse  
+- Tera Blast  
+- Recover  
+
+Flutter Mane @ Choice Specs  
+Ability: Protosynthesis  
+Level: 50  
+Tera Type: Fairy  
+EVs: 52 HP / 116 Def / 84 SpA / 4 SpD / 252 Spe  
+Timid Nature  
+IVs: 0 Atk  
+- Moonblast  
+- Dazzling Gleam  
+- Shadow Ball  
+- Icy Wind  
+
+Incineroar @ Sitrus Berry  
+Ability: Intimidate  
+Level: 50  
+Tera Type: Ghost  
+EVs: 252 HP / 196 Atk / 52 Def / 4 SpD / 4 Spe  
+Adamant Nature  
+- Will-O-Wisp  
+- Flare Blitz  
+- Fake Out  
+- Parting Shot  
+
