@@ -65,7 +65,7 @@ AGENTS = [
     #     "prompt_algo": "minimax",
     #     "device": 6,
     #     "username": "PAC-PC-gemma3-12b",
-    #     "password": "REMOVED_PASSWORD",
+    #     "password": None,  # Will be loaded from PASSWORDS
     # },
     {
         "name": "pokechamp",
@@ -89,7 +89,7 @@ AGENTS = [
     #     "prompt_algo": "minimax",
     #     "device": 6,
     #     "username": "PAC-PC-qwen3-14b",
-    #     "password": "REMOVED_PASSWORD",
+    #     "password": None,  # Will be loaded from PASSWORDS
     # },
     {
         "name": "pokechamp",
@@ -113,7 +113,7 @@ AGENTS = [
     #     "prompt_algo": "minimax",
     #     "device": 6,
     #     "username": "PAC-PC-gpt-oss",
-    #     "password": "REMOVED_PASSWORD",
+    #     "password": None,  # Will be loaded from PASSWORDS
     # },
     # {
     #     "name": "pokechamp",
@@ -121,7 +121,7 @@ AGENTS = [
     #     "prompt_algo": "minimax",
     #     "device": 6,
     #     "username": "PAC-PC-gem25f",
-    #     "password": "REMOVED_PASSWORD",
+    #     "password": None,  # Will be loaded from PASSWORDS
     # },
     # {
     #     "name": "pokechamp",
@@ -129,7 +129,7 @@ AGENTS = [
     #     "prompt_algo": "minimax",
     #     "device": 6,
     #     "username": "PAC-PC-gem25p",
-    #     "password": "REMOVED_PASSWORD",
+    #     "password": None,  # Will be loaded from PASSWORDS
     # },
     
     # LLM-based agents
@@ -219,7 +219,7 @@ AGENTS = [
     #     "prompt_algo": "io",
     #     "device": 6,
     #     "username": "PAC-LLM-gem25p",
-    #     "password": "REMOVED_PASSWORD",
+    #     "password": None,  # Will be loaded from PASSWORDS
     # },
     
     # PokeLLMon baseline agents
