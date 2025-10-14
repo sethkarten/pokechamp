@@ -136,13 +136,6 @@ class LLMPlayer(Player):
         # Warm-up flag to track if pre-initialization is complete
         self._warmed_up = False
 
-    def get_LLM_action(self, system_prompt, user_prompt, model, temperature=0.7, json_format=False, seed=None, stop=[], max_tokens=200, actions=None, llm=None) -> str:
-        if llm is None:
-            output, _ = self.llm.get_LLM_action(system_prompt, user_prompt, model, temperature, True, seed, stop, max_tokens=max_tokens, actions=actions)
-        else:
-            output, _ = llm.get_LLM_action(system_prompt, user_prompt, model, temperature, True, seed, stop, max_tokens=max_tokens, actions=actions)
-        return output
-    
     def warm_up(self, dummy_battle=None):
         """
         Pre-initialize all expensive components to avoid delays during first battle turn.
@@ -165,26 +158,32 @@ class LLMPlayer(Player):
         try:
             from bayesian.predictor_singleton import get_pokemon_predictor
             predictor = get_pokemon_predictor()
-            print("   ✅ Pokemon predictor loaded")
+            # Trigger model loading if it has training methods
+            if hasattr(predictor, 'load_and_train'):
+                predictor.load_and_train()
+            elif hasattr(predictor, 'team_predictor') and hasattr(predictor.team_predictor, 'load_and_train'):
+                predictor.team_predictor.load_and_train()
+            print("   ✅ Pokemon predictor pre-loaded")
         except Exception as e:
-            print(f"   ⚪ Pokemon predictor not available: {e}")
+            print(f"   ⚠️  Pokemon predictor warm-up failed: {e}")
         
-        # 4. Test LLM backend connection (optional)
+        # 4. Pre-load move set data
         try:
-            test_output = self.get_LLM_action(
-                system_prompt="You are a test.",
-                user_prompt="Respond with: {\"test\":\"success\"}",
-                model=self.backend,
-                temperature=0.0,
-                max_tokens=50,
-                json_format=True
-            )
-            print("   ✅ LLM backend connection verified")
+            from pokechamp.data_cache import get_cached_moves_set
+            get_cached_moves_set('gen9ou')
+            print("   ✅ Move set data pre-loaded")
         except Exception as e:
-            print(f"   ⚠️  LLM backend test failed: {e}")
+            print(f"   ⚠️  Move set data warm-up failed: {e}")
         
         self._warmed_up = True
-        print("🔥 Warm-up complete!")
+        print("🔥 Player warm-up complete!")
+
+    def get_LLM_action(self, system_prompt, user_prompt, model, temperature=0.7, json_format=False, seed=None, stop=[], max_tokens=200, actions=None, llm=None) -> str:
+        if llm is None:
+            output, _ = self.llm.get_LLM_action(system_prompt, user_prompt, model, temperature, True, seed, stop, max_tokens=max_tokens, actions=actions)
+        else:
+            output, _ = llm.get_LLM_action(system_prompt, user_prompt, model, temperature, True, seed, stop, max_tokens=max_tokens, actions=actions)
+        return output
     
     def check_all_pokemon(self, pokemon_str: str) -> Pokemon:
         valid_pokemon = None
@@ -233,7 +232,9 @@ class LLMPlayer(Player):
 
         gimmick_output_format = ''
         if 'pokellmon' not in self.ps_client.account_configuration.username: # make sure we dont mess with pokellmon original strat
-            gimmick_output_format = f'{f' or {{"dynamax":"<move_name>"}}' if battle.can_dynamax else ''}{f' or {{"terastallize":"<move_name>"}}' if battle.can_tera else ''}'
+            dynamax_option = ' or {"dynamax":"<move_name>"}' if battle.can_dynamax else ''
+            tera_option = ' or {"terastallize":"<move_name>"}' if battle.can_tera else ''
+            gimmick_output_format = f'{dynamax_option}{tera_option}'
 
         if battle.active_pokemon.fainted or len(battle.available_moves) == 0:
 

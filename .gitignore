@@ -25,12 +25,17 @@ build/
 # Battle logs and replays
 battle_log/*
 *.html
+log_*.txt
 
 # Test files and debugging
 test_bots.py
 test_openrouter.py
 example_openrouter_usage.py
 debug_*.py
+
+*.code-workspace
+
+local/
 
 # Testing artifacts
 .pytest_cache/
@@ -42,6 +47,9 @@ htmlcov/
 .env
 .env.local
 *.env
+passwords.json
+
+# Sensitive credentials
 passwords.json
 
 # Documentation for AI assistants (optional - uncomment if desired)
@@ -63,3 +71,12 @@ yarn-error.log*
 
 CLAUDE.md
 pokemon-showdown/
+
+*.code-workspace
+
+local/
+
+.venv/
+
+showdown_ladder_vs.py
+timeout_llm_player.py
