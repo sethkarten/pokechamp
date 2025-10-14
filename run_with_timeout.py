@@ -22,6 +22,20 @@ GAMES_PER_MATCHUP = 1  # Number of games per matchup (configurable)
 MAX_CONCURRENT_BATTLES = 3  # Maximum number of concurrent battles
 LLM_TIMEOUT_SECONDS = 90  # LLM timeout per move (configurable)
 
+def load_passwords():
+    """Load passwords from a secure JSON file."""
+    password_file = "passwords.json"
+    try:
+        with open(password_file, 'r') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        print(f"Error: {password_file} not found. Please create it from passwords.json.example")
+        print("Copy passwords.json.example to passwords.json and fill in your actual passwords.")
+        sys.exit(1)
+    except json.JSONDecodeError as e:
+        print(f"Error: Invalid JSON in {password_file}: {e}")
+        sys.exit(1)
+
 # Track which agents are currently in battle
 agents_in_battle = set()
 battle_lock = Lock()
@@ -30,6 +44,9 @@ battle_lock = Lock()
 # Queue to trigger immediate restart when all agents are freed
 restart_queue = Queue()
 restart_lock = Lock()
+
+# Load passwords once at startup
+PASSWORDS = load_passwords()
 
 # Define the agents and their configurations
 AGENTS = [
@@ -40,7 +57,7 @@ AGENTS = [
         "prompt_algo": "minimax",
         "device": 6,
         "username": "PAC-PC-llama31-8b",
-        "password": "REMOVED_PASSWORD",
+        "password": PASSWORDS["PAC-PC-llama31-8b"],
     },
     # {
     #     "name": "pokechamp",
@@ -56,7 +73,7 @@ AGENTS = [
         "prompt_algo": "minimax",
         "device": 6,
         "username": "PAC-PC-gemma3-4b",
-        "password": "REMOVED_PASSWORD",
+        "password": None,  # Will be loaded from PASSWORDS
     },
     {
         "name": "pokechamp",
@@ -64,7 +81,7 @@ AGENTS = [
         "prompt_algo": "minimax",
         "device": 6,
         "username": "PAC-PC-gemma3-1b",
-        "password": "REMOVED_PASSWORD",
+        "password": None,  # Will be loaded from PASSWORDS
     },
     # {
     #     "name": "pokechamp",
@@ -80,7 +97,7 @@ AGENTS = [
         "prompt_algo": "minimax",
         "device": 6,
         "username": "PAC-PC-qwen3-8b",
-        "password": "REMOVED_PASSWORD",
+        "password": None,  # Will be loaded from PASSWORDS
     },
     {
         "name": "pokechamp",
@@ -88,7 +105,7 @@ AGENTS = [
         "prompt_algo": "minimax",
         "device": 6,
         "username": "PAC-PC-qwen3-4b",
-        "password": "REMOVED_PASSWORD",
+        "password": None,  # Will be loaded from PASSWORDS
     },
     # {
     #     "name": "pokechamp",
@@ -96,6 +113,22 @@ AGENTS = [
     #     "prompt_algo": "minimax",
     #     "device": 6,
     #     "username": "PAC-PC-gpt-oss",
+    #     "password": "REMOVED_PASSWORD",
+    # },
+    # {
+    #     "name": "pokechamp",
+    #     "backend": "gemini-2.5-flash",
+    #     "prompt_algo": "minimax",
+    #     "device": 6,
+    #     "username": "PAC-PC-gem25f",
+    #     "password": "REMOVED_PASSWORD",
+    # },
+    # {
+    #     "name": "pokechamp",
+    #     "backend": "gemini-2.5-pro",
+    #     "prompt_algo": "minimax",
+    #     "device": 6,
+    #     "username": "PAC-PC-gem25p",
     #     "password": "REMOVED_PASSWORD",
     # },
     
@@ -106,7 +139,7 @@ AGENTS = [
         "prompt_algo": "io",
         "device": 6,
         "username": "PAC-LLM-llama31-8b",
-        "password": "REMOVED_PASSWORD",
+        "password": None,  # Will be loaded from PASSWORDS
     },
     {
         "name": "pokechamp",
@@ -114,7 +147,7 @@ AGENTS = [
         "prompt_algo": "io",
         "device": 6,
         "username": "PAC-LLM-gemma3-12b",
-        "password": "REMOVED_PASSWORD",
+        "password": None,  # Will be loaded from PASSWORDS
     },
     {
         "name": "pokechamp",
@@ -122,7 +155,7 @@ AGENTS = [
         "prompt_algo": "io",
         "device": 6,
         "username": "PAC-LLM-gemma3-4b",
-        "password": "REMOVED_PASSWORD",
+        "password": None,  # Will be loaded from PASSWORDS
     },
     {
         "name": "pokechamp",
@@ -130,7 +163,7 @@ AGENTS = [
         "prompt_algo": "io",
         "device": 6,
         "username": "PAC-LLM-gemma3-1b",
-        "password": "REMOVED_PASSWORD",
+        "password": None,  # Will be loaded from PASSWORDS
     },
     {
         "name": "pokechamp",
@@ -138,7 +171,7 @@ AGENTS = [
         "prompt_algo": "io",
         "device": 6,
         "username": "PAC-LLM-qwen3-14b",
-        "password": "REMOVED_PASSWORD",
+        "password": None,  # Will be loaded from PASSWORDS
     },
     {
         "name": "pokechamp",
@@ -146,7 +179,7 @@ AGENTS = [
         "prompt_algo": "io",
         "device": 6,
         "username": "PAC-LLM-qwen3-8b",
-        "password": "REMOVED_PASSWORD",
+        "password": None,  # Will be loaded from PASSWORDS
     },
     {
         "name": "pokechamp",
@@ -154,7 +187,7 @@ AGENTS = [
         "prompt_algo": "io",
         "device": 6,
         "username": "PAC-LLM-qwen3-4b",
-        "password": "REMOVED_PASSWORD",
+        "password": None,  # Will be loaded from PASSWORDS
     },
     {
         "name": "pokechamp",
@@ -162,8 +195,32 @@ AGENTS = [
         "prompt_algo": "io",
         "device": 6,
         "username": "PAC-LLM-gpt-oss",
-        "password": "REMOVED_PASSWORD",
-    },    
+        "password": None,  # Will be loaded from PASSWORDS
+    },
+    {
+        "name": "pokechamp",
+        "backend": "gemini-2.5-flash",
+        "prompt_algo": "io",
+        "device": 6,
+        "username": "PAC-LLM-gem25f",
+        "password": None,  # Will be loaded from PASSWORDS
+    },
+    {
+        "name": "pokechamp",
+        "backend": "gemini-2.5-flash-lite",
+        "prompt_algo": "io",
+        "device": 6,
+        "username": "PAC-LLM-gem25fl",
+        "password": None,  # Will be loaded from PASSWORDS
+    },
+    # {
+    #     "name": "pokechamp",
+    #     "backend": "gemini-2.5-pro",
+    #     "prompt_algo": "io",
+    #     "device": 6,
+    #     "username": "PAC-LLM-gem25p",
+    #     "password": "REMOVED_PASSWORD",
+    # },
     
     # PokeLLMon baseline agents
     {
@@ -172,7 +229,7 @@ AGENTS = [
         "prompt_algo": "io",
         "device": 5,
         "username": "PAC-PC-pokellmon",
-        "password": "hudson56",
+        "password": None,  # Will be loaded from PASSWORDS
     },
     
     # Non-LLM baseline agents (active by default)
@@ -182,7 +239,7 @@ AGENTS = [
         "prompt_algo": "one_step",
         "device": 0,
         "username": "PAC-PC-DC",
-        "password": "shore35",
+        "password": None,  # Will be loaded from PASSWORDS
     },
     {
         "name": "abyssal",
@@ -190,7 +247,7 @@ AGENTS = [
         "prompt_algo": "heuristic",
         "device": 0,
         "username": "PAC-PC-ABYSSAL",
-        "password": "sandy77",
+        "password": None,  # Will be loaded from PASSWORDS
     },
     {
         "name": "max_power",
@@ -198,9 +255,23 @@ AGENTS = [
         "prompt_algo": "max_power",
         "device": 0,
         "username": "PAC-PC-MAX-POWER",
-        "password": "jones12",
+        "password": None,  # Will be loaded from PASSWORDS
     },
 ]
+
+def initialize_agent_passwords():
+    """Initialize agent passwords from the password file."""
+    for agent in AGENTS:
+        username = agent["username"]
+        if username not in PASSWORDS:
+            print(f"Error: Password not found for username '{username}' in passwords.json")
+            print(f"Available usernames: {list(PASSWORDS.keys())}")
+            sys.exit(1)
+        agent["password"] = PASSWORDS[username]
+    print(f"Successfully loaded passwords for {len(AGENTS)} agents")
+
+# Initialize passwords for all agents
+initialize_agent_passwords()
 
 def parse_ladder_results(log_file, agent):
     """Parse ladder battle log to extract win/loss results."""
@@ -927,7 +998,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run concurrent Pokemon ladder tournament")
     parser.add_argument("--games-per-round", type=int, default=1, help="Number of games per agent per round (before sync)")
     parser.add_argument("--target-games", type=int, default=1000, help="Total target games per agent before full restart")
-    parser.add_argument("--timeout", type=int, default=7200, help="Timeout in seconds per ladder session")
+    parser.add_argument("--timeout", type=int, default=600, help="Timeout in seconds per ladder session")
     parser.add_argument("--max-concurrent", type=int, default=16, help="Maximum concurrent ladder sessions")
     parser.add_argument("--continuous", action="store_true", help="Run continuously in a loop")
     parser.add_argument("--delay", type=int, default=30, help="Delay between rounds in seconds")
