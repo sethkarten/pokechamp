@@ -52,11 +52,7 @@ parser.add_argument("--opponent_backend", type=str, default="gemini-2.5-pro", ch
     # Google models
     "google/gemini-pro", "gemini-2.0-flash", "gemini-2.0-pro", "gemini-2.0-flash-lite", "gemini-2.5-flash", "gemini-2.5-pro",
     # Ollama models
-<<<<<<< HEAD
     "ollama/gpt-oss:20b", "ollama/llama3.1:8b", "ollama/mistral", "ollama/qwen2.5", "ollama/gemma3:4b",
-=======
-    "ollama/gpt-oss:20b", "ollama/llama3.1:8b", "ollama/mistral", "ollama/qwen2.5",
->>>>>>> main
     # Meta models
     "meta-llama/llama-3.1-70b-instruct", "meta-llama/llama-3.1-8b-instruct",
     # Mistral models
@@ -77,11 +73,7 @@ parser.add_argument("--opponent_device", type=int, default=0)
 
 # Shared arguments
 parser.add_argument("--temperature", type=float, default=0.3)
-<<<<<<< HEAD
 parser.add_argument("--battle_format", default="gen9ou", choices=["gen8randombattle", "gen8ou", "gen9ou", "gen9randombattle", "gen9vgc2025regi"])
-=======
-parser.add_argument("--battle_format", default="gen9ou", choices=["gen8randombattle", "gen8ou", "gen9ou", "gen9randombattle", "gen9vgc2024regg"])
->>>>>>> main
 parser.add_argument("--log_dir", type=str, default="./battle_log/one_vs_one")
 parser.add_argument("--N", type=int, default=25)
 
@@ -104,7 +96,6 @@ async def main():
                             PNUMBER1=PNUMBER1 + '2',  # for name uniqueness locally
                             battle_format=args.battle_format)
 
-<<<<<<< HEAD
     # Try to use metamon teams, fallback to static teams if not available
     player_teamloader = None
     opponent_teamloader = None
@@ -131,19 +122,6 @@ async def main():
             
             player.update_team(player_teamloader.yield_team())
             opponent.update_team(opponent_teamloader.yield_team())
-=======
-    # Use old teamloader for player, modern for opponent
-    player_teamloader = get_metamon_teams(args.battle_format, "competitive")
-    opponent_teamloader = get_metamon_teams(args.battle_format, "modern_replays")
-    
-    if not 'random' in args.battle_format:
-        # Set teamloader on players for rejection recovery
-        player.set_teamloader(player_teamloader)
-        opponent.set_teamloader(opponent_teamloader)
-        
-        player.update_team(player_teamloader.yield_team())
-        opponent.update_team(opponent_teamloader.yield_team())
->>>>>>> main
 
     # play against bot for five battles
     N = args.N
@@ -154,7 +132,6 @@ async def main():
             await player.battle_against(opponent, n_battles=1)
         else:
             await opponent.battle_against(player, n_battles=1)
-<<<<<<< HEAD
         
         if not 'random' in args.battle_format:
             if 'vgc' in args.battle_format:
@@ -168,11 +145,6 @@ async def main():
                 # Use metamon teams if available
                 player.update_team(player_teamloader.yield_team())
                 opponent.update_team(opponent_teamloader.yield_team())
-=======
-        if not 'random' in args.battle_format:
-            player.update_team(player_teamloader.yield_team())
-            opponent.update_team(opponent_teamloader.yield_team())
->>>>>>> main
         pbar.set_description(f"{player.win_rate*100:.2f}%")
         pbar.update(1)
     print(f'player winrate: {player.win_rate*100}')

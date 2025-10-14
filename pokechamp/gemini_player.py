@@ -1,4 +1,4 @@
-from google import genai
+import google.generativeai as genai
 from time import sleep
 import os, sys
 import json

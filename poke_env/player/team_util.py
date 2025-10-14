@@ -76,7 +76,6 @@ def get_metamon_teams(battle_format: str, set_name: str) -> TeamSet:
             f"Cannot locate valid team directory for format {battle_format} at path {path}"
         )
     return TeamSet(path, battle_format)
->>>>>>> main
 
 class TeamSet(Teambuilder):
     """Sample from a directory of Showdown team files.
