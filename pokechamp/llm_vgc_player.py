@@ -419,6 +419,10 @@ Target numbers: 1=left opponent, 2=right opponent, 0=field effect, 0=self\n'''
                 # load when llm does heavylifting for parsing
                 if DEBUG:
                     print(f"Raw LLM output: {llm_output}")
+                
+                # Always show LLM reasoning in chat
+                print(f"🧠 LLM [{self.ps_client.account_configuration.username}] Slot {idx+1}: {llm_output}")
+                
                 llm_action_json = json.loads(llm_output)
                 if DEBUG:
                     print(f"Parsed JSON: {llm_action_json}")

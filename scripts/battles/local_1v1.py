@@ -105,6 +105,10 @@ async def main():
         if 'vgc' in args.battle_format:
             player.update_team(load_random_team(id=None, vgc=True))
             opponent.update_team(load_random_team(id=None, vgc=True))
+        elif 'gen9ou' in args.battle_format:
+            # Use static teams for gen9ou
+            player.update_team(load_random_team(id=None, vgc=False))
+            opponent.update_team(load_random_team(id=None, vgc=False))
         else:
             # Set teamloader on players for rejection recovery
             player.set_teamloader(player_teamloader)
@@ -127,6 +131,10 @@ async def main():
             if 'vgc' in args.battle_format:
                 player.update_team(load_random_team(id=None, vgc=True))
                 opponent.update_team(load_random_team(id=None, vgc=True))
+            elif 'gen9ou' in args.battle_format:
+                # Use static teams for gen9ou
+                player.update_team(load_random_team(id=None, vgc=False))
+                opponent.update_team(load_random_team(id=None, vgc=False))
             else:
                 player.update_team(player_teamloader.yield_team())
                 opponent.update_team(opponent_teamloader.yield_team())

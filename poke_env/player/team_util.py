@@ -71,7 +71,7 @@ def get_metamon_teams(battle_format: str, set_name: str) -> TeamSet:
             f"Invalid set name: {set_name}. Must be one of: competitive, paper_replays, paper_variety, modern_replays"
         )
     #path = download_teams(battle_format, set_name=set_name)
-    path = "/data1/DanielLi/pokechamp/bayesian_dataset"
+    path = "bayesian_dataset"
     if not os.path.exists(path):
         raise ValueError(
             f"Cannot locate valid team directory for format {battle_format} at path {path}"
@@ -88,7 +88,7 @@ def load_random_team(id=None, vgc=False):
         with open(f'poke_env/data/static/teams/gen9vgc2025regi/gen9vgc2025regi{team_id}.txt', 'r') as f:
             team = f.read()
     else:
-        with open(f'poke_env/data/static/teams/gen9ou{team_id}.txt', 'r') as f:
+        with open(f'poke_env/data/static/teams/gen9ou/gen9ou{team_id}.txt', 'r') as f:
             team = f.read()
     return team
 
@@ -172,21 +172,36 @@ def get_llm_player(args,
                        device=device,
                        llm_backend=llm_backend)
     elif 'pokechamp' in name:
-        return LLMPlayer(battle_format=battle_format,
-                       api_key=KEY,
-                       backend=backend,
-                       temperature=args.temperature,
-                       prompt_algo=prompt_algo,
-                    #    prompt_algo="minimax",
-                    #    prompt_algo="io",
-                       log_dir=args.log_dir,
-                       account_configuration=AccountConfiguration(f'{USERNAME}{PNUMBER1}', PASSWORD),
-                       server_configuration=server_config,
-                       save_replays=args.log_dir,
-                    #    prompt_translate=prompt_translate,
-                       prompt_translate=state_translate2,
-                       device=device,
-                       llm_backend=llm_backend)
+        # Use VGC player for VGC formats, regular player for others
+        if 'vgc' in battle_format:
+            return LLMVGCPlayer(battle_format=battle_format,
+                           api_key=KEY,
+                           backend=backend,
+                           temperature=args.temperature,
+                           prompt_algo=prompt_algo,
+                           log_dir=args.log_dir,
+                           account_configuration=AccountConfiguration(f'{USERNAME}{PNUMBER1}', PASSWORD),
+                           server_configuration=server_config,
+                           save_replays=args.log_dir,
+                           prompt_translate=state_translate3,
+                           device=device,
+                           llm_backend=llm_backend)
+        else:
+            return LLMPlayer(battle_format=battle_format,
+                           api_key=KEY,
+                           backend=backend,
+                           temperature=args.temperature,
+                           prompt_algo=prompt_algo,
+                        #    prompt_algo="minimax",
+                        #    prompt_algo="io",
+                           log_dir=args.log_dir,
+                           account_configuration=AccountConfiguration(f'{USERNAME}{PNUMBER1}', PASSWORD),
+                           server_configuration=server_config,
+                           save_replays=args.log_dir,
+                        #    prompt_translate=prompt_translate,
+                           prompt_translate=state_translate2,
+                           device=device,
+                           llm_backend=llm_backend)
     elif 'vgc' in name:
         return LLMVGCPlayer(battle_format=battle_format,
                        api_key=KEY,
