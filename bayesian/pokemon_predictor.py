@@ -142,7 +142,10 @@ class PokemonPredictor:
 
 def main():
     """Example usage of the Pokemon Predictor."""
-    print("[PREDICT] Pokemon Team Predictor - Production Interface")
+    from pokechamp.visual_effects import visual, print_banner
+    print_banner("POKEMON", "fire")
+    print_banner("PREDICTOR", "greenblue")
+    print("Production Interface")
     print("=" * 50)
     
     try:
@@ -150,7 +153,8 @@ def main():
         predictor = PokemonPredictor()
         
         # Example 1: Predict teammates for a popular core
-        print("\n[EXAMPLE 1] Predicting teammates for Kingambit + Gholdengo")
+        print(visual.create_banner("EXAMPLE 1", font="small", style="water"))
+        print("Predicting teammates for Kingambit + Gholdengo")
         core = ["Kingambit", "Gholdengo"]
         teammates = predictor.predict_teammates(core)
         
@@ -195,7 +199,7 @@ def main():
             if 'nature' in config:
                 print(f"     Nature: {config['nature']}")
         
-        print(f"\n[OK] All examples completed successfully!")
+        print(visual.victory_banner("EXAMPLES", 4))
         
     except Exception as e:
         print(f"[ERROR] {e}")

@@ -18,6 +18,13 @@ from poke_env.environment.battle import Battle
 from poke_env.player.baselines import AbyssalPlayer
 from bayesian.predictor_singleton import get_pokemon_predictor
 
+# Visual effects import (optional)
+try:
+    from pokechamp.visual_effects import visual, print_banner, print_status
+    VISUAL_EFFECTS = True
+except ImportError:
+    VISUAL_EFFECTS = False
+
 
 class LiveBattlePredictor(AbyssalPlayer):
     """Abyssal player that shows live Bayesian predictions every turn."""
@@ -75,7 +82,10 @@ class LiveBattlePredictor(AbyssalPlayer):
         super().__init__(*args, **kwargs)
         
         # Initialize predictor after parent init
-        print("[INIT] Initializing Live Battle Predictor...")
+        if VISUAL_EFFECTS:
+            print_banner("PREDICTOR", "purplepink")
+        else:
+            print("[INIT] Initializing Live Battle Predictor...")
         try:
             self.predictor = get_pokemon_predictor()
             print("[OK] Bayesian predictor ready!")
@@ -158,7 +168,11 @@ class LiveBattlePredictor(AbyssalPlayer):
         """Called when battle starts."""
         super()._battle_started_callback(battle)
         print(f"\n{'='*70}")
-        print(f"[BATTLE] BATTLE STARTED: {battle.battle_tag}")
+        if VISUAL_EFFECTS:
+            print(visual.battle_header("YOU", "OPPONENT"))
+            print(f"Battle ID: {battle.battle_tag}")
+        else:
+            print(f"[BATTLE] BATTLE STARTED: {battle.battle_tag}")
         print(f"{'='*70}")
         print(f"[TEAM-BLUE] Your team: {', '.join([p.species for p in battle.team.values() if p])}")
         print(f"[TEAM-RED] Opponent: Predictions will appear as Pokemon are revealed...")
@@ -169,7 +183,11 @@ class LiveBattlePredictor(AbyssalPlayer):
         super()._battle_finished_callback(battle)
         
         print(f"\n{'='*70}")
-        print(f"[FINISH] BATTLE FINISHED")
+        if VISUAL_EFFECTS:
+            winner = "YOU" if self.n_won_battles > 0 else "OPPONENT"
+            print(visual.victory_banner(winner, battle.turn))
+        else:
+            print(f"[FINISH] BATTLE FINISHED")
         print(f"{'='*70}")
         
         # Show final team analysis
@@ -236,7 +254,10 @@ class LiveBattlePredictor(AbyssalPlayer):
         if not opponent_pokemon_raw:
             return
         
-        print(f"\n[TURN {battle.turn}] MOVE/ITEM/EV PREDICTIONS")
+        if VISUAL_EFFECTS:
+            print(visual.battle_turn(battle.turn, "Analyzing opponent..."))
+        else:
+            print(f"\n[TURN {battle.turn}] MOVE/ITEM/EV PREDICTIONS")
         print("-" * 60)
         
         # Current battle state
@@ -265,7 +286,10 @@ class LiveBattlePredictor(AbyssalPlayer):
             print(f"   {i}. {species} - {move_display} | {item_display}")
         
         # Predict moves, items, and EVs for each Pokemon
-        print(f"\n[PREDICT] BAYESIAN MOVE/ITEM/EV PREDICTIONS:")
+        if VISUAL_EFFECTS:
+            print(visual.create_banner("PREDICT", font="small", style="greenblue"))
+        else:
+            print(f"\n[PREDICT] BAYESIAN MOVE/ITEM/EV PREDICTIONS:")
         if self.predictor is None:
             print("   [ERROR] Predictor not loaded")
             return
@@ -280,7 +304,12 @@ class LiveBattlePredictor(AbyssalPlayer):
                 if len(observed_moves) >= 4 and known_item and known_item != "unknown":
                     continue
                 
-                print(f"\n   {i}. [TARGET] {species_raw}:")
+                # Enhanced prediction display
+                move_predictions = [(move, prob) for move, prob in probabilities.get('moves', {}).items() if prob > 0.1]
+                if move_predictions:
+                    print(visual.prediction_display(species_raw, move_predictions[:5]))
+                else:
+                    print(f"\n   {i}. [TARGET] {species_raw}:")
                 
                 # Get detailed probability breakdown for all components
                 probabilities = self.predictor.predict_component_probabilities(
