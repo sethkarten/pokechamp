@@ -69,7 +69,11 @@ def create_battle_state_hash(battle: Battle) -> BattleStateHash:
 class LocalSimPool:
     """Object pool for LocalSim instances to avoid repeated creation."""
     
+<<<<<<< HEAD
     def __init__(self, initial_size: int = 1):
+=======
+    def __init__(self, initial_size: int = 16):
+>>>>>>> main
         self._available_sims: List[LocalSim] = []
         self._in_use_sims: List[LocalSim] = []
         self._initial_size = initial_size
@@ -79,14 +83,22 @@ class LocalSimPool:
         """Initialize the pool with template LocalSim instances."""
         self._creation_template = localsim_kwargs
         
+<<<<<<< HEAD
         print(f"🔄 Initializing LocalSim pool with {self._initial_size} instance (memory optimized)...")
+=======
+        print(f"🔄 Initializing LocalSim pool with {self._initial_size} instances...")
+>>>>>>> main
         for i in range(self._initial_size):
             sim = LocalSim(
                 battle=deepcopy(template_battle),
                 **localsim_kwargs
             )
             self._available_sims.append(sim)
+<<<<<<< HEAD
         print(f"✅ LocalSim pool initialized with {len(self._available_sims)} instance")
+=======
+        print(f"✅ LocalSim pool initialized with {len(self._available_sims)} instances")
+>>>>>>> main
     
     def acquire_sim(self, battle: Battle) -> LocalSim:
         """Get a LocalSim from the pool, creating new one if needed."""
@@ -224,7 +236,11 @@ class MinimaxOptimizer:
     """Main optimizer for minimax tree search."""
     
     def __init__(self):
+<<<<<<< HEAD
         self.sim_pool = LocalSimPool(initial_size=1)  # Single instance to reduce memory usage
+=======
+        self.sim_pool = LocalSimPool(initial_size=4)  # Larger pool for minimax
+>>>>>>> main
         self.cache = MinimaxCache(max_size=2000)
         self.stats = {
             'nodes_created': 0,

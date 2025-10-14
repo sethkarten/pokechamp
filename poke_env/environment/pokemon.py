@@ -61,6 +61,7 @@ class Pokemon:
         species: Optional[str] = None,
         request_pokemon: Optional[Dict[str, Any]] = None,
         details: Optional[str] = None,
+        battle_format: str = "gen9ou",
     ):
         # Base data
         self._data = GenData.from_gen(gen)
@@ -112,7 +113,13 @@ class Pokemon:
         self._status: Optional[Status] = None
         self._status_counter: int = 0
 
-        with open('poke_env/data/static/gen9/vgc/sets_1760.json', 'r') as f:
+        # Load appropriate sets file based on battle format
+        if "vgc" in battle_format.lower():
+            sets_file = 'poke_env/data/static/gen9/vgc/sets_1760.json'
+        else:
+            sets_file = 'poke_env/data/static/gen9/ou/sets_1500.json'
+        
+        with open(sets_file, 'r') as f:
             sets = json.load(f)
         self._sets = sets
         
@@ -1000,7 +1007,7 @@ class Pokemon:
                 'oricoriopau': 'Kilowattrel', 'oricoriosensu': 'Kilowattrel',  # All Oricorio forms to common similar type
                 'toxapexgmax': 'Toxapex', 'corviknightgmax': 'Corviknight', 'grimmsnarrgmax': 'Grimmsnarl',
                 # VGC specific Pokemon
-                'calyrexice': 'Calyrex-Ice', 'calyrexshadow': 'Calyrex-Shadow', 'zamazentacrowned': 'Zamazenta-Crowned',
+                'calyrexice': 'Calyrex-Ice', 'calyrexshadow': 'Calyrex-Shadow', 'zamazentacrowned': 'Zamazenta-Crowned'
             }
             lower_name = name.lower()
             return name_mapping.get(lower_name, name.capitalize())

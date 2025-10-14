@@ -47,7 +47,6 @@ htmlcov/
 .env
 .env.local
 *.env
-passwords.json
 
 # Sensitive credentials
 passwords.json
@@ -72,10 +71,6 @@ yarn-error.log*
 
 CLAUDE.md
 pokemon-showdown/
-
-*.code-workspace
-
-local/
 
 .venv/
 
