@@ -358,6 +358,9 @@ class Player(ABC):
                         gen=gen,
                         save_replays=self._save_replays,
                     )
+                
+                # Set the correct format from player instead of waiting for gen message
+                battle._format = self._format
 
                 await self._battle_count_queue.put(None)
                 if battle_tag in self._battles:

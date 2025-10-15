@@ -135,8 +135,10 @@ def get_metamon_teams(battle_format: str, set_name: str) -> TeamSet:
         raise ValueError(
             f"Invalid set name: {set_name}. Must be one of: competitive, paper_replays, paper_variety, modern_replays"
         )
-    #path = download_teams(battle_format, set_name=set_name)
-    path = "bayesian_dataset"
+    if battle_format == "gen9vgc2025regi":
+        path = 'bayesian_dataset'
+    else:
+        path = download_teams(battle_format, set_name=set_name)
     if not os.path.exists(path):
         raise ValueError(
             f"Cannot locate valid team directory for format {battle_format} at path {path}"

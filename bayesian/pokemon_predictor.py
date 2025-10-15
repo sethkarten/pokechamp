@@ -14,18 +14,25 @@ from bayesian.team_predictor import BayesianTeamPredictor
 class PokemonPredictor:
     """Production interface for Pokemon team predictions."""
     
-    def __init__(self, cache_dir: str = None):
+    def __init__(self, cache_dir: str = None, battle_format: str = "gen9ou"):
         """
         Initialize the predictor and load the trained model.
         
         Args:
             cache_dir: Directory containing the trained model cache.
                       Defaults to METAMON_CACHE_DIR environment variable.
+            battle_format: Battle format for format-specific predictions.
         """
         if cache_dir:
             os.environ['METAMON_CACHE_DIR'] = cache_dir
         
-        self.predictor = BayesianTeamPredictor()
+        # Create format-specific predictor
+        if "vgc" in battle_format.lower():
+            cache_file = f"{battle_format}_team_predictor_full.pkl"
+        else:
+            cache_file = f"{battle_format}_team_predictor_full.pkl"
+            
+        self.predictor = BayesianTeamPredictor(cache_file=cache_file, battle_format=battle_format)
         self._load_model()
     
     def _load_model(self):

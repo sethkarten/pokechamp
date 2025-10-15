@@ -725,8 +725,175 @@ def run_concurrent_ladder(skip_forfeit=False, games_per_agent_target=1000, conti
     
     print(f"[{datetime.now().strftime('%H:%M:%S')}] Initial {len(AGENTS)} VGC agents queued. Starting continuous queueing...")
     
-    # [Rest of the function is identical to the original, just with VGC-specific messaging]
-    # ... (keeping the rest of the concurrent ladder logic the same)
+    # Continuously check and requeue agents until they reach target games
+    all_agents_complete = False
+    loop_counter = 0
+    while not all_agents_complete:
+        try:
+            loop_counter += 1
+            if loop_counter % 5 == 0:  # Print every 10 seconds
+                print(f"[{datetime.now().strftime('%H:%M:%S')}] DEBUG: Main loop iteration {loop_counter}")
+            time.sleep(2)  # Check every 2 seconds for faster response
+            
+            # Debug: Show current battle state
+            with battle_lock:
+                if len(agents_in_battle) == 0:
+                    print(f"[{datetime.now().strftime('%H:%M:%S')}] DEBUG: No agents currently in battle")
+            
+            # Check for restart signal OR if all agents are free (belt and suspenders approach)
+            restart_needed = False
+            
+            # First check the restart queue
+            try:
+                restart_signal = restart_queue.get(block=False)
+                print(f"[{datetime.now().strftime('%H:%M:%S')}] DEBUG: Got restart signal: {restart_signal}")
+                if restart_signal == "restart":
+                    print(f"[{datetime.now().strftime('%H:%M:%S')}] Got restart signal from queue")
+                    restart_needed = True
+                    restart_queue.task_done()
+            except Empty:
+                # Only print this occasionally to avoid spam
+                if session_counter % 10 == 0:
+                    print(f"[{datetime.now().strftime('%H:%M:%S')}] DEBUG: No restart signal in queue")
+            
+            # Also check if all agents are free (backup check)
+            with battle_lock:
+                if len(agents_in_battle) == 0:
+                    # In continuous mode, always restart when all agents are free
+                    # In non-continuous mode, only restart if agents haven't reached target
+                    if continuous_mode:
+                        print(f"[{datetime.now().strftime('%H:%M:%S')}] All agents free in continuous mode - forcing restart")
+                        restart_needed = True
+                    else:
+                        # Check if any agent needs more games
+                        any_need_games = False
+                        for agent in AGENTS:
+                            if agent_games_completed[agent["username"]] < games_per_agent_target:
+                                any_need_games = True
+                                break
+                        
+                        if any_need_games:
+                            print(f"[{datetime.now().strftime('%H:%M:%S')}] All agents free and need more games - forcing restart")
+                            restart_needed = True
+            
+            # Process restart if needed
+            if restart_needed:
+                print(f"[{datetime.now().strftime('%H:%M:%S')}] Processing restart - requeuing all agents")
+                print(f"[{datetime.now().strftime('%H:%M:%S')}] DEBUG: session_queue size before: {session_queue.qsize()}")
+                
+                # Clear battle state
+                with battle_lock:
+                    agents_in_battle.clear()
+                
+                # In continuous mode, reset counters for infinite restart
+                if continuous_mode:
+                    for agent in AGENTS:
+                        username = agent["username"]
+                        agent_games_completed[username] = 0
+                        agent_games_queued[username] = 0
+                
+                # Requeue all agents that need more games
+                agents_requeued = 0
+                for agent in AGENTS:
+                    username = agent["username"]
+                    if continuous_mode or agent_games_completed[username] < games_per_agent_target:
+                        # Add to battle tracking
+                        with battle_lock:
+                            agents_in_battle.add(username)
+                        
+                        # Queue the session
+                        session_counter += 1
+                        session_key = f"{username}_ladder_{session_counter}"
+                        session_queue.put((agent, session_counter, session_key))
+                        agent_games_queued[username] += games_per_session
+                        agents_requeued += 1
+                        print(f"[{datetime.now().strftime('%H:%M:%S')}] Queued ladder session #{session_counter}: {username}")
+                
+                print(f"[{datetime.now().strftime('%H:%M:%S')}] Restart complete: {agents_requeued} agents requeued")
+                print(f"[{datetime.now().strftime('%H:%M:%S')}] DEBUG: session_queue size after: {session_queue.qsize()}")
+                continue  # Skip normal requeue logic
+            
+            # Check if we need to queue more sessions
+            agents_to_requeue = []
+            
+            # Synchronized restart: Wait for ALL agents to complete their current round
+            with battle_lock:
+                # Check how many agents have completed their current round
+                agents_ready_for_next_round = []
+                agents_still_battling = []
+                
+                for agent in AGENTS:
+                    username = agent["username"]
+                    completed = agent_games_completed[username]
+                    queued = agent_games_queued[username]
+                    
+                    if username in agents_in_battle:
+                        agents_still_battling.append(username)
+                    elif completed < games_per_agent_target and queued <= completed:
+                        agents_ready_for_next_round.append(agent)
+                
+                # Only restart when ALL agents are done with current round
+                if len(agents_still_battling) == 0 and len(agents_ready_for_next_round) == len(AGENTS):
+                    print(f"[{datetime.now().strftime('%H:%M:%S')}] All {len(AGENTS)} agents completed round - synchronized restart!")
+                    print(f"  Agents completed: {[a['username'] for a in agents_ready_for_next_round]}")
+                    agents_to_requeue = agents_ready_for_next_round
+                elif len(agents_still_battling) > 0:
+                    print(f"[{datetime.now().strftime('%H:%M:%S')}] Waiting for {len(agents_still_battling)} agents to complete: {agents_still_battling}")
+                
+                # Special case: all agents timed out or errored (battle set empty but not all reached target)
+                if len(agents_in_battle) == 0 and len(agents_ready_for_next_round) < len(AGENTS):
+                    all_stuck = True
+                    for agent in AGENTS:
+                        username = agent["username"]
+                        if agent_games_queued[username] > agent_games_completed[username]:
+                            all_stuck = False  # Some agent still has pending games
+                            break
+                    
+                    if all_stuck:
+                        print(f"[{datetime.now().strftime('%H:%M:%S')}] All agents appear stuck - forcing synchronized restart!")
+                        for agent in AGENTS:
+                            username = agent["username"]
+                            if agent_games_completed[username] < games_per_agent_target:
+                                agents_to_requeue.append(agent)
+            
+            # Requeue agents that need more games
+            for agent in agents_to_requeue:
+                username = agent["username"]
+                with battle_lock:
+                    agents_in_battle.add(username)
+                    session_counter += 1
+                    session_key = f"{username}_ladder_{session_counter}"
+                    session_queue.put((agent, session_counter, session_key))
+                    agent_games_queued[username] += games_per_session
+                    
+                    completed = agent_games_completed[username]
+                    remaining = games_per_agent_target - completed
+                    print(f"[{datetime.now().strftime('%H:%M:%S')}] Requeued ladder session #{session_counter}: {username} "
+                          f"(completed: {completed}/{games_per_agent_target}, remaining: {remaining})")
+                        
+        except KeyboardInterrupt:
+            print(f"\n[{datetime.now().strftime('%H:%M:%S')}] Stopping ladder tournament due to keyboard interrupt...")
+            all_agents_complete = True
+            break
+        except Exception as e:
+            print(f"[{datetime.now().strftime('%H:%M:%S')}] Error in main loop: {e}")
+            if continuous_mode:
+                print("Continuing in continuous mode despite error...")
+                # Force clear battle state and continue
+                force_clear_battle_state()
+                time.sleep(10)  # Wait a bit before retrying
+            else:
+                raise
+    
+    # Wait for all remaining sessions to complete
+    print(f"[{datetime.now().strftime('%H:%M:%S')}] All targets reached. Waiting for remaining sessions to complete...")
+    session_queue.join()
+    
+    # Stop workers
+    for _ in workers:
+        session_queue.put(None)
+    for worker in workers:
+        worker.join()
     
     print(f"[{datetime.now().strftime('%H:%M:%S')}] All VGC targets reached. Waiting for remaining sessions to complete...")
     

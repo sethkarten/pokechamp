@@ -122,7 +122,7 @@ async def main():
     try:
         player_teamloader = get_metamon_teams(args.battle_format, "competitive")
         opponent_teamloader = get_metamon_teams(args.battle_format, "modern_replays")
-    except ValueError as e:
+    except (ValueError, Exception) as e:
         if VISUAL_EFFECTS:
             print_status(f"Metamon teams not available for {args.battle_format}: {e}", "warning")
             print_status("Falling back to static teams...", "info")
