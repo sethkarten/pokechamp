@@ -21,7 +21,7 @@ parser.add_argument("--backend", type=str, default="gemini-2.5-flash", choices=[
     # Anthropic models
     "anthropic/claude-3.5-sonnet", "anthropic/claude-3-opus", "anthropic/claude-3-haiku",
     # Google models
-    "google/gemini-pro", "gemini-2.0-flash", "gemini-2.0-pro", "gemini-2.0-flash-lite", "gemini-2.5-flash", "gemini-2.5-pro",
+    "google/gemini-pro", "gemini-2.0-flash", "gemini-2.0-pro", "gemini-2.0-flash-lite", "gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.5-flash-lite",
     # Meta models
     "meta-llama/llama-3.1-70b-instruct", "meta-llama/llama-3.1-8b-instruct",
     # Mistral models
@@ -73,16 +73,30 @@ async def main():
                             PASSWORD=args.PASSWORD,
                             use_timeout=(args.timeout > 0),
                             timeout_seconds=args.timeout)
-    team_list = "modern_replays"
-    if args.name == 'pokechamp':
-        team_list = "competitive"
-    print(f"Using {team_list} team list")
-    teamloader = get_metamon_teams(args.battle_format, team_list)
+    # Try to use metamon teams, fallback to static teams if not available
+    teamloader = None
+    
+    try:
+        team_list = "modern_replays"
+        if args.name == 'pokechamp':
+            team_list = "competitive"
+        print(f"Using {team_list} team list")
+        teamloader = get_metamon_teams(args.battle_format, team_list)
+    except Exception as e:
+        print(f"Metamon teams not available for {args.battle_format}: {e}")
+        print(f"Falling back to static teams...")
     
     if not 'random' in args.battle_format:
-        # Set teamloader on player for rejection recovery
-        player.set_teamloader(teamloader)
-        player.update_team(teamloader.yield_team())
+        if 'vgc' in args.battle_format:
+            # VGC format - use local VGC teams
+            player.update_team(load_random_team(id=None, vgc=True))
+        elif teamloader is None:
+            # Fallback to static teams when metamon teams not available
+            player.update_team(load_random_team(id=None, vgc=False))
+        else:
+            # Use metamon teams if available
+            player.set_teamloader(teamloader)
+            player.update_team(teamloader.yield_team())
 
     # Warm up player components before battles to avoid turn-time delays
     print("[WARMUP] Warming up player before battles...")

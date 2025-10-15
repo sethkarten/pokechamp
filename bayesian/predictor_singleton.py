@@ -1,12 +1,19 @@
-# Singleton module for PokemonPredictor to avoid circular imports
-# and ensure only one instance is created
+# Format-aware singleton module for PokemonPredictor
+# Maintains separate instances for different battle formats
 
-_predictor_instance = None
+_predictor_instances = {}
 
-def get_pokemon_predictor():
-    """Get the shared PokemonPredictor instance, creating it if necessary."""
-    global _predictor_instance
-    if _predictor_instance is None:
+def get_pokemon_predictor(battle_format: str = "gen9ou"):
+    """Get the PokemonPredictor instance for the specified format."""
+    global _predictor_instances
+    if battle_format not in _predictor_instances:
         from bayesian.pokemon_predictor import PokemonPredictor
-        _predictor_instance = PokemonPredictor()
-    return _predictor_instance
+        
+        # Create format-specific predictor with appropriate cache file
+        if "vgc" in battle_format.lower():
+            cache_file = f"{battle_format}_team_predictor_full.pkl"
+        else:
+            cache_file = f"{battle_format}_team_predictor_full.pkl"
+            
+        _predictor_instances[battle_format] = PokemonPredictor(battle_format=battle_format)
+    return _predictor_instances[battle_format]

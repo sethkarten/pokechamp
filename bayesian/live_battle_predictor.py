@@ -87,8 +87,10 @@ class LiveBattlePredictor(AbyssalPlayer):
         else:
             print("[INIT] Initializing Live Battle Predictor...")
         try:
-            self.predictor = get_pokemon_predictor()
-            print("[OK] Bayesian predictor ready!")
+            # Use format-specific predictor
+            battle_format = kwargs.get('battle_format', self._format if hasattr(self, '_format') else 'gen9ou')
+            self.predictor = get_pokemon_predictor(battle_format)
+            print(f"[OK] Bayesian predictor ready for {battle_format}!")
         except Exception as e:
             print(f"[ERROR] Failed to load predictor: {e}")
             self.predictor = None
