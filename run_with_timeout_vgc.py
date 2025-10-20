@@ -596,7 +596,7 @@ def forfeit_existing_battles():
             
             # Create a minimal player just for forfeiting - VGC format
             temp_player = RandomPlayer(
-                battle_format="gen9vgc2024regh",
+                battle_format="gen9vgc2025regi",
                 account_configuration=AccountConfiguration(agent["username"], agent["password"]),
                 server_configuration=ShowdownServerConfiguration,
                 start_listening=False  # Don't auto-start listening
@@ -983,7 +983,7 @@ if __name__ == "__main__":
     parser.add_argument("--games-per-round", type=int, default=1, help="Number of games per agent per round (before sync)")
     parser.add_argument("--target-games", type=int, default=1000, help="Total target games per agent before full restart")
     parser.add_argument("--timeout", type=int, default=600, help="Timeout in seconds per ladder session")
-    parser.add_argument("--max-concurrent", type=int, default=16, help="Maximum concurrent ladder sessions")
+    parser.add_argument("--max-concurrent", type=int, default=10, help="Maximum concurrent ladder sessions")
     parser.add_argument("--continuous", action="store_true", help="Run continuously in a loop")
     parser.add_argument("--delay", type=int, default=30, help="Delay between rounds in seconds")
     parser.add_argument("--llm-timeout", type=int, default=90, help="LLM timeout per move in seconds")

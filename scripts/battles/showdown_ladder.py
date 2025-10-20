@@ -109,6 +109,7 @@ async def main():
     pbar = tqdm(total=n_challenges)
     wins = 0
     for i in range(n_challenges):
+        sleep(random.randint(10, 60))
         print('starting ladder')
         await player.ladder(1)
         winner = 'opponent'
@@ -117,7 +118,6 @@ async def main():
             wins += 1
         if not 'random' in args.battle_format:
             player.update_team(teamloader.yield_team())
-        sleep(30)
         pbar.set_description(f"{wins/(i+1)*100:.2f}%")
         pbar.update(1)
         print(winner)

@@ -134,11 +134,19 @@ class LLMVGCPlayer(Player):
         self.use_llm_value_function = True  # Use LLM for leaf node evaluation (vs fast heuristic)
         self.max_depth_for_llm_eval = 2  # Only use LLM evaluation for shallow depths to save time
 
-    def get_LLM_action(self, system_prompt, user_prompt, model, temperature=0.7, json_format=False, seed=None, stop=[], max_tokens=200, actions=None, llm=None) -> str:
+    def get_LLM_action(self, system_prompt, user_prompt, model, temperature=0.7, json_format=False, seed=None, stop=[], max_tokens=200, actions=None, llm=None, battle=None) -> str:
         if llm is None:
-            output, _ = self.llm.get_LLM_action(system_prompt, user_prompt, model, temperature, True, seed, stop, max_tokens=max_tokens, actions=actions)
+            output, _, raw_message = self.llm.get_LLM_action(system_prompt, user_prompt, model, temperature, True, seed, stop, max_tokens=max_tokens, actions=actions, battle=battle, ps_client=self.ps_client)
         else:
-            output, _ = llm.get_LLM_action(system_prompt, user_prompt, model, temperature, True, seed, stop, max_tokens=max_tokens, actions=actions)
+            output, _, raw_message = llm.get_LLM_action(system_prompt, user_prompt, model, temperature, True, seed, stop, max_tokens=max_tokens, actions=actions, battle=battle, ps_client=self.ps_client)
+        
+        # Send thinking message if battle is provided
+        if battle is not None and raw_message and hasattr(self, 'ps_client') and self.ps_client:
+            try:
+                self._send_thinking_message(battle, raw_message)
+            except Exception as e:
+                print(f"Failed to send thinking message: {e}")
+        
         return output
     
     def check_all_pokemon(self, pokemon_str: str) -> Pokemon:
@@ -416,7 +424,8 @@ Target numbers: 1=left opponent, 2=right opponent, 0=field effect, 0=self\n'''
                                             max_tokens=300,
                                             # stop=["reason"],
                                             json_format=True,
-                                            actions=actions)
+                                            actions=actions,
+                                            battle=battle)
         
                 # load when llm does heavylifting for parsing
                 if DEBUG:

@@ -1,4 +1,4 @@
-import google.generativeai as genai
+from google import genai
 from time import sleep
 import os, sys
 import json
@@ -37,7 +37,7 @@ class GeminiPlayer():
             'gemini-1.5-pro': 'gemini-1.5-pro',
         }
 
-    def get_LLM_action(self, system_prompt, user_prompt, model='gemini-2.0-flash', temperature=0.7, json_format=False, seed=None, stop=[], max_tokens=1000, actions=None) -> str:
+    def get_LLM_action(self, system_prompt, user_prompt, model='gemini-2.0-flash', temperature=0.7, json_format=False, seed=None, stop=[], max_tokens=1000, actions=None, battle=None, ps_client=None) -> str:
         try:
             # Map model name to official API name
             api_model_name = self.model_mapping.get(model, model)
@@ -77,22 +77,22 @@ class GeminiPlayer():
                     try:
                         # Validate JSON
                         json.loads(json_content)
-                        return json_content, True
+                        return json_content, True, outputs  # Return processed, json_flag, raw
                     except json.JSONDecodeError:
                         # If JSON is invalid, return the original output
-                        return outputs, True
+                        return outputs, True, outputs  # Return processed, json_flag, raw
                 else:
                     # No JSON found, return original output
-                    return outputs, True
+                    return outputs, True, outputs  # Return processed, json_flag, raw
             
-            return outputs, False
+            return outputs, False, outputs  # Return processed, json_flag, raw
             
         except Exception as e:
             print(f'Gemini API error: {e}')
             sys.exit(1)
             # sleep 2 seconds and try again
             sleep(2)
-            return self.get_LLM_action(system_prompt, user_prompt, model, temperature, json_format, seed, stop, max_tokens, actions)
+            return self.get_LLM_action(system_prompt, user_prompt, model, temperature, json_format, seed, stop, max_tokens, actions, battle, ps_client)
     
     def get_LLM_query(self, system_prompt, user_prompt, temperature=0.7, model='gemini-2.0-flash', json_format=False, seed=None, stop=[], max_tokens=1000):
         try:

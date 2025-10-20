@@ -1,4 +1,5 @@
 import ast
+import asyncio
 from copy import copy, deepcopy
 import datetime
 import json
@@ -33,6 +34,7 @@ from pokechamp.data_cache import (
     get_cached_pokemon_item_dict,
     get_cached_pokedex
 )
+from poke_env.concurrency import POKE_LOOP
 from pokechamp.minimax_optimizer import (
     get_minimax_optimizer,
     initialize_minimax_optimization,
@@ -193,11 +195,72 @@ class LLMPlayer(Player):
         else:
             print("[WARMUP] Player warm-up complete!")
 
-    def get_LLM_action(self, system_prompt, user_prompt, model, temperature=0.7, json_format=False, seed=None, stop=[], max_tokens=200, actions=None, llm=None) -> str:
+    def _send_thinking_message(self, battle: AbstractBattle, message: str):
+        """
+        Send LLM thinking as chat messages during battle in 1000-character chunks.
+        Based on TimeoutLLMPlayer._send_chat_message implementation.
+        """
+        try:
+            # Split message into 1000-character chunks
+            max_chunk_size = 950  # Leave room for turn prefix
+            chunks = []
+            
+            for i in range(0, len(message), max_chunk_size):
+                chunk = message[i:i + max_chunk_size]
+                chunks.append(chunk)
+            
+            # Create an async function to send all message chunks
+            async def send_message_async():
+                try:
+                    print(f"   Sending thinking to battle chat ({len(chunks)} parts)...")
+                    
+                    for part_num, chunk in enumerate(chunks, 1):
+                        if len(chunks) == 1:
+                            # Single message
+                            chat_message = f"Turn #{battle.turn} thinking: {chunk}"
+                        else:
+                            # Multiple parts
+                            chat_message = f"Turn #{battle.turn} thinking ({part_num}/{len(chunks)}): {chunk}"
+                        
+                        await self.ps_client.send_message(chat_message, room=battle.battle_tag)
+                        
+                        # Small delay between multiple messages
+                        if part_num < len(chunks):
+                            await asyncio.sleep(0.25)
+                    
+                    # Send fast mode command once after all thinking
+                    await self.ps_client.send_message("/timer off", room=battle.battle_tag)
+                    print(f"   All thinking sent to {battle.battle_tag}")
+                    
+                except Exception as e:
+                    print(f"   Failed to send thinking message: {e}")
+            
+            # Submit to the poke loop for execution
+            try:
+                future = asyncio.run_coroutine_threadsafe(send_message_async(), POKE_LOOP)
+                # Don't wait for completion to avoid blocking
+            except Exception as e:
+                print(f"   Could not schedule thinking message: {e}")
+                
+        except Exception as e:
+            print(f"Failed to send thinking message: {e}")
+
+    def get_LLM_action(self, system_prompt, user_prompt, model, temperature=0.7, json_format=False, seed=None, stop=[], max_tokens=200, actions=None, llm=None, battle=None) -> str:
         if llm is None:
-            output, _ = self.llm.get_LLM_action(system_prompt, user_prompt, model, temperature, True, seed, stop, max_tokens=max_tokens, actions=actions)
+            output, _, raw_message = self.llm.get_LLM_action(system_prompt, user_prompt, model, temperature, True, seed, stop, max_tokens=max_tokens, actions=actions, battle=battle, ps_client=self.ps_client)
         else:
-            output, _ = llm.get_LLM_action(system_prompt, user_prompt, model, temperature, True, seed, stop, max_tokens=max_tokens, actions=actions)
+            output, _, raw_message = llm.get_LLM_action(system_prompt, user_prompt, model, temperature, True, seed, stop, max_tokens=max_tokens, actions=actions, battle=battle, ps_client=self.ps_client)
+        
+        # Send thinking message if battle is provided
+        if battle is not None and raw_message:
+            try:
+                                # Always show LLM reasoning in chat
+                print(f"🧠 LLM [{self.ps_client.account_configuration.username}]: {raw_message}")
+                
+                self._send_thinking_message(battle, raw_message)
+            except Exception as e:
+                print(f"Failed to send thinking message: {e}")
+        
         return output
     
     def check_all_pokemon(self, pokemon_str: str) -> Pokemon:
@@ -293,7 +356,8 @@ class LLMPlayer(Player):
                                                model=self.backend,
                                                temperature=self.temperature,
                                                max_tokens=200,
-                                               json_format=True)
+                                               json_format=True,
+                                               battle=battle)
                     break
                 except:
                     raise ValueError('No valid move', battle.active_pokemon.fainted, len(battle.available_switches))
@@ -309,7 +373,8 @@ class LLMPlayer(Player):
                                                model=self.backend,
                                                temperature=self.temperature,
                                                max_tokens=100,
-                                               json_format=True)
+                                               json_format=True,
+                                               battle=battle)
 
                     next_action = self.parse_new(llm_output2, battle, sim)
                     with open(f"{self.log_dir}/output.jsonl", "a") as f:
@@ -360,15 +425,14 @@ class LLMPlayer(Player):
                                             max_tokens=300,
                                             # stop=["reason"],
                                             json_format=True,
-                                            actions=actions)
+                                            actions=actions,
+                                            battle=battle)
 
                 # load when llm does heavylifting for parsing
                 if DEBUG:
                     print(f"Raw LLM output: {llm_output}")
                 
-                # Always show LLM reasoning in chat
-                print(f"🧠 LLM [{self.ps_client.account_configuration.username}]: {llm_output}")
-                
+
                 llm_action_json = json.loads(llm_output)
                 if DEBUG:
                     print(f"Parsed JSON: {llm_action_json}")
@@ -676,7 +740,8 @@ class LLMPlayer(Player):
                                                     temperature=self.temperature,
                                                     max_tokens=500,
                                                     json_format=True,
-                                                    llm=self.llm_value
+                                                    llm=self.llm_value,
+                                                    battle=battle
                                                     )
                     # load when llm does heavylifting for parsing
                     llm_action_json = json.loads(llm_output)
@@ -740,6 +805,7 @@ class LLMPlayer(Player):
                                                             temperature=0.6,
                                                             max_tokens=100,
                                                             json_format=True,
+                                                            battle=battle
                                                             )
                             # load when llm does heavylifting for parsing
                             llm_action_json = json.loads(llm_output)
@@ -918,6 +984,7 @@ class LLMPlayer(Player):
                                                         temperature=0.6,
                                                         max_tokens=100,
                                                         json_format=True,
+                                                        battle=battle
                                                         )
                         # Load when llm does heavylifting for parsing
                         llm_action_json = json.loads(llm_output)
@@ -968,7 +1035,8 @@ class LLMPlayer(Player):
                                                         temperature=self.temperature,
                                                         max_tokens=500,
                                                         json_format=True,
-                                                        llm=self.llm_value
+                                                        llm=self.llm_value,
+                                                        battle=battle
                                                         )
                         # Load when llm does heavylifting for parsing
                         llm_action_json = json.loads(llm_output)
