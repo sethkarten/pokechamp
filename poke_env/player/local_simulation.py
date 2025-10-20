@@ -885,7 +885,7 @@ class LocalSim():
     
     
 
-    def state_translate(self, battle: Battle, idx: int, return_actions: bool = False, return_choices: bool = False):
+    def state_translate(self, battle: Battle, idx: int = 0, return_actions: bool = False, return_choices: bool = False):
         try:
             if return_actions:
                 return self.prompt_translate(self, battle, return_actions=return_actions, idx=idx)

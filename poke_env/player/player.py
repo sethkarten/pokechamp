@@ -7,6 +7,7 @@ import random
 from abc import ABC, abstractmethod
 from asyncio import Condition, Event, Queue, Semaphore
 from logging import Logger
+import os
 from time import perf_counter, sleep
 from typing import Any, Awaitable, Dict, List, Optional, Union
 
@@ -37,6 +38,12 @@ from poke_env.ps_client.server_configuration import (
 from poke_env.teambuilder.constant_teambuilder import ConstantTeambuilder
 from poke_env.teambuilder.teambuilder import Teambuilder
 
+
+def _get_random_avatar():
+    with open(os.path.join(os.path.dirname(__file__), "..", "data", "avatar_names.txt"), "r") as f:
+        options = [l.strip() for l in f.readlines()]
+    return random.choice(options)
+    
 class Player(ABC):
     """
     Base class for players.
@@ -110,6 +117,9 @@ class Player(ABC):
 
         if server_configuration is None:
             server_configuration = LocalhostServerConfiguration
+
+        if avatar is None:
+            avatar = _get_random_avatar()
 
         self.ps_client = PSClient(
             account_configuration=account_configuration,
