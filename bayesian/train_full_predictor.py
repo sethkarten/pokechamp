@@ -31,7 +31,7 @@ def main():
     start_time = time.time()
     
     try:
-        predictor.load_and_train(force_retrain=False)  # Use cache if available
+        predictor.load_and_train(force_retrain=True)  # Use cache if available
         
         end_time = time.time()
         duration = end_time - start_time
