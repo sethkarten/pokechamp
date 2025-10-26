@@ -34,13 +34,16 @@ class OllamaPlayer():
         # except Exception as e:
         #     print(f"Warning: Could not check available models: {e}")
     
-    def get_LLM_action(self, system_prompt, user_prompt, model, temperature=0.7, json_format=True, seed=None, stop=[], max_tokens=20, actions=None, think=True) -> str:
+    def get_LLM_action(self, system_prompt, user_prompt, model, temperature=0.7, json_format=True, seed=None, stop=[], max_tokens=20, actions=None, think=True, battle=None, ps_client=None) -> str:
         """
         Get action from LLM using Ollama API.
         
         Args:
             think: Whether to enable thinking mode for models that support it
         """
+        # if 'qwen3' in self.model.lower() or 'oss' in self.model.lower():
+        #     user_prompt = user_prompt + '\nDo not think, just answer.'
+        
         # Prepare the prompt - add JSON formatting
         if json_format:
             user_prompt_with_json = user_prompt + '\n{"'
@@ -57,6 +60,14 @@ class OllamaPlayer():
             options['seed'] = seed
         if stop:
             options['stop'] = stop
+        
+        # Add thinking mode parameter for models that support it
+        # if 'qwen3' in self.model.lower() or 'oss' in self.model.lower():
+        #     # Try multiple approaches to disable thinking
+        #     options['think'] = False
+        #     options['enable_thinking'] = False
+        #     options['thinking'] = False
+        #     print(f"Disabling thinking for {self.model}")
         
         try:
             # Use chat endpoint
@@ -103,7 +114,9 @@ class OllamaPlayer():
                     if json_end > 0:
                         message_json = json_part[:json_end + 1]
                         print('output:', message_json)
-                        return message_json, True
+                        # Combine thinking and message for raw output
+                        combined_raw = f"THINKING: {thinking}\n\nRESPONSE: {message}" if thinking else message
+                        return message_json, True, combined_raw
                 elif message.startswith('"'):
                     # Complete the JSON that started with '{"'
                     message_json = '{"' + message
@@ -111,7 +124,9 @@ class OllamaPlayer():
                     if json_end > 0:
                         message_json = message_json[:json_end + 1]
                         print('output:', message_json)
-                        return message_json, True
+                        # Combine thinking and message for raw output
+                        combined_raw = f"THINKING: {thinking}\n\nRESPONSE: {message}" if thinking else message
+                        return message_json, True, combined_raw
                 else:
                     # Look for any JSON-like pattern
                     import re
@@ -119,11 +134,15 @@ class OllamaPlayer():
                     if json_match:
                         message_json = json_match.group(0)
                         print('output:', message_json)
-                        return message_json, True
+                        # Combine thinking and message for raw output
+                        combined_raw = f"THINKING: {thinking}\n\nRESPONSE: {message}" if thinking else message
+                        return message_json, True, combined_raw
             
-            return message, False
+            # Combine thinking and message for raw output
+            combined_raw = f"THINKING: {thinking}\n\nRESPONSE: {message}" if thinking else message
+            return message, False, combined_raw
             
         except Exception as e:
             print(f"Error generating response: {e}")
-            return "", False
+            return "", False, ""
     

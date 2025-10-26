@@ -17,7 +17,7 @@ class OpenRouterPlayer():
         self.site_url = os.getenv('OPENROUTER_SITE_URL', 'https://github.com/pokechamp')
         self.site_name = os.getenv('OPENROUTER_SITE_NAME', 'PokeChamp')
 
-    def get_LLM_action(self, system_prompt, user_prompt, model='openai/gpt-4o', temperature=0.7, json_format=False, seed=None, stop=[], max_tokens=200, actions=None) -> str:
+    def get_LLM_action(self, system_prompt, user_prompt, model='openai/gpt-4o', temperature=0.7, json_format=False, seed=None, stop=[], max_tokens=200, actions=None, battle=None, ps_client=None) -> str:
         client = OpenAI(
             base_url="https://openrouter.ai/api/v1",
             api_key=self.api_key,
@@ -61,14 +61,15 @@ class OpenRouterPlayer():
             # sleep 5 seconds and try again
             sleep(5)  
             print('rate limit error')
-            return self.get_LLM_action(system_prompt, user_prompt, model, temperature, json_format, seed, stop, max_tokens, actions)
+            return self.get_LLM_action(system_prompt, user_prompt, model, temperature, json_format, seed, stop, max_tokens, actions, battle, ps_client)
         except Exception as e:
             print(f'OpenRouter API error: {e}')
             # sleep 2 seconds and try again
             sleep(2)
-            return self.get_LLM_action(system_prompt, user_prompt, model, temperature, json_format, seed, stop, max_tokens, actions)
+            return self.get_LLM_action(system_prompt, user_prompt, model, temperature, json_format, seed, stop, max_tokens, actions, battle, ps_client)
             
         outputs = response.choices[0].message.content
+        
         # log completion tokens
         self.completion_tokens += response.usage.completion_tokens
         self.prompt_tokens += response.usage.prompt_tokens
@@ -84,15 +85,15 @@ class OpenRouterPlayer():
                 try:
                     # Validate JSON
                     json.loads(json_content)
-                    return json_content, True
+                    return json_content, True, outputs  # Return processed, json_flag, raw
                 except json.JSONDecodeError:
                     # If JSON is invalid, return the original output
-                    return outputs, True
+                    return outputs, True, outputs  # Return processed, json_flag, raw
             else:
                 # No JSON found, return original output
-                return outputs, True
+                return outputs, True, outputs  # Return processed, json_flag, raw
         
-        return outputs, False
+        return outputs, False, outputs  # Return processed, json_flag, raw
     
     def get_LLM_query(self, system_prompt, user_prompt, temperature=0.7, model='openai/gpt-4o', json_format=False, seed=None, stop=[], max_tokens=200):
         client = OpenAI(

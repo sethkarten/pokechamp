@@ -1,0 +1,61 @@
+Blissey @ Heavy-Duty Boots  
+Ability: Natural Cure  
+Tera Type: Water  
+EVs: 4 HP / 252 Def / 252 SpD  
+Calm Nature  
+IVs: 0 Atk  
+- Stealth Rock  
+- Seismic Toss  
+- Calm Mind  
+- Soft-Boiled  
+
+Ditto @ Air Balloon  
+Ability: Imposter  
+Tera Type: Normal  
+EVs: 248 HP / 8 Def / 252 SpA  
+Quiet Nature  
+IVs: 0 Spe  
+- Transform  
+
+Dondozo (F) @ Heavy-Duty Boots  
+Ability: Unaware  
+Tera Type: Ghost  
+EVs: 248 HP / 252 Def / 8 SpD  
+Impish Nature  
+- Rest  
+- Sleep Talk  
+- Body Press  
+- Avalanche  
+
+Toxapex @ Heavy-Duty Boots  
+Ability: Regenerator  
+Tera Type: Fairy  
+EVs: 248 HP / 252 Def / 8 SpD  
+Bold Nature  
+IVs: 0 Atk  
+- Toxic  
+- Haze  
+- Recover  
+- Toxic Spikes  
+
+Alomomola @ Heavy-Duty Boots  
+Ability: Regenerator  
+Tera Type: Flying  
+EVs: 252 HP / 252 Def / 4 SpD  
+Bold Nature  
+IVs: 0 Atk  
+- Wish  
+- Protect  
+- Whirlpool  
+- Chilling Water  
+
+Ting-Lu @ Heavy-Duty Boots  
+Ability: Vessel of Ruin  
+Tera Type: Steel  
+EVs: 252 HP / 4 Atk / 252 SpD  
+Careful Nature  
+IVs: 29 Spe  
+- Spikes  
+- Protect  
+- Rest  
+- Earthquake  

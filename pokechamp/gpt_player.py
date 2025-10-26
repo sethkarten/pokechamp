@@ -12,7 +12,7 @@ class GPTPlayer():
         self.completion_tokens = 0
         self.prompt_tokens = 0
 
-    def get_LLM_action(self, system_prompt, user_prompt, model='gpt-4o', temperature=0.7, json_format=False, seed=None, stop=[], max_tokens=200, actions=None) -> str:
+    def get_LLM_action(self, system_prompt, user_prompt, model='gpt-4o', temperature=0.7, json_format=False, seed=None, stop=[], max_tokens=200, actions=None, battle=None, ps_client=None) -> str:
         client = OpenAI(api_key=self.api_key)
         # client = AzureOpenAI()
         try:
@@ -46,14 +46,14 @@ class GPTPlayer():
             # sleep 5 seconds and try again
             sleep(5)  
             print('rate limit error')
-            return self.get_LLM_action(system_prompt, user_prompt, model, temperature, json_format, seed, stop, max_tokens, actions)
+            return self.get_LLM_action(system_prompt, user_prompt, model, temperature, json_format, seed, stop, max_tokens, actions, battle, ps_client)
         outputs = response.choices[0].message.content
         # log completion tokens
         self.completion_tokens += response.usage.completion_tokens
         self.prompt_tokens += response.usage.prompt_tokens
         if json_format:
-            return outputs, True
-        return outputs, False
+            return outputs, True, outputs  # Return processed, json_flag, raw
+        return outputs, False, outputs  # Return processed, json_flag, raw
     
     def get_LLM_query(self, system_prompt, user_prompt, temperature=0.7, model='gpt-4o', json_format=False, seed=None, stop=[], max_tokens=200):
         client = OpenAI(api_key=self.api_key)

@@ -136,7 +136,7 @@ def test_bayesian_methods():
     test_instance = TestBayesianMethods()
     test_instance.test_pokemon_predictor_direct()
     test_instance.test_live_battle_predictor()
-    print("✅ Bayesian methods tests completed!")
+    print("[OK] Bayesian methods tests completed!")
 
 
 if __name__ == "__main__":

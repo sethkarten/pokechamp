@@ -52,6 +52,7 @@ class Pokemon:
         "_type_1",
         "_type_2",
         "_weightkg",
+        "_battle_format",
     )
 
     def __init__(
@@ -61,9 +62,11 @@ class Pokemon:
         species: Optional[str] = None,
         request_pokemon: Optional[Dict[str, Any]] = None,
         details: Optional[str] = None,
+        battle_format: str = "gen9ou",
     ):
         # Base data
         self._data = GenData.from_gen(gen)
+        self._battle_format = battle_format or "gen9ou"
 
         # Species related attributes
         self._base_stats: Dict[str, int]
@@ -112,7 +115,14 @@ class Pokemon:
         self._status: Optional[Status] = None
         self._status_counter: int = 0
 
-        with open('poke_env/data/static/gen9/ou/sets_1500.json', 'r') as f:
+        # Load appropriate sets file based on battle format
+        # Handle None battle_format gracefully
+        if battle_format and "vgc" in battle_format.lower():
+            sets_file = 'poke_env/data/static/gen9/vgc/sets_1760.json'
+        else:
+            sets_file = 'poke_env/data/static/gen9/ou/sets_1500.json'
+        
+        with open(sets_file, 'r') as f:
             sets = json.load(f)
         self._sets = sets
         
@@ -137,7 +147,7 @@ class Pokemon:
 
         return (
             f"{self._species} (pokemon object) "
-            f"[Active: {self._active}, Status: {status_repr}]"
+            f"[Active: {self._active}, Status: {status_repr}, Item: {self._item}, Moves: {self._moves}]"
         )
 
     def _add_move(self, move_id: str, use: bool = False) -> Optional[Move]:
@@ -908,9 +918,39 @@ class Pokemon:
             spread = set['stats']
             nature = set['nature']
         else:
-            # statistically weighted choice
+            # statistically weighted choice  
             def get_weighted_choice(category, id, size=1):
-                category_dict = sets[self.species.lower()][category]
+                # Normalize species name for VGC Pokemon using local mapping
+                species_lower = self.species.lower()
+                name_mapping = {
+                    # Calyrex forms
+                    'calyrex-ice': 'calyrexice',
+                    'calyrexice': 'calyrexice', 
+                    'calyrex-shadow': 'calyrexshadow',
+                    'calyrexshadow': 'calyrexshadow',
+                    # Zamazenta forms
+                    'zamazenta-crowned': 'zamazentacrowned',
+                    'zamazentacrowned': 'zamazentacrowned',
+                    # Newer VGC Pokemon
+                    'flutter-mane': 'fluttermane',
+                    'fluttermane': 'fluttermane',
+                    'chi-yu': 'chiyu',
+                    'chiyu': 'chiyu',
+                    'wo-chien': 'wochien', 
+                    'wochien': 'wochien',
+                    'chien-pao': 'chienpao',
+                    'chienpao': 'chienpao'
+                }
+                normalized_species = name_mapping.get(species_lower, species_lower)
+                
+                # Debug: Check if species exists in sets
+                if normalized_species not in sets:
+                    print(f"ERROR: Species '{normalized_species}' (from '{self.species}') not found in sets file")
+                    print(f"Available similar species: {[k for k in sets.keys() if normalized_species[:4] in k]}")
+                    # Fallback to a default Pokemon
+                    normalized_species = list(sets.keys())[0]
+                    
+                category_dict = sets[normalized_species][category]
                 p = np.array([float(category_dict[i]['percentage'])/100. for i in range(len(category_dict))])
                 p = p / p.sum()
                 if size > len(category_dict):
@@ -933,7 +973,7 @@ class Pokemon:
         """Get Bayesian stat predictions for this Pokemon."""
         # Use singleton predictor to avoid loading multiple models
         from bayesian.predictor_singleton import get_pokemon_predictor
-        predictor = get_pokemon_predictor()
+        predictor = get_pokemon_predictor(self._battle_format)
         
         # Normalize Pokemon names
         def normalize_pokemon_name(name):
@@ -998,7 +1038,10 @@ class Pokemon:
                 'lycanrocmidday': 'Lycanroc', 'lycanrocmidnight': 'Lycanroc-Dusk', 'lycanrocdusk': 'Lycanroc-Dusk',
                 'oricoriomeadow': 'Kilowattrel', 'oricoriopompom': 'Kilowattrel',  # Map to common Electric/Flying
                 'oricoriopau': 'Kilowattrel', 'oricoriosensu': 'Kilowattrel',  # All Oricorio forms to common similar type
-                'toxapexgmax': 'Toxapex', 'corviknightgmax': 'Corviknight', 'grimmsnarrgmax': 'Grimmsnarl'
+                'toxapexgmax': 'Toxapex', 'corviknightgmax': 'Corviknight', 'grimmsnarrgmax': 'Grimmsnarl',
+                # VGC specific Pokemon
+                'calyrexice': 'Calyrex-Ice', 'calyrexshadow': 'Calyrex-Shadow', 'zamazentacrowned': 'Zamazenta-Crowned', 'urshifurapidstrike': 'Urshifu-Rapid-Strike',
+                'hooh': 'Ho-Oh'
             }
             lower_name = name.lower()
             return name_mapping.get(lower_name, name.capitalize())

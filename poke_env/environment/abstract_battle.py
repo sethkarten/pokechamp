@@ -1,4 +1,6 @@
 import os
+import asyncio
+
 from abc import ABC, abstractmethod
 from logging import Logger
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
@@ -147,6 +149,7 @@ class AbstractBattle(ABC):
         self._anybody_inactive: bool = False
         self._reconnected: bool = True
         self.logger: Optional[Logger] = logger
+        self._time_left: Optional[int] = None  # Time left in seconds from battle timer
 
         # Turn choice attributes
         self._available_switches: List[Pokemon] = []
@@ -282,12 +285,12 @@ class AbstractBattle(ABC):
             )
 
         if request:
-            team[identifier] = Pokemon(request_pokemon=request, gen=self._data.gen)
+            team[identifier] = Pokemon(request_pokemon=request, gen=self._data.gen, battle_format=self._format)
         elif details:
-            team[identifier] = Pokemon(details=details, gen=self._data.gen)
+            team[identifier] = Pokemon(details=details, gen=self._data.gen, battle_format=self._format)
         else:
             species = identifier[4:]
-            team[identifier] = Pokemon(species=species, gen=self._data.gen)
+            team[identifier] = Pokemon(species=species, gen=self._data.gen, battle_format=self._format)
         return team[identifier]
 
     @abstractmethod
@@ -745,6 +748,12 @@ class AbstractBattle(ABC):
             elif "reconnected" in split_message[2]:
                 self._anybody_inactive = False
                 self._reconnected = True
+            elif "Time left:" in split_message[2]:
+                # Parse time from message like: "Time left: 150 sec this turn | 300 sec total"
+                import re
+                match = re.search(r'(\d+) sec total', split_message[2])
+                if match:
+                    self._time_left = int(match.group(1))
         elif split_message[1] == "player":
             if len(split_message) == 6:
                 player, username, avatar, rating = split_message[2:6]
@@ -766,6 +775,7 @@ class AbstractBattle(ABC):
                 }
             )
         elif split_message[1] == "poke":
+            #pass    #TODO make this not register teampreview pokemon while playing VGC b/c it messes with showteam
             player, details = split_message[2:4]
             self._register_teampreview_pokemon(player, details)
         elif split_message[1] == "premove":
@@ -773,20 +783,26 @@ class AbstractBattle(ABC):
             mon = self.get_pokemon(pokemon, force_self_team=True)
             mon._add_move(details)
         elif split_message[1] == "raw":
-            username, rating_info = split_message[2].split("'s rating: ")
-            rating = int(rating_info[:4])
-            if username == self.player_username:
-                self._rating = rating
-            elif username == self.opponent_username:
-                self._opponent_rating = rating
-            elif self.logger is not None:
-                self.logger.warning(
-                    "Rating information regarding an unrecognized username received. "
+            # Check if this is a rating message (contains "'s rating: ")
+            if "'s rating: " in split_message[2]:
+                username, rating_info = split_message[2].split("'s rating: ")
+                rating = int(rating_info[:4])
+                if username == self.player_username:
+                    self._rating = rating
+                elif username == self.opponent_username:
+                    self._opponent_rating = rating
+                elif self.logger is not None:
+                    self.logger.warning(
+                        "Rating information regarding an unrecognized username received. "
                     "Received '%s', while only known players are '%s' and '%s'",
                     username,
                     self.player_username,
                     self.opponent_username,
-                )
+                    )
+            else:
+                # Handle non-rating raw messages (like throttle notices)
+                if self.logger is not None:
+                    self.logger.debug("Raw message received: %s", split_message[2])
         elif split_message[1] == "replace":
             pokemon = split_message[2]
             details = split_message[3]
@@ -825,16 +841,20 @@ class AbstractBattle(ABC):
             if pokemon.terastallized:
                 if pokemon in set(self.opponent_team.values()):
                     self._opponent_can_terrastallize = False
+        elif split_message[1] == "sentchoice":
+            # Handle sentchoice messages (player action confirmations)
+            if self.logger is not None:
+                self.logger.debug("Player sent choice: %s", " ".join(split_message[2:]))
+            # This is just a confirmation message, no action needed
         else:
             raise NotImplementedError(split_message)
-
     @abstractmethod
     def parse_request(self, request: Dict[str, Any]):
         pass
 
     def _register_teampreview_pokemon(self, player: str, details: str):
         if player != self._player_role:
-            mon = Pokemon(details=details, gen=self._data.gen)
+            mon = Pokemon(details=details, gen=self._data.gen, battle_format=self._format)
             self._teampreview_opponent_team.add(mon)
         else:
             pokemon = player + 'a: ' + details.split(',')[0]
@@ -1224,6 +1244,14 @@ class AbstractBattle(ABC):
         :type turn: int
         """
         self._turn = turn
+
+    @property
+    def time_left(self) -> Optional[int]:
+        """
+        :return: Time left in seconds from the battle timer, or None if not available.
+        :rtype: Optional[int]
+        """
+        return self._time_left
 
     @property
     def weather(self) -> Dict[Weather, int]:
