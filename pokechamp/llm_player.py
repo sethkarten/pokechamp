@@ -23,8 +23,8 @@ from poke_env.data.gen_data import GenData
 from pokechamp.gpt_player import GPTPlayer
 from pokechamp.llama_player import LLAMAPlayer
 from pokechamp.openrouter_player import OpenRouterPlayer
-#from pokechamp.gemini_player import GeminiPlayer
-#from pokechamp.ollama_player import OllamaPlayer
+from pokechamp.gemini_player import GeminiPlayer
+from pokechamp.ollama_player import OllamaPlayer
 from pokechamp.data_cache import (
     get_cached_move_effect,
     get_cached_pokemon_move_dict,
