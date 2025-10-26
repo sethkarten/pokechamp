@@ -26,3 +26,4 @@ requests
 pytest
 huggingface-hub
 termcolor
+mcp

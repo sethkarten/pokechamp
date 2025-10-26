@@ -28,7 +28,7 @@ parser.add_argument("--player_backend", type=str, default="gemini-2.5-flash", ch
     # Anthropic models
     "anthropic/claude-3.5-sonnet", "anthropic/claude-3-opus", "anthropic/claude-3-haiku",
     # Google models
-    "google/gemini-pro", "gemini-2.0-flash", "gemini-2.0-pro", "gemini-2.0-flash-lite", "gemini-2.5-flash", "gemini-2.5-pro",
+    "google/gemini-pro", "gemini-2.0-flash", "gemini-2.0-pro", "gemini-2.0-flash-lite", "gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.5-flash-lite",
     # Meta models
     "meta-llama/llama-3.1-70b-instruct", "meta-llama/llama-3.1-8b-instruct",
     # Mistral models
@@ -73,7 +73,7 @@ parser.add_argument("--opponent_backend", type=str, default="gemini-2.5-pro", ch
     # Microsoft models
     "microsoft/wizardlm-2-8x22b", "microsoft/phi-3-medium-128k-instruct",
     # Local models (via OpenRouter)
-    "llama", 'None'
+    "llama", 'None', 'mcp'
 ])
 parser.add_argument("--opponent_name", type=str, default='pokellmon', choices=bot_choices)
 parser.add_argument("--opponent_device", type=int, default=0)
