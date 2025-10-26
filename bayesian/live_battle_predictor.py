@@ -560,7 +560,7 @@ class LiveBattlePredictor(AbyssalPlayer):
             
             # Demonstrate the new Bayesian-powered methods
             if battle.opponent_active_pokemon:
-                print(f"\n🧠 BAYESIAN-POWERED BATTLE ANALYSIS:")
+                print(f"\nBAYESIAN-POWERED BATTLE ANALYSIS:")
                 print("-" * 50)
                 
                 # Test get_opponent_current_moves

@@ -229,7 +229,7 @@ class LLMPlayer(Player):
                             await asyncio.sleep(0.25)
                     
                     # Send fast mode command once after all thinking
-                    await self.ps_client.send_message("/timer off", room=battle.battle_tag)
+                    # await self.ps_client.send_message("/timer off", room=battle.battle_tag)
                     print(f"   All thinking sent to {battle.battle_tag}")
                     
                 except Exception as e:
@@ -255,7 +255,7 @@ class LLMPlayer(Player):
         if battle is not None and raw_message:
             try:
                                 # Always show LLM reasoning in chat
-                print(f"🧠 LLM [{self.ps_client.account_configuration.username}]: {raw_message}")
+                print(f"LLM [{self.ps_client.account_configuration.username}]: {raw_message}")
                 
                 self._send_thinking_message(battle, raw_message)
             except Exception as e:

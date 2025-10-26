@@ -167,14 +167,14 @@ class LLMVGCPlayer(Player):
                         
                         # Small delay between multiple messages
                         if part_num < len(chunks):
-                            await asyncio.sleep(0.25)
+                            await asyncio.sleep(0.15)
                     
                     # Send fast mode command once after all thinking
-                    await self.ps_client.send_message("/timer off", room=battle.battle_tag)
-                    print(f"   All thinking sent to {battle.battle_tag}")
+                    # await self.ps_client.send_message("/timer off", room=battle.battle_tag)
+                    print(f"All thinking sent to {battle.battle_tag}")
                     
                 except Exception as e:
-                    print(f"   Failed to send thinking message: {e}")
+                    print(f"Failed to send thinking message: {e}")
             
             # Submit to the poke loop for execution
             try:
@@ -505,7 +505,7 @@ Target numbers: 1=left opponent, 2=right opponent, 0=field effect, 0=self\n'''
                     print(f"Raw LLM output: {llm_output}")
                 
                 # Always show LLM reasoning in chat
-                print(f"🧠 LLM [{self.ps_client.account_configuration.username}] Slot {idx+1}: {llm_output}")
+                print(f"LLM [{self.ps_client.account_configuration.username}] Slot {idx+1}: {llm_output}")
                 
                 llm_action_json = json.loads(llm_output)
                 if DEBUG:
