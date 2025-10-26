@@ -13,7 +13,8 @@ prompt_algos = [
     "heuristic", 
     'max_power',
     'one_step',
-    'random'
+    'random',
+    'mcp'
     ]
 
 def get_available_bots():

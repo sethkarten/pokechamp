@@ -11,6 +11,7 @@ import inspect
 import os
 import random
 from pokechamp.llm_vgc_player import LLMVGCPlayer
+from pokechamp.mcp_player import MCPPlayer
 
 class TeamSet(Teambuilder):
     """Sample from a directory of Showdown team files.
@@ -217,6 +218,21 @@ def get_llm_player(args,
         server_config = ShowdownServerConfiguration
     if USERNAME == '':
         USERNAME = name
+    
+    if prompt_algo == 'mcp':
+            print(f"[DEBUG] Creating MCPPlayer")
+            return MCPPlayer(battle_format=battle_format,
+                           api_key=KEY,
+                           backend=backend,
+                           temperature=args.temperature,
+                           prompt_algo=prompt_algo,
+                           log_dir=args.log_dir,
+                           account_configuration=AccountConfiguration(f'{USERNAME}{PNUMBER1}', PASSWORD),
+                           server_configuration=server_config,
+                           save_replays=args.log_dir,
+                           prompt_translate=state_translate3 if "vgc" in battle_format.lower() else state_translate2,
+                           device=device,
+                           llm_backend=llm_backend)
     if name == 'abyssal':
         return AbyssalPlayer(battle_format=battle_format,
                             account_configuration=AccountConfiguration(f'{USERNAME}{PNUMBER1}', PASSWORD),
