@@ -1,4 +1,5 @@
 import ast
+import asyncio
 from copy import copy, deepcopy
 import datetime
 import json
@@ -15,6 +16,7 @@ from poke_env.environment.pokemon import Pokemon
 from poke_env.environment.side_condition import SideCondition
 from poke_env.player.player import Player, BattleOrder, DoubleBattleOrder
 from poke_env.player.battle_order import DefaultBattleOrder
+from poke_env.concurrency import POKE_LOOP
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 from poke_env.environment.move import Move
 import time
@@ -133,6 +135,56 @@ class LLMVGCPlayer(Player):
         self.use_damage_calc_early_exit = True  # Use damage calculator to exit early when advantageous
         self.use_llm_value_function = True  # Use LLM for leaf node evaluation (vs fast heuristic)
         self.max_depth_for_llm_eval = 2  # Only use LLM evaluation for shallow depths to save time
+    
+    def _send_thinking_message(self, battle: AbstractBattle, message: str):
+        """
+        Send LLM thinking as chat messages during battle in 1000-character chunks.
+        Based on TimeoutLLMPlayer._send_chat_message implementation.
+        """
+        try:
+            # Split message into 1000-character chunks
+            max_chunk_size = 950  # Leave room for turn prefix
+            chunks = []
+            
+            for i in range(0, len(message), max_chunk_size):
+                chunk = message[i:i + max_chunk_size]
+                chunks.append(chunk)
+            
+            # Create an async function to send all message chunks
+            async def send_message_async():
+                try:
+                    print(f"   Sending thinking to battle chat ({len(chunks)} parts)...")
+                    
+                    for part_num, chunk in enumerate(chunks, 1):
+                        if len(chunks) == 1:
+                            # Single message
+                            chat_message = f"Turn #{battle.turn} thinking: {chunk}"
+                        else:
+                            # Multiple parts
+                            chat_message = f"Turn #{battle.turn} thinking ({part_num}/{len(chunks)}): {chunk}"
+                        
+                        await self.ps_client.send_message(chat_message, room=battle.battle_tag)
+                        
+                        # Small delay between multiple messages
+                        if part_num < len(chunks):
+                            await asyncio.sleep(0.25)
+                    
+                    # Send fast mode command once after all thinking
+                    await self.ps_client.send_message("/timer off", room=battle.battle_tag)
+                    print(f"   All thinking sent to {battle.battle_tag}")
+                    
+                except Exception as e:
+                    print(f"   Failed to send thinking message: {e}")
+            
+            # Submit to the poke loop for execution
+            try:
+                future = asyncio.run_coroutine_threadsafe(send_message_async(), POKE_LOOP)
+                # Don't wait for completion to avoid blocking
+            except Exception as e:
+                print(f"   Could not schedule thinking message: {e}")
+                
+        except Exception as e:
+            print(f"Failed to send thinking message: {e}")
 
     def get_LLM_action(self, system_prompt, user_prompt, model, temperature=0.7, json_format=False, seed=None, stop=[], max_tokens=200, actions=None, llm=None, battle=None) -> str:
         if llm is None:
@@ -250,14 +302,35 @@ class LLMVGCPlayer(Player):
                 next_action[i] = self.choose_max_damage_move(battle, i)
 
         # handle all forced switch cases
+        special_case_handled = False
         if all(battle.force_switch):
             #print("INFO: Both slots are forced to switch")
-            # Ensure we don't try to use moves for any slot
+            # Check if we have a shared switch scenario (both forced to switch, limited options)
+            total_available_switches = set()
             for idx in range(len(battle.active_pokemon)):
-                if not battle.force_switch[idx]:
-                    next_action[idx] = None
+                if battle.force_switch[idx]:
+                    for pokemon in battle.available_switches[idx]:
+                        total_available_switches.add(pokemon.species)
+            
+            # If we have fewer total unique switches than forced slots, we need special handling
+            if len(total_available_switches) < sum(battle.force_switch):
+                print(f"WARNING: Both slots forced to switch but only {len(total_available_switches)} unique switches available")
+                # Assign the first available switch to the first slot, None to the second
+                next_action[0] = BattleOrder(battle.available_switches[0][0])
+                next_action[1] = None
+                special_case_handled = True
+            else:
+                # Normal case: enough switches for all slots
+                # Ensure we don't try to use moves for any slot
+                for idx in range(len(battle.active_pokemon)):
+                    if not battle.force_switch[idx]:
+                        next_action[idx] = None
 
         for idx, mon in enumerate(battle.active_pokemon):
+            # Skip individual processing if we already handled the special case
+            if special_case_handled and battle.force_switch[idx]:
+                continue
+                
             # if force switch is true for any pokemon, but the current pokemon is not forced to switch, we need its action to be None
             # we will handle the forced to switch state in state_translate3
             if any(battle.force_switch):
@@ -327,7 +400,7 @@ class LLMVGCPlayer(Player):
                                     next_action[idx] = self.create_order(pokemon)
                                     break
                             else:
-                                # If all switches are duplicates, use first available
+                                # If all switches are duplicates
                                 next_action[idx] = self.create_order(battle.available_switches[idx][0])
                         elif chosen_species not in switches:
                             #print(f"WARNING: LLM chose invalid switch {chosen_species}, falling back to first available")
