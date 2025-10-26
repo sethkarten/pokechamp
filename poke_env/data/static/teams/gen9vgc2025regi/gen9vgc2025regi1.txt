@@ -1,0 +1,67 @@
+Amoonguss (F) @ Rocky Helmet  
+Ability: Regenerator  
+Level: 59  
+Tera Type: Dark  
+EVs: 244 HP / 188 Def / 76 SpD  
+Calm Nature  
+IVs: 0 Atk / 16 Spe  
+- Spore  
+- Rage Powder  
+- Pollen Puff
+- Protect  
+
+Calyrex-Ice @ Leftovers  
+Ability: As One (Glastrier)  
+Level: 80  
+Tera Type: Fairy  
+EVs: 252 HP / 100 Def / 156 SpD  
+Relaxed Nature  
+IVs: 16 Spe  
+- Glacial Lance  
+- Leech Seed  
+- Trick Room  
+- Protect  
+
+Kyogre @ Mystic Water  
+Ability: Drizzle  
+Tera Type: Grass  
+EVs: 52 HP / 4 Def / 236 SpA / 4 SpD / 212 Spe  
+Modest Nature  
+IVs: 0 Atk  
+- Water Spout  
+- Origin Pulse  
+- Hydro Pump  
+- Protect  
+
+Grimmsnarl @ Light Clay  
+Ability: Prankster  
+Level: 57  
+Tera Type: Ghost  
+EVs: 252 HP / 4 Atk / 108 Def / 116 SpD / 28 Spe  
+Careful Nature  
+- Spirit Break  
+- Sucker Punch  
+- Reflect  
+- Light Screen  
+
+Flutter Mane @ Focus Sash  
+Ability: Protosynthesis  
+Level: 86  
+Tera Type: Fairy  
+EVs: 4 HP / 252 SpA / 252 Spe  
+Timid Nature  
+IVs: 0 Atk  
+- Icy Wind  
+- Shadow Ball  
+- Moonblast  
+- Taunt  
+
+Basculegion @ Life Orb  
+Ability: Swift Swim  
+Tera Type: Ghost  
+EVs: 100 HP / 252 Atk / 28 Def / 20 SpD / 108 Spe  
+Adamant Nature  
+- Wave Crash  
+- Last Respects  
+- Aqua Jet  
+- Protect  

@@ -158,8 +158,9 @@ class TeamParser:
 class BayesianTeamPredictor:
     """Naive Bayes predictor for Pokemon team configurations."""
     
-    def __init__(self, cache_file: str = "gen9ou_team_predictor_full.pkl"):
+    def __init__(self, cache_file: str = "gen9ou_team_predictor_full.pkl", battle_format: str = "gen9ou"):
         self.cache_file = cache_file
+        self.battle_format = battle_format
         self.parser = TeamParser()
         
         # Set up cache directory
@@ -197,7 +198,7 @@ class BayesianTeamPredictor:
     def _train_from_data(self):
         """Train the model on team data."""
         # Get team data
-        team_set = get_metamon_teams("gen9ou", "modern_replays")
+        team_set = get_metamon_teams(self.battle_format, "modern_replays")
         team_files = team_set.team_files
         
         print(f"Training on {len(team_files)} teams...")

@@ -69,7 +69,7 @@ def create_battle_state_hash(battle: Battle) -> BattleStateHash:
 class LocalSimPool:
     """Object pool for LocalSim instances to avoid repeated creation."""
     
-    def __init__(self, initial_size: int = 16):
+    def __init__(self, initial_size: int = 1):
         self._available_sims: List[LocalSim] = []
         self._in_use_sims: List[LocalSim] = []
         self._initial_size = initial_size
@@ -79,14 +79,14 @@ class LocalSimPool:
         """Initialize the pool with template LocalSim instances."""
         self._creation_template = localsim_kwargs
         
-        print(f"🔄 Initializing LocalSim pool with {self._initial_size} instances...")
+        print(f"[INIT] Initializing LocalSim pool with {self._initial_size} instance (memory optimized)...")
         for i in range(self._initial_size):
             sim = LocalSim(
                 battle=deepcopy(template_battle),
                 **localsim_kwargs
             )
             self._available_sims.append(sim)
-        print(f"✅ LocalSim pool initialized with {len(self._available_sims)} instances")
+        print(f"[OK] LocalSim pool initialized with {len(self._available_sims)} instance")
     
     def acquire_sim(self, battle: Battle) -> LocalSim:
         """Get a LocalSim from the pool, creating new one if needed."""
@@ -224,7 +224,7 @@ class MinimaxOptimizer:
     """Main optimizer for minimax tree search."""
     
     def __init__(self):
-        self.sim_pool = LocalSimPool(initial_size=4)  # Larger pool for minimax
+        self.sim_pool = LocalSimPool(initial_size=1)  # Single instance to reduce memory usage
         self.cache = MinimaxCache(max_size=2000)
         self.stats = {
             'nodes_created': 0,
@@ -236,7 +236,7 @@ class MinimaxOptimizer:
     def initialize(self, battle: Battle, **localsim_kwargs):
         """Initialize the optimizer with battle template."""
         self.sim_pool.initialize_pool(battle, **localsim_kwargs)
-        print(f"🚀 MinimaxOptimizer initialized")
+        print(f"[INIT] MinimaxOptimizer initialized")
     
     def create_optimized_root(self, battle: Battle) -> OptimizedSimNode:
         """Create an optimized root node for minimax search."""

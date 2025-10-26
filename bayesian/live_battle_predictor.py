@@ -18,6 +18,13 @@ from poke_env.environment.battle import Battle
 from poke_env.player.baselines import AbyssalPlayer
 from bayesian.predictor_singleton import get_pokemon_predictor
 
+# Visual effects import (optional)
+try:
+    from pokechamp.visual_effects import visual, print_banner, print_status
+    VISUAL_EFFECTS = True
+except ImportError:
+    VISUAL_EFFECTS = False
+
 
 class LiveBattlePredictor(AbyssalPlayer):
     """Abyssal player that shows live Bayesian predictions every turn."""
@@ -75,12 +82,17 @@ class LiveBattlePredictor(AbyssalPlayer):
         super().__init__(*args, **kwargs)
         
         # Initialize predictor after parent init
-        print("🔮 Initializing Live Battle Predictor...")
+        if VISUAL_EFFECTS:
+            print_banner("PREDICTOR", "purplepink")
+        else:
+            print("[INIT] Initializing Live Battle Predictor...")
         try:
-            self.predictor = get_pokemon_predictor()
-            print("✅ Bayesian predictor ready!")
+            # Use format-specific predictor
+            battle_format = kwargs.get('battle_format', self._format if hasattr(self, '_format') else 'gen9ou')
+            self.predictor = get_pokemon_predictor(battle_format)
+            print(f"[OK] Bayesian predictor ready for {battle_format}!")
         except Exception as e:
-            print(f"❌ Failed to load predictor: {e}")
+            print(f"[ERROR] Failed to load predictor: {e}")
             self.predictor = None
     
     def normalize_pokemon_name(self, name: str) -> str:
@@ -158,10 +170,14 @@ class LiveBattlePredictor(AbyssalPlayer):
         """Called when battle starts."""
         super()._battle_started_callback(battle)
         print(f"\n{'='*70}")
-        print(f"⚔️  BATTLE STARTED: {battle.battle_tag}")
+        if VISUAL_EFFECTS:
+            print(visual.battle_header("YOU", "OPPONENT"))
+            print(f"Battle ID: {battle.battle_tag}")
+        else:
+            print(f"[BATTLE] BATTLE STARTED: {battle.battle_tag}")
         print(f"{'='*70}")
-        print(f"🔵 Your team: {', '.join([p.species for p in battle.team.values() if p])}")
-        print(f"🔴 Opponent: Predictions will appear as Pokemon are revealed...")
+        print(f"[TEAM-BLUE] Your team: {', '.join([p.species for p in battle.team.values() if p])}")
+        print(f"[TEAM-RED] Opponent: Predictions will appear as Pokemon are revealed...")
         print(f"{'='*70}\n")
     
     def _battle_finished_callback(self, battle: Battle):
@@ -169,7 +185,11 @@ class LiveBattlePredictor(AbyssalPlayer):
         super()._battle_finished_callback(battle)
         
         print(f"\n{'='*70}")
-        print(f"🏆 BATTLE FINISHED")
+        if VISUAL_EFFECTS:
+            winner = "YOU" if self.n_won_battles > 0 else "OPPONENT"
+            print(visual.victory_banner(winner, battle.turn))
+        else:
+            print(f"[FINISH] BATTLE FINISHED")
         print(f"{'='*70}")
         
         # Show final team analysis
@@ -183,7 +203,7 @@ class LiveBattlePredictor(AbyssalPlayer):
                     if move:
                         revealed_moves[pokemon.species].add(move.id)
         
-        print(f"🔴 Final opponent team ({len(opponent_pokemon)}/6):")
+        print(f"[TEAM-RED] Final opponent team ({len(opponent_pokemon)}/6):")
         for i, species in enumerate(opponent_pokemon, 1):
             moves = list(revealed_moves[species])
             if moves:
@@ -191,10 +211,10 @@ class LiveBattlePredictor(AbyssalPlayer):
             else:
                 print(f"   {i}. {species}: No moves revealed")
         
-        result = "Victory! 🎉" if self.n_won_battles > 0 else "Defeat"
-        print(f"\n📊 Result: {result}")
+        result = "Victory! [WIN]" if self.n_won_battles > 0 else "Defeat"
+        print(f"\n[RESULT] {result}")
         print(f"⏱️  Total turns: {battle.turn}")
-        print(f"🎯 Win rate: {self.win_rate*100:.1f}%")
+        print(f"[STATS] Win rate: {self.win_rate*100:.1f}%")
         print(f"{'='*70}")
     
     def show_live_predictions(self, battle: Battle):
@@ -236,7 +256,10 @@ class LiveBattlePredictor(AbyssalPlayer):
         if not opponent_pokemon_raw:
             return
         
-        print(f"\n🎯 TURN {battle.turn} MOVE/ITEM/EV PREDICTIONS")
+        if VISUAL_EFFECTS:
+            print(visual.battle_turn(battle.turn, "Analyzing opponent..."))
+        else:
+            print(f"\n[TURN {battle.turn}] MOVE/ITEM/EV PREDICTIONS")
         print("-" * 60)
         
         # Current battle state
@@ -246,11 +269,11 @@ class LiveBattlePredictor(AbyssalPlayer):
             your_status = f" ({battle.active_pokemon.status.name})" if battle.active_pokemon.status else ""
             opp_status = f" ({battle.opponent_active_pokemon.status.name})" if battle.opponent_active_pokemon.status else ""
             
-            print(f"⚔️  CURRENT MATCHUP:")
-            print(f"🔵 YOU: {battle.active_pokemon.species} - {your_hp:.0f}% HP{your_status}")
-            print(f"🔴 OPP: {battle.opponent_active_pokemon.species} - {opp_hp:.0f}% HP{opp_status}")
+            print(f"[MATCHUP] CURRENT BATTLE:")
+            print(f"[BLUE] YOU: {battle.active_pokemon.species} - {your_hp:.0f}% HP{your_status}")
+            print(f"[RED] OPP: {battle.opponent_active_pokemon.species} - {opp_hp:.0f}% HP{opp_status}")
         
-        print(f"\n📋 OPPONENT TEAM ({len(opponent_pokemon_raw)}/6 revealed from team preview):")
+        print(f"\n[ROSTER] OPPONENT TEAM ({len(opponent_pokemon_raw)}/6 revealed from team preview):")
         for i, species in enumerate(opponent_pokemon_raw, 1):
             moves = list(revealed_moves[species])
             item = revealed_items.get(species)
@@ -265,9 +288,12 @@ class LiveBattlePredictor(AbyssalPlayer):
             print(f"   {i}. {species} - {move_display} | {item_display}")
         
         # Predict moves, items, and EVs for each Pokemon
-        print(f"\n🔮 BAYESIAN MOVE/ITEM/EV PREDICTIONS:")
+        if VISUAL_EFFECTS:
+            print(visual.create_banner("PREDICT", font="small", style="greenblue"))
+        else:
+            print(f"\n[PREDICT] BAYESIAN MOVE/ITEM/EV PREDICTIONS:")
         if self.predictor is None:
-            print("   ❌ Predictor not loaded")
+            print("   [ERROR] Predictor not loaded")
             return
             
         try:
@@ -280,7 +306,12 @@ class LiveBattlePredictor(AbyssalPlayer):
                 if len(observed_moves) >= 4 and known_item and known_item != "unknown":
                     continue
                 
-                print(f"\n   {i}. 🎯 {species_raw}:")
+                # Enhanced prediction display
+                move_predictions = [(move, prob) for move, prob in probabilities.get('moves', {}).items() if prob > 0.1]
+                if move_predictions:
+                    print(visual.prediction_display(species_raw, move_predictions[:5]))
+                else:
+                    print(f"\n   {i}. [TARGET] {species_raw}:")
                 
                 # Get detailed probability breakdown for all components
                 probabilities = self.predictor.predict_component_probabilities(
@@ -290,24 +321,24 @@ class LiveBattlePredictor(AbyssalPlayer):
                 )
                 
                 if 'error' in probabilities:
-                    print(f"      ❌ No prediction data available")
+                    print(f"      [ERROR] No prediction data available")
                     continue
                 
                 # Show move probabilities
                 if 'moves' in probabilities and probabilities['moves']:
-                    print(f"      🎯 Move Probabilities:")
+                    print(f"      [MOVES] Move Probabilities:")
                     for move, prob in probabilities['moves'][:6]:  # Top 6 moves
                         if move in observed_moves:
-                            print(f"        ✅ {move:<20} {prob:>6.1%} (confirmed)")
+                            print(f"        [OK] {move:<20} {prob:>6.1%} (confirmed)")
                         else:
-                            print(f"        ❓ {move:<20} {prob:>6.1%}")
+                            print(f"        [?] {move:<20} {prob:>6.1%}")
                 
                 # Show item probabilities
                 if 'items' in probabilities and probabilities['items']:
                     if known_item:
-                        print(f"      💎 Item: {known_item} ✅ (confirmed)")
+                        print(f"      [ITEM] {known_item} [OK] (confirmed)")
                     else:
-                        print(f"      💎 Item Probabilities:")
+                        print(f"      [ITEM] Probabilities:")
                         for item, prob in probabilities['items'][:3]:  # Top 3 items
                             print(f"        • {item:<20} {prob:>6.1%}")
                 
@@ -319,7 +350,7 @@ class LiveBattlePredictor(AbyssalPlayer):
                 
                 # Show EV spread probabilities
                 if 'ev_spreads' in probabilities and probabilities['ev_spreads']:
-                    print(f"      ⚡ EV Spread Probabilities:")
+                    print(f"      [EVS] EV Spread Probabilities:")
                     for ev_spread, prob in probabilities['ev_spreads'][:3]:  # Top 3 spreads
                         print(f"        • {ev_spread:<20} {prob:>6.1%}")
                 
@@ -327,18 +358,18 @@ class LiveBattlePredictor(AbyssalPlayer):
                 if 'abilities' in probabilities and probabilities['abilities']:
                     known_ability = revealed_abilities.get(species_raw)
                     if known_ability:
-                        print(f"      🌟 Ability: {known_ability} ✅ (confirmed)")
+                        print(f"      [ABILITY] {known_ability} [OK] (confirmed)")
                     else:
-                        print(f"      🌟 Ability Probabilities:")
+                        print(f"      [ABILITY] Probabilities:")
                         for ability, prob in probabilities['abilities'][:3]:  # Top 3 abilities
                             print(f"        • {ability:<20} {prob:>6.1%}")
                 
                 # Show how many moves are revealed vs predicted
                 total_revealed = len(observed_moves)
-                print(f"      📊 Info Status: {total_revealed}/4 moves revealed")
+                print(f"      [INFO] Status: {total_revealed}/4 moves revealed")
                 
         except Exception as e:
-            print(f"   ❌ Prediction error: {e}")
+            print(f"   [ERROR] Prediction error: {e}")
         
         print("-" * 60)
         self.last_prediction_turn = battle.turn
@@ -529,25 +560,25 @@ class LiveBattlePredictor(AbyssalPlayer):
             
             # Demonstrate the new Bayesian-powered methods
             if battle.opponent_active_pokemon:
-                print(f"\n🧠 BAYESIAN-POWERED BATTLE ANALYSIS:")
+                print(f"\nBAYESIAN-POWERED BATTLE ANALYSIS:")
                 print("-" * 50)
                 
                 # Test get_opponent_current_moves
                 try:
                     predicted_moves = self.get_opponent_current_moves(battle.opponent_active_pokemon, battle=battle)
-                    print(f"🎯 Predicted moves for {battle.opponent_active_pokemon.species}:")
+                    print(f"[PREDICT] Predicted moves for {battle.opponent_active_pokemon.species}:")
                     print(f"   {', '.join(predicted_moves)}")
                 except Exception as e:
-                    print(f"   ❌ Move prediction error: {e}")
+                    print(f"   [ERROR] Move prediction error: {e}")
                 
                 # Test guess_opponent_stats  
                 try:
                     predicted_evs, predicted_nature = self.guess_opponent_stats(battle.opponent_active_pokemon, battle)
-                    print(f"📊 Predicted stats for {battle.opponent_active_pokemon.species}:")
+                    print(f"[STATS] Predicted stats for {battle.opponent_active_pokemon.species}:")
                     print(f"   Nature: {predicted_nature}")
                     print(f"   EVs: {predicted_evs}")
                 except Exception as e:
-                    print(f"   ❌ Stat prediction error: {e}")
+                    print(f"   [ERROR] Stat prediction error: {e}")
                 
                 print("-" * 50)
             
@@ -557,7 +588,7 @@ class LiveBattlePredictor(AbyssalPlayer):
 
 async def run_live_battle():
     """Run a battle with live turn-by-turn predictions."""
-    print("🎮 Live Battle Predictor")
+    print("[BATTLE] Live Battle Predictor")
     print("=" * 50)
     print("Shows real-time Bayesian predictions every turn!")
     print("Uses parsed battle data for accurate predictions.")
@@ -582,12 +613,12 @@ async def run_live_battle():
     )
     
     # Load teams
-    print("⚡ Loading teams...")
+    print("[LOAD] Loading teams...")
     player.update_team(load_random_team(1))
     opponent.update_team(load_random_team(2))
     
-    print("🚀 Starting live battle with predictions!")
-    print("🔮 Watch for predictions after each turn!")
+    print("[START] Starting live battle with predictions!")
+    print("[INFO] Watch for predictions after each turn!")
     
     try:
         await player.battle_against(opponent, n_battles=1)
@@ -595,7 +626,7 @@ async def run_live_battle():
     except KeyboardInterrupt:
         print("\n⏹️ Battle interrupted by user")
     except Exception as e:
-        print(f"\n❌ Battle error: {e}")
+        print(f"\n[ERROR] Battle error: {e}")
         import traceback
         traceback.print_exc()
 
@@ -609,7 +640,7 @@ def main():
     try:
         asyncio.run(run_live_battle())
     except KeyboardInterrupt:
-        print("\n👋 Live battle predictor ended!")
+        print("\n[END] Live battle predictor ended!")
 
 
 if __name__ == "__main__":

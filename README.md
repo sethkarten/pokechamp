@@ -1,3 +1,11 @@
+```
+██████╗  ██████╗ ██╗  ██╗███████╗ ██████╗██╗  ██╗ █████╗ ███╗   ███╗██████╗ 
+██╔══██╗██╔═══██╗██║ ██╔╝██╔════╝██╔════╝██║  ██║██╔══██╗████╗ ████║██╔══██╗
+██████╔╝██║   ██║█████╔╝ █████╗  ██║     ███████║███████║██╔████╔██║██████╔╝
+██╔═══╝ ██║   ██║██╔═██╗ ██╔══╝  ██║     ██╔══██║██╔══██║██║╚██╔╝██║██╔═══╝ 
+██║     ╚██████╔╝██║  ██╗███████╗╚██████╗██║  ██║██║  ██║██║ ╚═╝ ██║██║     
+╚═╝      ╚═════╝ ╚═╝  ╚═╝╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝╚═╝     
+```
 # Pokémon Champion
 <!-- project badges -->
 [![Paper (ICML '25)](https://img.shields.io/badge/Paper-ICML-blue?style=flat)](https://openreview.net/pdf?id=SnZ7SKykHh)
@@ -10,13 +18,13 @@ This is the implementation for the paper "PokéChamp: an Expert-level Minimax La
   <img src="./resource/method.png" alt="PokemonChamp">
 </div>
 
-## 🏗️ Architecture
+## Architecture
 
 The codebase is organized into several clean modules:
 
 ```
 pokechamp/
-├── pokechamp/           # 🧠 LLM player implementation
+├── pokechamp/           # [CORE] LLM player implementation
 │   ├── llm_player.py    # Core LLM player class
 │   ├── gpt_player.py    # OpenAI GPT backend
 │   ├── llama_player.py  # Meta LLaMA backend  
@@ -24,17 +32,17 @@ pokechamp/
 │   ├── openrouter_player.py # OpenRouter API backend
 │   ├── prompts.py       # Battle prompts & algorithms
 │   └── translate.py     # Battle translation utilities
-├── bayesian/            # 🔮 Bayesian prediction system
+├── bayesian/            # [PREDICT] Bayesian prediction system
 │   ├── pokemon_predictor.py    # Pokemon team predictions
 │   ├── team_predictor.py       # Bayesian team predictor
 │   └── live_battle_predictor.py # Live battle predictions
-├── scripts/             # 🚀 Battle execution scripts
+├── scripts/             # [SCRIPTS] Battle execution scripts
 │   ├── battles/         # Battle runners (local_1v1.py, etc.)
 │   ├── evaluation/      # Evaluation tools
 │   └── training/        # Dataset processing
-├── poke_env/            # ⚔️ Core battle engine (LLM-independent)
-├── bots/                # 🤖 Custom bot implementations
-└── tests/               # ✅ Comprehensive test suite
+├── poke_env/            # [ENGINE] Core battle engine (LLM-independent)
+├── bots/                # [BOTS] Custom bot implementations
+└── tests/               # [TESTS] Comprehensive test suite
 ```
 
 **Key Benefits:**
@@ -43,7 +51,7 @@ pokechamp/
 - **Extensible**: Easy to add new LLM backends or battle algorithms
 - **Testable**: Comprehensive test coverage for all functionality
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Requirements
 
@@ -63,7 +71,7 @@ python local_1v1.py --player_name pokechamp --opponent_name random
 python scripts/evaluation/evaluate_gen9ou.py
 ```
 
-## 🎮 Battle Configuration
+## Battle Configuration
 
 ### Local Pokémon Showdown Server Setup
 
@@ -80,7 +88,7 @@ node pokemon-showdown start --no-security
 
 3. Open http://localhost:8000/ in your browser
 
-## 🤖 Available Bots
+## Available Bots
 
 ### Built-in Bots
 - `pokechamp` - Main PokéChamp agent using minimax algorithm
@@ -109,7 +117,7 @@ class MyCustomBot(LLMPlayer):
 
 3. Your bot automatically becomes available in battle scripts
 
-## 🧠 LLM Backend Support
+## LLM Backend Support
 
 The system supports multiple LLM backends through OpenRouter, providing access to hundreds of models:
 
@@ -134,7 +142,7 @@ python local_1v1.py --player_backend anthropic/claude-3-haiku --opponent_backend
 python local_1v1.py --player_backend mistralai/mixtral-8x7b-instruct --opponent_backend gpt-4o
 ```
 
-## 🔮 Bayesian Prediction System
+## Bayesian Prediction System
 
 The codebase includes a sophisticated Bayesian predictor for real-time battle analysis:
 
@@ -162,7 +170,7 @@ python bayesian/live_battle_predictor.py
 
 Shows turn-by-turn Bayesian predictions with probabilities for unrevealed Pokemon, predicted moves, items, and EVs.
 
-## 🎯 Battle Execution
+## Battle Execution
 
 ### Local 1v1 Battles
 ```sh
@@ -183,7 +191,7 @@ python scripts/battles/human_agent_1v1.py
 python scripts/battles/showdown_ladder.py --USERNAME $USERNAME --PASSWORD $PASSWORD
 ```
 
-## 📊 Evaluation & Analysis
+## Evaluation & Analysis
 
 ### Cross-Evaluation
 ```sh
@@ -200,7 +208,7 @@ Runs battles between all agents and outputs:
 python scripts/training/battle_translate.py --output data/battles.json --limit 5000 --gamemode gen9ou
 ```
 
-## 📈 Dataset
+## Dataset
 
 The PokéChamp dataset contains over 2 million competitive Pokémon battles across 37+ formats.
 
@@ -225,7 +233,7 @@ filtered_dataset = load_filtered_dataset(
 )
 ```
 
-## 🧪 Testing
+## Testing
 
 Run the comprehensive test suite:
 
@@ -240,37 +248,13 @@ pytest tests/ -m teamloader    # Team loading
 ```
 
 The test suite includes:
-- ✅ Bayesian prediction accuracy (100% success rate)
-- ✅ Move normalization (284 unique moves tested)
-- ✅ Team loading and rejection handling
-- ✅ Bot system integration
-- ✅ Core battle engine functionality
+- [OK] Bayesian prediction accuracy (100% success rate)
+- [OK] Move normalization (284 unique moves tested)
+- [OK] Team loading and rejection handling
+- [OK] Bot system integration
+- [OK] Core battle engine functionality
 
-## 📋 Development Commands
-
-All development commands are documented in `CLAUDE.md` for AI assistants and include:
-
-### Environment Setup
-```bash
-conda create -n pokechamp python=3.12
-conda activate pokechamp
-pip install -r requirements.txt
-```
-
-### Testing Commands
-```bash
-pytest tests/ -v                    # Run all tests
-pytest tests/ -m "not slow"        # Skip slow tests
-pytest tests/test_bayesian_*.py     # Test Bayesian functionality
-```
-
-### Battle Commands
-```bash
-python local_1v1.py --help         # See all options
-python scripts/evaluation/evaluate_gen9ou.py  # Cross-evaluation
-```
-
-## 🏆 Reproducing Paper Results
+## Reproducing Paper Results
 
 ### Gen 9 OU Evaluation
 ```sh
@@ -284,9 +268,9 @@ This runs the full cross-evaluation between PokéChamp and baseline bots, output
 python evaluate_action_prediction.py
 ```
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
-## 📖 Citation
+## Citation
 
 ```bibtex
 @article{karten2025pokechamp,

@@ -1,4 +1,5 @@
 import ast
+import asyncio
 from copy import copy, deepcopy
 import datetime
 import json
@@ -33,6 +34,7 @@ from pokechamp.data_cache import (
     get_cached_pokemon_item_dict,
     get_cached_pokedex
 )
+from poke_env.concurrency import POKE_LOOP
 from pokechamp.minimax_optimizer import (
     get_minimax_optimizer,
     initialize_minimax_optimization,
@@ -43,6 +45,13 @@ from pokechamp.minimax_optimizer import (
 from poke_env.player.local_simulation import LocalSim, SimNode
 from difflib import get_close_matches
 from pokechamp.prompts import get_number_turns_faint, get_status_num_turns_fnt, state_translate, get_gimmick_motivation
+
+# Visual effects import (optional)
+try:
+    from pokechamp.visual_effects import visual, print_banner, print_status
+    VISUAL_EFFECTS = True
+except ImportError:
+    VISUAL_EFFECTS = False
 
 DEBUG=False
 
@@ -132,12 +141,126 @@ class LLMPlayer(Player):
         self.use_damage_calc_early_exit = True  # Use damage calculator to exit early when advantageous
         self.use_llm_value_function = True  # Use LLM for leaf node evaluation (vs fast heuristic)
         self.max_depth_for_llm_eval = 2  # Only use LLM evaluation for shallow depths to save time
+        
+        # Warm-up flag to track if pre-initialization is complete
+        self._warmed_up = False
 
-    def get_LLM_action(self, system_prompt, user_prompt, model, temperature=0.7, json_format=False, seed=None, stop=[], max_tokens=200, actions=None, llm=None) -> str:
-        if llm is None:
-            output, _ = self.llm.get_LLM_action(system_prompt, user_prompt, model, temperature, True, seed, stop, max_tokens=max_tokens, actions=actions)
+    def warm_up(self, dummy_battle=None):
+        """
+        Pre-initialize all expensive components to avoid delays during first battle turn.
+        This should be called after player creation but before battles start.
+        """
+        if self._warmed_up:
+            return
+            
+        if VISUAL_EFFECTS:
+            print_banner("WARMUP", "water")
+            print("Starting player component initialization...")
         else:
-            output, _ = llm.get_LLM_action(system_prompt, user_prompt, model, temperature, True, seed, stop, max_tokens=max_tokens, actions=actions)
+            print("[WARMUP] Starting player component initialization...")
+        
+        # 1. Data cache is already loaded during __init__
+        
+        # 2. Pre-initialize minimax optimizer if using minimax
+        if self.prompt_algo == "minimax" and self.use_optimized_minimax:
+            # Skip minimax warm-up for now - it requires a real battle state
+            # The optimizer will initialize on first actual battle turn
+            print("   [INFO] Minimax optimizer will initialize on first battle turn")
+        
+        # 3. Pre-load team predictor (triggers Bayesian model loading)
+        try:
+            from bayesian.predictor_singleton import get_pokemon_predictor
+            predictor = get_pokemon_predictor()
+            # Trigger model loading if it has training methods
+            if hasattr(predictor, 'load_and_train'):
+                predictor.load_and_train()
+            elif hasattr(predictor, 'team_predictor') and hasattr(predictor.team_predictor, 'load_and_train'):
+                predictor.team_predictor.load_and_train()
+            print("   [OK] Pokemon predictor pre-loaded")
+        except Exception as e:
+            print(f"   [WARN] Pokemon predictor warm-up failed: {e}")
+        
+        # 4. Pre-load move set data
+        try:
+            from pokechamp.data_cache import get_cached_moves_set
+            get_cached_moves_set('gen9ou')
+            print("   [OK] Move set data pre-loaded")
+        except Exception as e:
+            print(f"   [WARN] Move set data warm-up failed: {e}")
+        
+        self._warmed_up = True
+        if VISUAL_EFFECTS:
+            print(visual.create_banner("READY", font="small", style="greenblue"))
+            print("Player warm-up complete!")
+        else:
+            print("[WARMUP] Player warm-up complete!")
+
+    def _send_thinking_message(self, battle: AbstractBattle, message: str):
+        """
+        Send LLM thinking as chat messages during battle in 1000-character chunks.
+        Based on TimeoutLLMPlayer._send_chat_message implementation.
+        """
+        try:
+            # Split message into 1000-character chunks
+            max_chunk_size = 950  # Leave room for turn prefix
+            chunks = []
+            
+            for i in range(0, len(message), max_chunk_size):
+                chunk = message[i:i + max_chunk_size]
+                chunks.append(chunk)
+            
+            # Create an async function to send all message chunks
+            async def send_message_async():
+                try:
+                    print(f"   Sending thinking to battle chat ({len(chunks)} parts)...")
+                    
+                    for part_num, chunk in enumerate(chunks, 1):
+                        if len(chunks) == 1:
+                            # Single message
+                            chat_message = f"Turn #{battle.turn} thinking: {chunk}"
+                        else:
+                            # Multiple parts
+                            chat_message = f"Turn #{battle.turn} thinking ({part_num}/{len(chunks)}): {chunk}"
+                        
+                        await self.ps_client.send_message(chat_message, room=battle.battle_tag)
+                        
+                        # Small delay between multiple messages
+                        if part_num < len(chunks):
+                            await asyncio.sleep(0.25)
+                    
+                    # Send fast mode command once after all thinking
+                    # await self.ps_client.send_message("/timer off", room=battle.battle_tag)
+                    print(f"   All thinking sent to {battle.battle_tag}")
+                    
+                except Exception as e:
+                    print(f"   Failed to send thinking message: {e}")
+            
+            # Submit to the poke loop for execution
+            try:
+                future = asyncio.run_coroutine_threadsafe(send_message_async(), POKE_LOOP)
+                # Don't wait for completion to avoid blocking
+            except Exception as e:
+                print(f"   Could not schedule thinking message: {e}")
+                
+        except Exception as e:
+            print(f"Failed to send thinking message: {e}")
+
+    def get_LLM_action(self, system_prompt, user_prompt, model, temperature=0.7, json_format=False, seed=None, stop=[], max_tokens=200, actions=None, llm=None, battle=None) -> str:
+        if llm is None:
+            output, _, raw_message = self.llm.get_LLM_action(system_prompt, user_prompt, model, temperature, True, seed, stop, max_tokens=max_tokens, actions=actions, battle=battle, ps_client=self.ps_client)
+        else:
+            output, _, raw_message = llm.get_LLM_action(system_prompt, user_prompt, model, temperature, True, seed, stop, max_tokens=max_tokens, actions=actions, battle=battle, ps_client=self.ps_client)
+        
+        # Send thinking message if battle is provided
+        if battle is not None and raw_message:
+            try:
+                                # Always show LLM reasoning in chat
+                print(f"LLM [{self.ps_client.account_configuration.username}]: {raw_message}")
+                
+                self._send_thinking_message(battle, raw_message)
+            except Exception as e:
+                print(f"Failed to send thinking message: {e}")
+        
         return output
     
     def check_all_pokemon(self, pokemon_str: str) -> Pokemon:
@@ -187,7 +310,9 @@ class LLMPlayer(Player):
 
         gimmick_output_format = ''
         if 'pokellmon' not in self.ps_client.account_configuration.username: # make sure we dont mess with pokellmon original strat
-            gimmick_output_format = f'{f' or {{"dynamax":"<move_name>"}}' if battle.can_dynamax else ''}{f' or {{"terastallize":"<move_name>"}}' if battle.can_tera else ''}'
+            dynamax_option = ' or {"dynamax":"<move_name>"}' if battle.can_dynamax else ''
+            tera_option = ' or {"terastallize":"<move_name>"}' if battle.can_tera else ''
+            gimmick_output_format = f'{dynamax_option}{tera_option}'
 
         if battle.active_pokemon.fainted or len(battle.available_moves) == 0:
 
@@ -231,7 +356,8 @@ class LLMPlayer(Player):
                                                model=self.backend,
                                                temperature=self.temperature,
                                                max_tokens=200,
-                                               json_format=True)
+                                               json_format=True,
+                                               battle=battle)
                     break
                 except:
                     raise ValueError('No valid move', battle.active_pokemon.fainted, len(battle.available_switches))
@@ -247,7 +373,8 @@ class LLMPlayer(Player):
                                                model=self.backend,
                                                temperature=self.temperature,
                                                max_tokens=100,
-                                               json_format=True)
+                                               json_format=True,
+                                               battle=battle)
 
                     next_action = self.parse_new(llm_output2, battle, sim)
                     with open(f"{self.log_dir}/output.jsonl", "a") as f:
@@ -298,11 +425,14 @@ class LLMPlayer(Player):
                                             max_tokens=300,
                                             # stop=["reason"],
                                             json_format=True,
-                                            actions=actions)
+                                            actions=actions,
+                                            battle=battle)
 
                 # load when llm does heavylifting for parsing
                 if DEBUG:
                     print(f"Raw LLM output: {llm_output}")
+                
+
                 llm_action_json = json.loads(llm_output)
                 if DEBUG:
                     print(f"Parsed JSON: {llm_action_json}")
@@ -544,9 +674,12 @@ class LLMPlayer(Player):
                 prompt_translate=self.prompt_translate
             )
             self._minimax_initialized = True
-            print("🚀 Minimax optimizer initialized")
+            if VISUAL_EFFECTS:
+                print_status("Minimax optimizer initialized", "success")
+            else:
+                print("[INIT] Minimax optimizer initialized")
         except Exception as e:
-            print(f"⚠️  Failed to initialize minimax optimizer: {e}")
+            print(f"[WARN] Failed to initialize minimax optimizer: {e}")
             self.use_optimized_minimax = False  # Fallback to original
 
     def check_timeout(self, start_time, battle):
@@ -607,7 +740,8 @@ class LLMPlayer(Player):
                                                     temperature=self.temperature,
                                                     max_tokens=500,
                                                     json_format=True,
-                                                    llm=self.llm_value
+                                                    llm=self.llm_value,
+                                                    battle=battle
                                                     )
                     # load when llm does heavylifting for parsing
                     llm_action_json = json.loads(llm_output)
@@ -671,6 +805,7 @@ class LLMPlayer(Player):
                                                             temperature=0.6,
                                                             max_tokens=100,
                                                             json_format=True,
+                                                            battle=battle
                                                             )
                             # load when llm does heavylifting for parsing
                             llm_action_json = json.loads(llm_output)
@@ -849,6 +984,7 @@ class LLMPlayer(Player):
                                                         temperature=0.6,
                                                         max_tokens=100,
                                                         json_format=True,
+                                                        battle=battle
                                                         )
                         # Load when llm does heavylifting for parsing
                         llm_action_json = json.loads(llm_output)
@@ -899,7 +1035,8 @@ class LLMPlayer(Player):
                                                         temperature=self.temperature,
                                                         max_tokens=500,
                                                         json_format=True,
-                                                        llm=self.llm_value
+                                                        llm=self.llm_value,
+                                                        battle=battle
                                                         )
                         # Load when llm does heavylifting for parsing
                         llm_action_json = json.loads(llm_output)
@@ -1021,9 +1158,12 @@ class LLMPlayer(Player):
             # Log performance stats
             end_time = time.time()
             stats = optimizer.get_performance_stats()
-            print(f"⚡ Optimized minimax: {end_time - start_time:.2f}s, "
-                  f"Pool reuse: {stats['pool_stats']['reuse_rate']:.2f}, "
-                  f"Cache hit rate: {stats['cache_stats']['hit_rate']:.2f}")
+            if VISUAL_EFFECTS:
+                print(visual.minimax_progress(depth, evaluated_nodes, end_time - start_time))
+            else:
+                print(f"[PERF] Optimized minimax: {end_time - start_time:.2f}s, nodes: {evaluated_nodes}, "
+                      f"Pool reuse: {stats['pool_stats']['reuse_rate']:.2f}, "
+                      f"Cache hit rate: {stats['cache_stats']['hit_rate']:.2f}")
             
             if return_opp:
                 return action, action_opp

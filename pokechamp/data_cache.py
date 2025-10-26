@@ -11,6 +11,13 @@ from typing import Dict, Any
 from functools import lru_cache
 from poke_env.data.gen_data import GenData
 
+# Visual effects import (optional)
+try:
+    from pokechamp.visual_effects import visual, print_banner
+    VISUAL_EFFECTS = True
+except ImportError:
+    VISUAL_EFFECTS = False
+
 
 class GameDataCache:
     """Singleton cache for static game data."""
@@ -30,21 +37,25 @@ class GameDataCache:
     
     def _load_all_data(self):
         """Load all static game data into memory."""
-        print("🔄 Loading static game data into cache...")
+        if VISUAL_EFFECTS:
+            print_banner("CACHE", "water")
+            print("Loading static game data...")
+        else:
+            print("[CACHE] Loading static game data into cache...")
         
         # Move effects and Pokemon move mappings
         try:
             with open("./poke_env/data/static/moves/moves_effect.json", "r") as f:
                 self._data['move_effect'] = json.load(f)
         except FileNotFoundError:
-            print("⚠️  moves_effect.json not found, using empty dict")
+            print("[WARN] moves_effect.json not found, using empty dict")
             self._data['move_effect'] = {}
             
         try:
             with open("./poke_env/data/static/moves/gen8pokemon_move_dict.json", "r") as f:
                 self._data['pokemon_move_dict'] = json.load(f)
         except FileNotFoundError:
-            print("⚠️  gen8pokemon_move_dict.json not found, using empty dict")
+            print("[WARN] gen8pokemon_move_dict.json not found, using empty dict")
             self._data['pokemon_move_dict'] = {}
         
         # Ability effects and Pokemon ability mappings
@@ -52,14 +63,14 @@ class GameDataCache:
             with open("./poke_env/data/static/abilities/ability_effect.json", "r") as f:
                 self._data['ability_effect'] = json.load(f)
         except FileNotFoundError:
-            print("⚠️  ability_effect.json not found, using empty dict")
+            print("[WARN] ability_effect.json not found, using empty dict")
             self._data['ability_effect'] = {}
             
         try:
             with open("./poke_env/data/static/abilities/gen8pokemon_ability_dict.json", "r") as f:
                 self._data['pokemon_ability_dict'] = json.load(f)
         except FileNotFoundError:
-            print("⚠️  gen8pokemon_ability_dict.json not found, using empty dict")
+            print("[WARN] gen8pokemon_ability_dict.json not found, using empty dict")
             self._data['pokemon_ability_dict'] = {}
         
         # Item effects
@@ -67,13 +78,16 @@ class GameDataCache:
             with open("./poke_env/data/static/items/item_effect.json", "r") as f:
                 self._data['item_effect'] = json.load(f)
         except FileNotFoundError:
-            print("⚠️  item_effect.json not found, using empty dict")
+            print("[WARN] item_effect.json not found, using empty dict")
             self._data['item_effect'] = {}
         
         # Pokemon item mappings (if needed)
         self._data['pokemon_item_dict'] = {}  # Currently unused
         
-        print("✅ Static game data loaded into cache")
+        if VISUAL_EFFECTS:
+            print(visual.create_banner("LOADED", font="small", style="greenblue"))
+        else:
+            print("[OK] Static game data loaded into cache")
     
     def get_move_effect(self) -> Dict[str, Any]:
         """Get cached move effects data."""
@@ -108,9 +122,9 @@ class GameDataCache:
             try:
                 with open(f"./poke_env/data/static/pokedex/gen{gen}pokedex.json", "r") as f:
                     self._data[cache_key] = json.load(f)
-                print(f"✅ Loaded gen{gen} Pokedex data")
+                print(f"[OK] Loaded gen{gen} Pokedex data")
             except FileNotFoundError:
-                print(f"⚠️  gen{gen}pokedex.json not found, using empty dict")
+                print(f"[WARN] gen{gen}pokedex.json not found, using empty dict")
                 self._data[cache_key] = {}
         
         return self._data[cache_key]
@@ -124,15 +138,17 @@ class GameDataCache:
             try:
                 if format == 'gen9ou':
                     file_path = 'poke_env/data/static/gen9/ou/sets_1000.json'
+                elif format == 'gen9vgc2025regi':
+                    file_path = 'poke_env/data/static/gen9/vgc/sets_1760.json'
                 else:
                     # Add more formats as needed
                     file_path = f'poke_env/data/static/{format}/sets_1000.json'
                 
                 with open(file_path, 'r') as f:
                     self._data[cache_key] = orjson.loads(f.read())
-                print(f"✅ Loaded {format} moves set data")
+                print(f"[OK] Loaded {format} moves set data")
             except FileNotFoundError:
-                print(f"⚠️  {format} moves set not found, using empty dict")
+                print(f"[WARN] {format} moves set not found, using empty dict")
                 self._data[cache_key] = {}
         
         return self._data[cache_key]

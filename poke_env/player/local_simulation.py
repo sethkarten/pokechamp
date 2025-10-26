@@ -81,7 +81,8 @@ def calculate_move_type_damage_multipier(type_1, type_2, type_chart, constraint_
            list(map(lambda x: x.capitalize(), immune_type_list)))
 
 def move_type_damage_wrapper(pokemon, type_chart, constraint_type_list=None):
-
+    if pokemon is None:
+        return ""
     type_1 = None
     type_2 = None
     if pokemon.type_1:
@@ -596,7 +597,7 @@ class LocalSim():
     def get_opponent_current_moves(self, mon=None, return_switch=False, is_player=False, return_separate=False):
         if is_player:
             return list(self.battle.active_pokemon.moves.keys())
-        if mon == None:
+        if mon == None: #fainted pokemon 
             mon = self.battle.opponent_active_pokemon
         # get definite moves for the current pokemon
         opponent_moves = []
@@ -884,8 +885,20 @@ class LocalSim():
     
     
 
-    def state_translate(self, battle: Battle):
-        return self.prompt_translate(self, battle)
+    def state_translate(self, battle: Battle, idx: int = 0, return_actions: bool = False, return_choices: bool = False):
+        try:
+            if return_actions:
+                return self.prompt_translate(self, battle, return_actions=return_actions, idx=idx)
+            if return_choices:
+                return self.prompt_translate(self, battle, return_choices=return_choices, idx=idx)
+            return self.prompt_translate(self, battle, idx=idx)
+        except TypeError:
+            # Prompt function may not accept idx; fall back gracefully
+            if return_actions:
+                return self.prompt_translate(self, battle, return_actions=return_actions)
+            if return_choices:
+                return self.prompt_translate(self, battle, return_choices=return_choices)
+            return self.prompt_translate(self, battle)
 
     def check_status(self, status):
         if status:

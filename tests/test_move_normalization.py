@@ -229,4 +229,4 @@ def test_all_moves_from_teamloader():
 if __name__ == "__main__":
     print("Running move normalization tests...")
     test_all_moves_from_teamloader()
-    print("✅ Move normalization test completed!")
+    print("[OK] Move normalization test completed!")

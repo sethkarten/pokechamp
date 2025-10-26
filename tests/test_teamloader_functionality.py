@@ -172,4 +172,4 @@ async def test_teamloader_rejection():
 if __name__ == "__main__":
     # Run the async test
     asyncio.run(test_teamloader_rejection())
-    print("✅ Teamloader functionality test completed!")
+    print("[OK] Teamloader functionality test completed!")
