@@ -83,8 +83,17 @@ parser.add_argument("--temperature", type=float, default=0.3)
 parser.add_argument("--battle_format", default="gen9ou", choices=["gen8randombattle", "gen8ou", "gen9ou", "gen9randombattle", "gen9vgc2025regi"])
 parser.add_argument("--log_dir", type=str, default="./battle_log/one_vs_one")
 parser.add_argument("--N", type=int, default=25)
+parser.add_argument("--seed", type=int, default=None, help="Random seed for reproducibility")
 
 args = parser.parse_args()
+
+# Set random seed if provided
+if args.seed is not None:
+    import random
+    import numpy as np
+    random.seed(args.seed)
+    np.random.seed(args.seed)
+    print(f"Using random seed: {args.seed}")
 
 async def main():
     # Visual banner for local battles
@@ -131,10 +140,7 @@ async def main():
             print(f"Falling back to static teams...")
     
     if not 'random' in args.battle_format:
-        if 'vgc' in args.battle_format:
-            player.update_team(load_random_team(id=None, vgc=True))
-            opponent.update_team(load_random_team(id=None, vgc=True))
-        elif player_teamloader is None or opponent_teamloader is None:
+        if player_teamloader is None or opponent_teamloader is None:
             # Fallback to static teams when metamon teams not available
             player.update_team(load_random_team(id=None, vgc=False))
             opponent.update_team(load_random_team(id=None, vgc=False))

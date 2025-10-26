@@ -87,10 +87,7 @@ async def main():
         print(f"Falling back to static teams...")
     
     if not 'random' in args.battle_format:
-        if 'vgc' in args.battle_format:
-            # VGC format - use local VGC teams
-            player.update_team(load_random_team(id=None, vgc=True))
-        elif teamloader is None:
+        if teamloader is None:
             # Fallback to static teams when metamon teams not available
             player.update_team(load_random_team(id=None, vgc=False))
         else:

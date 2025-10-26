@@ -26,6 +26,7 @@ build/
 battle_log/*
 *.html
 log_*.txt
+battle_log*
 
 # Test files and debugging
 test_bots.py
