@@ -1,0 +1,107 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pokechamp"
+version = "1.2.0"
+description = "Advanced Pokemon battle AI with LLM integration and MCP support"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Seth Karten", email = "sethkarten@princeton.edu"},
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Games/Entertainment",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+requires-python = ">=3.10"
+dependencies = [
+    # Core dependencies
+    "numpy",
+    "pandas",
+    "tqdm",
+    "orjson",
+    "matplotlib",
+    "scipy",
+    "scikit-learn",
+    
+    # AI/ML dependencies
+    "torch",
+    "transformers",
+    "accelerate",
+    "wandb",
+    "evaluate",
+    "datasets",
+    "bitsandbytes",
+    
+    # LLM API clients
+    "openai",
+    "google-genai",
+    "ollama",
+    "huggingface-hub",
+    
+    # Network and async
+    "websockets",
+    "requests",
+    
+    # Terminal UI
+    "pyfiglet",
+    "rich",
+    "fade",
+    "termcolor",
+    
+    # MCP support
+    "mcp",
+    
+    # Testing
+    "pytest",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "black",
+    "flake8",
+    "mypy",
+]
+flash-attention = [
+    "flash-attn",
+]
+
+[project.urls]
+Homepage = "https://github.com/DanielLi10720/pokechamp"
+Repository = "https://github.com/DanielLi10720/pokechamp"
+Issues = "https://github.com/DanielLi10720/pokechamp/issues"
+
+[project.scripts]
+pokechamp = "local_1v1:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["pokechamp", "poke_env", "bayesian", "bots", "scripts"]
+
+[tool.black]
+line-length = 88
+target-version = ['py310']
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+asyncio_mode = "auto"
+markers = [
+    "bayesian: Bayesian prediction tests",
+    "moves: Move normalization tests", 
+    "teamloader: Team loading tests",
+    "slow: Slow running tests",
+]

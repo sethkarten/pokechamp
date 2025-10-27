@@ -12,7 +12,7 @@
 [![Dataset on HuggingFace](https://img.shields.io/badge/Dataset-HuggingFace-brightgreen?logo=huggingface&logoColor=white&style=flat)](https://huggingface.co/datasets/milkkarten/pokechamp)
 [![Source Code](https://img.shields.io/badge/Code-GitHub-black?logo=github&logoColor=white&style=flat)](https://github.com/sethkarten/pokechamp)
 
-This is the implementation for the paper "PokéChamp: an Expert-level Minimax Language Agent for Competitive Pokémon"
+This is the implementation for the paper "PokéChamp: an Expert-level Minimax Language Agent"
 
 <div align="center">
   <img src="./resource/method.png" alt="PokemonChamp">
@@ -26,6 +26,8 @@ The codebase is organized into several clean modules:
 pokechamp/
 ├── pokechamp/           # [CORE] LLM player implementation
 │   ├── llm_player.py    # Core LLM player class
+│   ├── mcp_player.py    # MCP protocol support
+│   ├── llm_vgc_player.py # VGC doubles support
 │   ├── gpt_player.py    # OpenAI GPT backend
 │   ├── llama_player.py  # Meta LLaMA backend  
 │   ├── gemini_player.py # Google Gemini backend
@@ -56,19 +58,30 @@ pokechamp/
 ### Requirements
 
 ```sh
-conda create -n pokechamp python=3.12
-conda activate pokechamp
-pip install -r requirements.txt
+# Install uv (modern Python package manager)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Clone and setup
+git clone https://github.com/sethkarten/pokechamp.git
+cd pokechamp
+uv sync
 ```
 
 ### Battle Any Agent Against Any Agent
 ```sh
-python local_1v1.py --player_name pokechamp --opponent_name random
+# Basic battle
+uv run python local_1v1.py --player_name pokechamp --opponent_name abyssal
+
+# Try MCP integration
+uv run python local_1v1.py --player_prompt_algo mcp --player_backend gemini-2.5-flash --opponent_name abyssal
+
+# VGC double battles
+uv run python run_with_timeout_vgc.py --continuous --max-concurrent 2
 ```
 
 ### Evaluation
 ```sh
-python scripts/evaluation/evaluate_gen9ou.py
+uv run python scripts/evaluation/evaluate_gen9ou.py
 ```
 
 ## Battle Configuration
@@ -97,9 +110,23 @@ node pokemon-showdown start --no-security
 - `max_power` - Maximum base power move selection
 - `one_step` - One-step lookahead agent
 - `random` - Random move selection
+- `vgc` - VGC-specialized agent for double battles
 
 ### Custom Bots
 - `starter_kit` - Example LLM-based bot for creating custom implementations
+
+### Prompt Algorithms
+Available prompt algorithms for LLM-based bots:
+- `io` - Input/Output prompting (default)
+- `sc` - Self-consistency prompting
+- `cot` - Chain-of-thought prompting
+- `tot` - Tree-of-thought prompting
+- `minimax` - Minimax algorithm with LLM evaluation
+- `heuristic` - Heuristic-based decisions
+- `max_power` - Maximum base power move selection
+- `one_step` - One-step lookahead
+- `random` - Random move selection
+- `mcp` - Model Context Protocol integration
 
 ### Creating Custom Bots
 
@@ -122,12 +149,16 @@ class MyCustomBot(LLMPlayer):
 The system supports multiple LLM backends through OpenRouter, providing access to hundreds of models:
 
 ### Supported Providers
-- **OpenAI**: `gpt-4o`, `gpt-4o-mini`, `gpt-4-turbo`
-- **Anthropic**: `anthropic/claude-3.5-sonnet`, `anthropic/claude-3-opus`
-- **Google**: `google/gemini-pro`, `google/gemini-flash-1.5`
-- **Meta**: `meta-llama/llama-3.1-70b-instruct`
-- **Mistral**: `mistralai/mixtral-8x7b-instruct`
-- **Others**: Cohere, Perplexity, DeepSeek, Microsoft, and more
+- **OpenAI**: `gpt-4o`, `gpt-4o-mini`, `gpt-4-turbo`, `gpt-4`, `gpt-3.5-turbo`
+- **Anthropic**: `anthropic/claude-3.5-sonnet`, `anthropic/claude-3-opus`, `anthropic/claude-3-haiku`
+- **Google**: `google/gemini-pro`, `gemini-2.0-flash`, `gemini-2.0-pro`, `gemini-2.5-flash`, `gemini-2.5-pro`
+- **Meta**: `meta-llama/llama-3.1-70b-instruct`, `meta-llama/llama-3.1-8b-instruct`
+- **Mistral**: `mistralai/mistral-7b-instruct`, `mistralai/mixtral-8x7b-instruct`
+- **Cohere**: `cohere/command-r-plus`, `cohere/command-r`
+- **Perplexity**: `perplexity/llama-3.1-sonar-small-128k`, `perplexity/llama-3.1-sonar-large-128k`
+- **DeepSeek**: `deepseek-ai/deepseek-coder-33b-instruct`, `deepseek-ai/deepseek-llm-67b-chat`
+- **Microsoft**: `microsoft/wizardlm-2-8x22b`, `microsoft/phi-3-medium-128k-instruct`
+- **Local via Ollama**: `ollama/llama3.1:8b`, `ollama/mistral`, `ollama/qwen2.5`, `ollama/gemma3:4b`, `ollama/gpt-oss:20b`
 
 ### Setup
 1. Get your API key from [OpenRouter](https://openrouter.ai/keys)
@@ -136,10 +167,13 @@ The system supports multiple LLM backends through OpenRouter, providing access t
 
 ```sh
 # Claude vs Gemini battle
-python local_1v1.py --player_backend anthropic/claude-3-haiku --opponent_backend google/gemini-flash-1.5
+uv run python local_1v1.py --player_backend anthropic/claude-3-haiku --opponent_backend gemini-2.5-flash
 
 # Test different models
-python local_1v1.py --player_backend mistralai/mixtral-8x7b-instruct --opponent_backend gpt-4o
+uv run python local_1v1.py --player_backend mistralai/mixtral-8x7b-instruct --opponent_backend gpt-4o
+
+# Local models (no API key needed)
+uv run python local_1v1.py --player_backend ollama/llama3.1:8b --opponent_name abyssal
 ```
 
 ## Bayesian Prediction System
@@ -165,7 +199,7 @@ predictions = predictor.predict_teammates(
 
 ### Live Battle Predictions
 ```sh
-python bayesian/live_battle_predictor.py
+uv run python bayesian/live_battle_predictor.py
 ```
 
 Shows turn-by-turn Bayesian predictions with probabilities for unrevealed Pokemon, predicted moves, items, and EVs.
@@ -175,27 +209,39 @@ Shows turn-by-turn Bayesian predictions with probabilities for unrevealed Pokemo
 ### Local 1v1 Battles
 ```sh
 # Basic battle
-python scripts/battles/local_1v1.py --player_name pokechamp --opponent_name random
+uv run python scripts/battles/local_1v1.py --player_name pokechamp --opponent_name abyssal
 
 # Custom backends
-python scripts/battles/local_1v1.py --player_name starter_kit --player_backend gpt-4o
+uv run python scripts/battles/local_1v1.py --player_name starter_kit --player_backend gpt-4o
+
+# MCP integration
+uv run python local_1v1.py --player_prompt_algo mcp --player_backend gemini-2.5-flash --opponent_name abyssal
+```
+
+### VGC Double Battles
+```sh
+# VGC tournament
+uv run python run_with_timeout_vgc.py --continuous --max-concurrent 2
+
+# Single VGC battle
+uv run python local_1v1.py --battle_format gen9vgc2025regi --player_name pokechamp --opponent_name abyssal
 ```
 
 ### Human vs Agent
 ```sh
-python scripts/battles/human_agent_1v1.py
+uv run python scripts/battles/human_agent_1v1.py
 ```
 
 ### Ladder Battles
 ```sh
-python scripts/battles/showdown_ladder.py --USERNAME $USERNAME --PASSWORD $PASSWORD
+uv run python scripts/battles/showdown_ladder.py --USERNAME $USERNAME --PASSWORD $PASSWORD
 ```
 
 ## Evaluation & Analysis
 
 ### Cross-Evaluation
 ```sh
-python scripts/evaluation/evaluate_gen9ou.py
+uv run python scripts/evaluation/evaluate_gen9ou.py
 ```
 
 Runs battles between all agents and outputs:
@@ -205,7 +251,7 @@ Runs battles between all agents and outputs:
 
 ### Dataset Processing
 ```sh
-python scripts/training/battle_translate.py --output data/battles.json --limit 5000 --gamemode gen9ou
+uv run python scripts/training/battle_translate.py --output data/battles.json --limit 5000 --gamemode gen9ou
 ```
 
 ## Dataset
@@ -239,12 +285,12 @@ Run the comprehensive test suite:
 
 ```sh
 # All tests
-pytest tests/
+uv run pytest tests/
 
 # Specific test categories  
-pytest tests/ -m bayesian      # Bayesian functionality
-pytest tests/ -m moves         # Move normalization
-pytest tests/ -m teamloader    # Team loading
+uv run pytest tests/ -m bayesian      # Bayesian functionality
+uv run pytest tests/ -m moves         # Move normalization
+uv run pytest tests/ -m teamloader    # Team loading
 ```
 
 The test suite includes:
@@ -258,14 +304,14 @@ The test suite includes:
 
 ### Gen 9 OU Evaluation
 ```sh
-python scripts/evaluation/evaluate_gen9ou.py
+uv run python scripts/evaluation/evaluate_gen9ou.py
 ```
 
 This runs the full cross-evaluation between PokéChamp and baseline bots, outputting win rates, Elo ratings, and turn statistics as reported in the paper.
 
 ### Action Prediction Benchmark (Coming Soon)
 ```sh
-python evaluate_action_prediction.py
+uv run python evaluate_action_prediction.py
 ```
 
 ## Acknowledgments
