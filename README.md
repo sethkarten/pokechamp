@@ -92,7 +92,7 @@ uv run python scripts/evaluation/evaluate_gen9ou.py
 2. Set up the battle server:
 
 ```sh
-git clone git@github.com:jakegrigsby/pokemon-showdown.git
+git clone https://github.com/smogon/pokemon-showdown.git
 cd pokemon-showdown
 npm install
 cp config/config-example.js config/config.js
