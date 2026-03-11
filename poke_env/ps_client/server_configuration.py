@@ -12,15 +12,21 @@ class ServerConfiguration(NamedTuple):
 
 
 LocalhostServerConfiguration = ServerConfiguration(
-     "localhost:8000", "https://play.pokemonshowdown.com/action.php?"
-    #"localhost:8016", "https://play.pokemonshowdown.com/action.php?"
+     "localhost:9100", "https://play.pokemonshowdown.com/action.php?"
+    #"localhost:8000", "https://play.pokemonshowdown.com/action.php?"
 )
 """Server configuration with localhost and smogon's authentication endpoint."""
 
 ShowdownServerConfiguration = ServerConfiguration(
-    "pokeagentshowdown.com", "https://play.pokemonshowdown.com/action.php?"
+    "battling.sethkarten.ai", "https://battling.sethkarten.ai/action.php?"
 )
 """Server configuration with smogon's server and authentication endpoint."""
+
+PokeAgentServerConfiguration = ServerConfiguration(
+    "wss://battling.pokeagentchallenge.com/showdown/websocket",
+    "https://battling.pokeagentchallenge.com/action.php?",
+)
+"""Server configuration for pokeagentchallenge.com."""
 
 # ShowdownServerConfiguration = ServerConfiguration(
 #     "sim3.psim.us", "https://play.pokemonshowdown.com/action.php?"

@@ -110,6 +110,7 @@ def run_agent(agent: dict, passwords: dict):
         "pokechamp",
         battle_format=BATTLE_FORMAT,
         online=True,
+        server='pac',
         USERNAME=username,
         PASSWORD=password,
         use_timeout=True,

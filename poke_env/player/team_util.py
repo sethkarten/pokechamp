@@ -3,7 +3,7 @@ from poke_env.player.player import Player
 from poke_env.player.baselines import AbyssalPlayer, MaxBasePowerPlayer, OneStepPlayer
 from poke_env.player.random_player import RandomPlayer
 from poke_env.ps_client.account_configuration import AccountConfiguration
-from poke_env.ps_client.server_configuration import ShowdownServerConfiguration
+from poke_env.ps_client.server_configuration import ShowdownServerConfiguration, PokeAgentServerConfiguration
 from poke_env.teambuilder import Teambuilder
 from numpy.random import randint
 import importlib
@@ -71,12 +71,20 @@ def get_metamon_teams(battle_format: str, set_name: str) -> TeamSet:
         raise ValueError(
             f"Invalid set name: {set_name}. Must be one of: competitive, paper_replays, paper_variety, modern_replays"
         )
-    path = download_teams(battle_format, set_name=set_name)
+    # Map gen9oulongtimer to gen9ou for team downloads since they use the same teams
+    download_format = battle_format
+    if battle_format == "gen9oulongtimer":
+        download_format = "gen9ou"
+    path = download_teams(download_format, set_name=set_name)
     if not os.path.exists(path):
         raise ValueError(
             f"Cannot locate valid team directory for format {battle_format} at path {path}"
         )
-    return TeamSet(path, battle_format)
+    # Map gen9oulongtimer to gen9ou for TeamSet since they use the same team files
+    teamset_format = battle_format
+    if battle_format == "gen9oulongtimer":
+        teamset_format = "gen9ou"
+    return TeamSet(path, teamset_format)
 
 class TeamSet(Teambuilder):
     """Sample from a directory of Showdown team files.
@@ -139,14 +147,22 @@ def get_metamon_teams(battle_format: str, set_name: str) -> TeamSet:
     if battle_format == "gen9vgc2025regi":
         path = 'bayesian_dataset'
     else:
-        path = download_teams(battle_format, set_name=set_name)
+        # Map gen9oulongtimer to gen9ou for team downloads since they use the same teams
+        download_format = battle_format
+        if battle_format == "gen9oulongtimer":
+            download_format = "gen9ou"
+        path = download_teams(download_format, set_name=set_name)
     if not os.path.exists(path):
         raise ValueError(
             f"Cannot locate valid team directory for format {battle_format} at path {path}"
         )
     
     # Check if team files exist for this format
-    team_set = TeamSet(path, battle_format)
+    # Map gen9oulongtimer to gen9ou for TeamSet since they use the same team files
+    teamset_format = battle_format
+    if battle_format == "gen9oulongtimer":
+        teamset_format = "gen9ou"
+    team_set = TeamSet(path, teamset_format)
     if not team_set.team_files:
         raise ValueError(
             f"No team files found for format {battle_format} in {path}. "
@@ -196,26 +212,30 @@ def get_custom_bot_class(bot_name: str):
     except ImportError:
         return None
 
-def get_llm_player(args, 
-                   backend: str, 
-                   prompt_algo: str, 
-                   name: str, 
-                   KEY: str='', 
+def get_llm_player(args,
+                   backend: str,
+                   prompt_algo: str,
+                   name: str,
+                   KEY: str='',
                    battle_format='gen9ou',
-                   llm_backend=None, 
+                   llm_backend=None,
                    device=0,
-                   PNUMBER1: str='', 
-                   USERNAME: str='', 
-                   PASSWORD: str='', 
+                   PNUMBER1: str='',
+                   USERNAME: str='',
+                   PASSWORD: str='',
                    online: bool=False,
+                   server: str='showdown',
                    use_timeout: bool=True,
                    timeout_seconds: int=90) -> Player:
     from pokechamp.llm_player import LLMPlayer
     from pokechamp.prompts import prompt_translate, state_translate2, state_translate3
-    
+
     server_config = None
     if online:
-        server_config = ShowdownServerConfiguration
+        if server == 'pac':
+            server_config = PokeAgentServerConfiguration
+        else:
+            server_config = ShowdownServerConfiguration
     if USERNAME == '':
         USERNAME = name
     
